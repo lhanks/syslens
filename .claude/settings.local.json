@@ -1,0 +1,31 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir:*)",
+      "Bash(rm:*)",
+      "Bash(cp:*)",
+      "Bash(mv:*)",
+      "Bash(touch:*)",
+      "Bash(npm:*)",
+      "Bash(npx:*)",
+      "Bash(ng:*)",
+      "Bash(node:*)",
+      "Bash(cargo:*)",
+      "Bash(rustup:*)",
+      "Bash(git:*)",
+      "Bash(code:*)",
+      "Bash(pnpm:*)",
+      "Bash(yarn:*)",
+      "Bash(tauri:*)",
+      "Bash(powershell:*)",
+      "Bash(where:*)",
+      "Bash(which:*)",
+      "Bash(type:*)",
+      "Read(*)",
+      "Edit(*)",
+      "Write(*)",
+      "Bash(\"/c/Users/lesli/.cargo/bin/cargo\" --version)"
+    ],
+    "deny": []
+  }
+}

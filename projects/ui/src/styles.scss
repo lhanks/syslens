@@ -1,0 +1,104 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+// Global styles
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+// Custom scrollbar for dark theme
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-syslens-bg-secondary;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-syslens-border-secondary rounded;
+
+  &:hover {
+    @apply bg-syslens-text-muted;
+  }
+}
+
+// Utility classes
+@layer components {
+  .card {
+    @apply bg-syslens-bg-secondary border border-syslens-border-primary rounded-lg p-4;
+  }
+
+  .card-hover {
+    @apply card transition-colors hover:bg-syslens-bg-hover hover:border-syslens-border-secondary;
+  }
+
+  .btn-primary {
+    @apply px-4 py-2 bg-syslens-accent-blue text-white rounded-md
+           hover:bg-blue-600 transition-colors font-medium;
+  }
+
+  .btn-secondary {
+    @apply px-4 py-2 bg-syslens-bg-tertiary text-syslens-text-primary rounded-md
+           border border-syslens-border-primary hover:bg-syslens-bg-hover transition-colors;
+  }
+
+  .stat-value {
+    @apply text-2xl font-semibold text-syslens-text-primary font-mono;
+  }
+
+  .stat-label {
+    @apply text-sm text-syslens-text-secondary;
+  }
+
+  .section-title {
+    @apply text-lg font-semibold text-syslens-text-primary mb-4;
+  }
+
+  .status-dot {
+    @apply w-2 h-2 rounded-full;
+
+    &.online {
+      @apply bg-syslens-accent-green;
+    }
+
+    &.offline {
+      @apply bg-syslens-text-muted;
+    }
+
+    &.warning {
+      @apply bg-syslens-accent-yellow;
+    }
+
+    &.error {
+      @apply bg-syslens-accent-red;
+    }
+  }
+}
+
+// Progress bar animations
+@keyframes progress-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+.progress-bar {
+  @apply h-2 rounded-full bg-syslens-bg-tertiary overflow-hidden;
+
+  .progress-fill {
+    @apply h-full rounded-full transition-all duration-300;
+  }
+}
