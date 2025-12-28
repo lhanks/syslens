@@ -190,7 +190,7 @@ impl NetworkCollector {
                 let dns_config = Self::extract_dns_config(adapter, &wmi_data, &description);
 
                 let network_adapter = NetworkAdapter {
-                    id: adapter_name.clone(),
+                    id: friendly_name.clone(),  // Use friendly_name as ID to match sysinfo's Networks
                     name: friendly_name,
                     description,
                     adapter_type,

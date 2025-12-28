@@ -1,10 +1,11 @@
 import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { Subject, takeUntil, combineLatest } from 'rxjs';
+import { Subject, takeUntil, interval, forkJoin, of } from 'rxjs';
+import { switchMap, startWith, catchError } from 'rxjs/operators';
 
 import { HardwareService, SystemService, NetworkService, StorageService } from '@core/services';
-import { CpuMetrics, MemoryMetrics, CpuInfo, MemoryInfo } from '@core/models';
+import { CpuMetrics, MemoryMetrics, CpuInfo, MemoryInfo, NetworkAdapter, AdapterStats } from '@core/models';
 import { ProgressRingComponent } from '@shared/components';
 import { BytesPipe, UptimePipe } from '@shared/pipes';
 
@@ -202,6 +203,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
   downloadSpeed = 0;
   uploadSpeed = 0;
   networkAdapterCount = 0;
+  private activeAdapters: NetworkAdapter[] = [];
+  private previousNetworkStats: Map<string, { bytesReceived: number; bytesSent: number; timestamp: number }> = new Map();
 
   ngOnInit(): void {
     this.loadSystemInfo();
@@ -257,7 +260,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.networkService.getNetworkAdapters()
       .pipe(takeUntil(this.destroy$))
       .subscribe(adapters => {
-        this.networkAdapterCount = adapters.filter(a => a.status === 'Up').length;
+        this.activeAdapters = adapters.filter(a => a.status === 'Up');
+        this.networkAdapterCount = this.activeAdapters.length;
       });
   }
 
@@ -283,5 +287,61 @@ export class DashboardComponent implements OnInit, OnDestroy {
       .subscribe(uptime => {
         this.uptimeSeconds = uptime.uptimeSeconds;
       });
+
+    // Network stats - poll every second
+    interval(1000).pipe(
+      startWith(0),
+      takeUntil(this.destroy$),
+      switchMap(() => {
+        if (this.activeAdapters.length === 0) {
+          return of([]);
+        }
+        // Get stats for all active adapters
+        const statsRequests = this.activeAdapters.map(adapter =>
+          this.networkService.getAdapterStats(adapter.id).pipe(
+            catchError(() => of(null))
+          )
+        );
+        return forkJoin(statsRequests);
+      })
+    ).subscribe(allStats => {
+      this.calculateNetworkSpeeds(allStats.filter((s): s is AdapterStats => s !== null));
+    });
+  }
+
+  private calculateNetworkSpeeds(currentStats: AdapterStats[]): void {
+    let totalDownloadSpeed = 0;
+    let totalUploadSpeed = 0;
+    const now = Date.now();
+
+    for (const stats of currentStats) {
+      const previous = this.previousNetworkStats.get(stats.adapterId);
+
+      if (previous) {
+        const timeDeltaSeconds = (now - previous.timestamp) / 1000;
+        if (timeDeltaSeconds > 0) {
+          const downloadDelta = stats.bytesReceived - previous.bytesReceived;
+          const uploadDelta = stats.bytesSent - previous.bytesSent;
+
+          // Only count positive deltas (counter resets can cause negative values)
+          if (downloadDelta >= 0) {
+            totalDownloadSpeed += downloadDelta / timeDeltaSeconds;
+          }
+          if (uploadDelta >= 0) {
+            totalUploadSpeed += uploadDelta / timeDeltaSeconds;
+          }
+        }
+      }
+
+      // Store current values for next calculation
+      this.previousNetworkStats.set(stats.adapterId, {
+        bytesReceived: stats.bytesReceived,
+        bytesSent: stats.bytesSent,
+        timestamp: now
+      });
+    }
+
+    this.downloadSpeed = Math.round(totalDownloadSpeed);
+    this.uploadSpeed = Math.round(totalUploadSpeed);
   }
 }
