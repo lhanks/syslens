@@ -2,7 +2,7 @@ import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subject, takeUntil } from 'rxjs';
 
-import { HardwareService } from '@core/services';
+import { HardwareService, StatusService } from '@core/services';
 import {
   CpuInfo, CpuMetrics,
   MemoryInfo, MemoryMetrics, MemoryModule,
@@ -384,6 +384,7 @@ import { BytesPipe, DecimalPipe } from '@shared/pipes';
 })
 export class HardwareComponent implements OnInit, OnDestroy {
   private hardwareService = inject(HardwareService);
+  private statusService = inject(StatusService);
   private destroy$ = new Subject<void>();
 
   cpuInfo: CpuInfo | null = null;
@@ -406,9 +407,14 @@ export class HardwareComponent implements OnInit, OnDestroy {
   }
 
   private loadHardwareInfo(): void {
+    this.statusService.startOperation('hardware-init', 'Loading hardware information...');
+
     this.hardwareService.getCpuInfo()
       .pipe(takeUntil(this.destroy$))
-      .subscribe(info => this.cpuInfo = info);
+      .subscribe(info => {
+        this.cpuInfo = info;
+        this.statusService.endOperation('hardware-init');
+      });
 
     this.hardwareService.getMemoryInfo()
       .pipe(takeUntil(this.destroy$))

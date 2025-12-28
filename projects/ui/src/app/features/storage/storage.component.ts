@@ -2,7 +2,7 @@ import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subject, takeUntil } from 'rxjs';
 
-import { StorageService } from '@core/services';
+import { StorageService, StatusService } from '@core/services';
 import { PhysicalDisk, Volume, DiskHealth, DiskPerformance, NetworkDrive } from '@core/models';
 import { BytesPipe, DecimalPipe } from '@shared/pipes';
 
@@ -219,6 +219,7 @@ import { BytesPipe, DecimalPipe } from '@shared/pipes';
 })
 export class StorageComponent implements OnInit, OnDestroy {
   private storageService = inject(StorageService);
+  private statusService = inject(StatusService);
   private destroy$ = new Subject<void>();
 
   disks: PhysicalDisk[] = [];
@@ -238,10 +239,13 @@ export class StorageComponent implements OnInit, OnDestroy {
   }
 
   private loadStorageData(): void {
+    this.statusService.startOperation('storage-init', 'Loading storage information...');
+
     this.storageService.getPhysicalDisks()
       .pipe(takeUntil(this.destroy$))
       .subscribe(disks => {
         this.disks = disks;
+        this.statusService.endOperation('storage-init');
         // Load health for each disk
         disks.forEach(disk => {
           this.storageService.getDiskHealth(disk.deviceId)

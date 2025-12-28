@@ -1,18 +1,21 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-import { SidebarComponent } from './shared/components/sidebar/sidebar.component';
+import { SidebarComponent, StatusBarComponent } from './shared/components';
 import { PreloadService, StateService } from '@core/services';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, SidebarComponent],
+  imports: [RouterOutlet, SidebarComponent, StatusBarComponent],
   template: `
-    <div class="flex h-screen bg-syslens-bg-primary">
-      <app-sidebar />
-      <main class="flex-1 overflow-auto">
-        <router-outlet />
-      </main>
+    <div class="flex flex-col h-screen bg-syslens-bg-primary">
+      <div class="flex flex-1 overflow-hidden">
+        <app-sidebar />
+        <main class="flex-1 overflow-auto">
+          <router-outlet />
+        </main>
+      </div>
+      <app-status-bar />
     </div>
   `,
   styles: [`

@@ -10,7 +10,6 @@ Tech Stack: Tauri 2.0 (Rust) + Angular 21 + Tailwind CSS
 ** IMPORTANT ** Do not remove this section. Just clear out the tasks once processed.
 
 - For device information, we want to display deep detail about the device. We need to add more information to the device information. Explore ways to find information on the internet if necessary.
-- Add a status bar to show the current task being executed. Mainly interested in feedback while the app is capturing data.
 - Keep track of historical data. Add network traffic graph.
 - Add a process list (like task manager) tab.  
 
@@ -72,6 +71,7 @@ Tech Stack: Tauri 2.0 (Rust) + Angular 21 + Tailwind CSS
 - [x] 4.17 Display motherboard image if available
 - [x] 4.20 Parallelize dashboard data loading for faster startup (~500-1000ms improvement)
 - [x] 4.21 Restore last active route on app restart (state persistence)
+- [x] 4.22 Add status bar showing data capture operations in progress
 
 ## 5. Quality
 

@@ -2,7 +2,7 @@ import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subject, takeUntil } from 'rxjs';
 
-import { NetworkService } from '@core/services';
+import { NetworkService, StatusService } from '@core/services';
 import { NetworkAdapter, AdapterStats, NetworkConnection, Route } from '@core/models';
 import { BytesPipe } from '@shared/pipes';
 
@@ -208,6 +208,7 @@ import { BytesPipe } from '@shared/pipes';
 })
 export class NetworkComponent implements OnInit, OnDestroy {
   private networkService = inject(NetworkService);
+  private statusService = inject(StatusService);
   private destroy$ = new Subject<void>();
 
   adapters: NetworkAdapter[] = [];
@@ -226,10 +227,13 @@ export class NetworkComponent implements OnInit, OnDestroy {
   }
 
   private loadNetworkData(): void {
+    this.statusService.startOperation('network-init', 'Loading network information...');
+
     this.networkService.getNetworkAdapters()
       .pipe(takeUntil(this.destroy$))
       .subscribe(adapters => {
         this.adapters = adapters;
+        this.statusService.endOperation('network-init');
         // Start polling stats for active adapters
         adapters.filter(a => a.status === 'Up').forEach(adapter => {
           this.networkService.getAdapterStatsPolling(adapter.id)

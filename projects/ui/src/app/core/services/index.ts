@@ -7,3 +7,4 @@ export { HardwareService } from './hardware.service';
 export { StorageService } from './storage.service';
 export { PreloadService } from './preload.service';
 export { StateService } from './state.service';
+export { StatusService } from './status.service';

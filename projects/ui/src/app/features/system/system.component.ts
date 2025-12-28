@@ -2,7 +2,7 @@ import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subject, takeUntil } from 'rxjs';
 
-import { SystemService } from '@core/services';
+import { SystemService, StatusService } from '@core/services';
 import { DeviceInfo, BiosInfo, BootConfig, OsInfo, SystemUptime, UserInfo } from '@core/models';
 import { UptimePipe } from '@shared/pipes';
 
@@ -234,6 +234,7 @@ import { UptimePipe } from '@shared/pipes';
 })
 export class SystemComponent implements OnInit, OnDestroy {
   private systemService = inject(SystemService);
+  private statusService = inject(StatusService);
   private destroy$ = new Subject<void>();
 
   deviceInfo: DeviceInfo | null = null;
@@ -254,9 +255,14 @@ export class SystemComponent implements OnInit, OnDestroy {
   }
 
   private loadSystemData(): void {
+    this.statusService.startOperation('system-init', 'Loading system information...');
+
     this.systemService.getDeviceInfo()
       .pipe(takeUntil(this.destroy$))
-      .subscribe(info => this.deviceInfo = info);
+      .subscribe(info => {
+        this.deviceInfo = info;
+        this.statusService.endOperation('system-init');
+      });
 
     this.systemService.getBiosInfo()
       .pipe(takeUntil(this.destroy$))

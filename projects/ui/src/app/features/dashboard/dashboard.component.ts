@@ -4,7 +4,7 @@ import { RouterLink } from '@angular/router';
 import { Subject, takeUntil, interval, forkJoin, of } from 'rxjs';
 import { switchMap, startWith, catchError } from 'rxjs/operators';
 
-import { HardwareService, SystemService, NetworkService, StorageService } from '@core/services';
+import { HardwareService, SystemService, NetworkService, StorageService, StatusService } from '@core/services';
 import { CpuMetrics, MemoryMetrics, CpuInfo, MemoryInfo, NetworkAdapter, AdapterStats } from '@core/models';
 import { ProgressRingComponent } from '@shared/components';
 import { BytesPipe, UptimePipe } from '@shared/pipes';
@@ -177,6 +177,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private systemService = inject(SystemService);
   private networkService = inject(NetworkService);
   private storageService = inject(StorageService);
+  private statusService = inject(StatusService);
   private destroy$ = new Subject<void>();
 
   // System info
@@ -216,6 +217,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   private loadInitialData(): void {
+    this.statusService.startOperation('dashboard-init', 'Loading dashboard data...');
+
     // Parallelize ALL initial data fetches for faster startup
     forkJoin({
       deviceInfo: this.systemService.getDeviceInfo(),
@@ -227,6 +230,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     }).pipe(
       takeUntil(this.destroy$)
     ).subscribe(({ deviceInfo, osInfo, cpuInfo, memoryInfo, volumes, adapters }) => {
+      this.statusService.endOperation('dashboard-init');
       // System info
       this.deviceName = deviceInfo.computerName;
       this.osName = osInfo.name;
