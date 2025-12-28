@@ -9,12 +9,10 @@ Tech Stack: Tauri 2.0 (Rust) + Angular 21 + Tailwind CSS
 ** IMPORTANT ** Process the tasks below (in this section).  Expand them if needed and put them in the appropriate sections below.
 ** IMPORTANT ** Do not remove this section. Just clear out the tasks once processed.
 
-- For device information, we want to dipslay deep detail about the device. We need to add more information to the device information. Explore ways to find information on the internet if necessary.
-- Update app to reopen in its previous state.
+- For device information, we want to display deep detail about the device. We need to add more information to the device information. Explore ways to find information on the internet if necessary.
 - Add a status bar to show the current task being executed. Mainly interested in feedback while the app is capturing data.
 - Keep track of historical data. Add network traffic graph.
-- Add a process list (like task manager) tab.
-- speed up the startup time when running the application.  
+- Add a process list (like task manager) tab.  
 
 ## 1. Setup
 
@@ -72,6 +70,8 @@ Tech Stack: Tauri 2.0 (Rust) + Angular 21 + Tailwind CSS
 - [x] 4.15 Display detailed Motherboard information in Hardware Info component
 - [x] 4.16 Add clickable driver/documentation links for all devices
 - [x] 4.17 Display motherboard image if available
+- [x] 4.20 Parallelize dashboard data loading for faster startup (~500-1000ms improvement)
+- [x] 4.21 Restore last active route on app restart (state persistence)
 
 ## 5. Quality
 

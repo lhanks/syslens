@@ -1,7 +1,7 @@
-import { Component, inject } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { SidebarComponent } from './shared/components/sidebar/sidebar.component';
-import { PreloadService } from '@core/services';
+import { PreloadService, StateService } from '@core/services';
 
 @Component({
   selector: 'app-root',
@@ -22,9 +22,15 @@ import { PreloadService } from '@core/services';
     }
   `]
 })
-export class AppComponent {
+export class AppComponent implements OnInit {
   title = 'Syslens';
 
-  // Inject PreloadService to initialize background preloading
   private preloadService = inject(PreloadService);
+  private stateService = inject(StateService);
+
+  ngOnInit(): void {
+    // Initialize state persistence and restore last route
+    this.stateService.initialize();
+    this.stateService.restoreLastRoute();
+  }
 }
