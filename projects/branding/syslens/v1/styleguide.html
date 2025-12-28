@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Syslens Style Guide</title>
+  <link rel="stylesheet" href="assets/colors.css">
+  <link rel="stylesheet" href="assets/fonts.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: var(--syslens-bg-primary);
+      color: var(--syslens-text-primary);
+      padding: 2rem;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    nav {
+      background: var(--syslens-bg-card);
+      padding: 1rem;
+      border-radius: var(--syslens-radius-lg);
+      margin-bottom: 2rem;
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    nav a {
+      padding: 0.5rem 1rem;
+      border-radius: var(--syslens-radius-md);
+      transition: background var(--syslens-transition-fast);
+    }
+
+    nav a:hover {
+      background: var(--syslens-bg-hover);
+      text-decoration: none;
+    }
+
+    section {
+      background: var(--syslens-bg-card);
+      padding: 2rem;
+      border-radius: var(--syslens-radius-lg);
+      margin-bottom: 2rem;
+      border: 1px solid var(--syslens-border-subtle);
+    }
+
+    section h2 {
+      margin-bottom: 1.5rem;
+      padding-bottom: 1rem;
+      border-bottom: 2px solid var(--syslens-border-default);
+    }
+
+    .section-intro {
+      color: var(--syslens-text-secondary);
+      margin-bottom: 2rem;
+    }
+
+    /* Logo Display */
+    .logo-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 2rem;
+      margin-top: 2rem;
+    }
+
+    .logo-card {
+      background: var(--syslens-bg-secondary);
+      padding: 2rem;
+      border-radius: var(--syslens-radius-md);
+      text-align: center;
+    }
+
+    .logo-card h4 {
+      margin-top: 1rem;
+      font-size: var(--syslens-text-sm);
+      color: var(--syslens-text-secondary);
+      text-transform: uppercase;
+      letter-spacing: var(--syslens-tracking-wide);
+    }
+
+    .logo-card.dark {
+      background: var(--syslens-slate-950);
+    }
+
+    .logo-card.light {
+      background: var(--syslens-slate-200);
+    }
+
+    /* Color Swatches */
+    .color-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-top: 2rem;
+    }
+
+    .color-swatch {
+      border-radius: var(--syslens-radius-md);
+      overflow: hidden;
+      border: 1px solid var(--syslens-border-subtle);
+    }
+
+    .color-preview {
+      height: 100px;
+      width: 100%;
+    }
+
+    .color-info {
+      background: var(--syslens-bg-secondary);
+      padding: 1rem;
+    }
+
+    .color-name {
+      font-weight: var(--syslens-weight-semibold);
+      margin-bottom: 0.25rem;
+    }
+
+    .color-hex {
+      font-family: var(--syslens-font-mono);
+      font-size: var(--syslens-text-sm);
+      color: var(--syslens-text-secondary);
+    }
+
+    /* Typography Specimens */
+    .type-specimen {
+      padding: 1.5rem;
+      background: var(--syslens-bg-secondary);
+      border-radius: var(--syslens-radius-md);
+      margin-bottom: 1rem;
+    }
+
+    .type-label {
+      font-size: var(--syslens-text-xs);
+      color: var(--syslens-text-secondary);
+      text-transform: uppercase;
+      letter-spacing: var(--syslens-tracking-wide);
+      margin-bottom: 0.5rem;
+    }
+
+    /* Component Examples */
+    .component-grid {
+      display: grid;
+      gap: 2rem;
+      margin-top: 2rem;
+    }
+
+    .btn {
+      padding: 0.75rem 1.5rem;
+      border-radius: var(--syslens-radius-md);
+      font-weight: var(--syslens-weight-medium);
+      cursor: pointer;
+      border: none;
+      transition: all var(--syslens-transition-fast);
+      font-family: var(--syslens-font-body);
+      font-size: var(--syslens-text-sm);
+      display: inline-block;
+    }
+
+    .btn-primary {
+      background: var(--syslens-action-primary);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: var(--syslens-action-primary-hover);
+      box-shadow: var(--syslens-shadow-glow);
+    }
+
+    .btn-secondary {
+      background: var(--syslens-action-secondary);
+      color: white;
+    }
+
+    .btn-secondary:hover {
+      background: var(--syslens-action-secondary-hover);
+    }
+
+    .btn-outline {
+      background: transparent;
+      border: 2px solid var(--syslens-action-primary);
+      color: var(--syslens-action-primary);
+    }
+
+    .btn-outline:hover {
+      background: var(--syslens-action-primary);
+      color: white;
+    }
+
+    .card {
+      background: var(--syslens-bg-secondary);
+      padding: 1.5rem;
+      border-radius: var(--syslens-radius-lg);
+      border: 1px solid var(--syslens-border-default);
+    }
+
+    .card h3 {
+      margin-bottom: 0.5rem;
+    }
+
+    .card p {
+      color: var(--syslens-text-secondary);
+      font-size: var(--syslens-text-sm);
+    }
+
+    .metric-card {
+      background: var(--syslens-bg-secondary);
+      padding: 1.5rem;
+      border-radius: var(--syslens-radius-lg);
+      border-left: 4px solid var(--syslens-electric-blue);
+    }
+
+    .metric-value {
+      font-family: var(--syslens-font-mono);
+      font-size: var(--syslens-text-4xl);
+      font-weight: var(--syslens-weight-bold);
+      color: var(--syslens-text-primary);
+      margin-bottom: 0.25rem;
+    }
+
+    .metric-label {
+      font-size: var(--syslens-text-sm);
+      color: var(--syslens-text-secondary);
+      text-transform: uppercase;
+      letter-spacing: var(--syslens-tracking-wide);
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      border-radius: var(--syslens-radius-full);
+      font-size: var(--syslens-text-xs);
+      font-weight: var(--syslens-weight-medium);
+      text-transform: uppercase;
+      letter-spacing: var(--syslens-tracking-wide);
+    }
+
+    .status-success {
+      background: rgba(16, 185, 129, 0.2);
+      color: var(--syslens-success-green);
+      border: 1px solid var(--syslens-success-green);
+    }
+
+    .status-warning {
+      background: rgba(245, 158, 11, 0.2);
+      color: var(--syslens-warning-amber);
+      border: 1px solid var(--syslens-warning-amber);
+    }
+
+    .status-error {
+      background: rgba(239, 68, 68, 0.2);
+      color: var(--syslens-critical-red);
+      border: 1px solid var(--syslens-critical-red);
+    }
+
+    .status-info {
+      background: rgba(6, 182, 212, 0.2);
+      color: var(--syslens-info-cyan);
+      border: 1px solid var(--syslens-info-cyan);
+    }
+
+    .example-row {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      align-items: center;
+      padding: 1rem;
+      background: var(--syslens-bg-secondary);
+      border-radius: var(--syslens-radius-md);
+      margin-bottom: 1rem;
+    }
+
+    .gradient-demo {
+      height: 100px;
+      border-radius: var(--syslens-radius-lg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: var(--syslens-weight-bold);
+      margin-top: 1rem;
+    }
+  </style>
+</head>
+<body>
+  <header style="margin-bottom: 3rem;">
+    <h1 style="margin-bottom: 0.5rem;">Syslens Style Guide</h1>
+    <p class="syslens-body-lg" style="color: var(--syslens-text-secondary);">
+      Complete visual identity and design system for Syslens
+    </p>
+  </header>
+
+  <nav>
+    <a href="index.html">Asset Gallery</a>
+    <a href="styleguide.html" style="background: var(--syslens-bg-hover);">Style Guide</a>
+    <a href="example-site.html">Example Site</a>
+    <a href="../BRAND.md">Brand Document</a>
+  </nav>
+
+  <!-- Logo Section -->
+  <section id="logo">
+    <h2>Logo</h2>
+    <p class="section-intro">
+      The Syslens logo combines a circular lens element with system metrics visualization, representing clarity and real-time monitoring.
+    </p>
+
+    <div class="logo-grid">
+      <div class="logo-card dark">
+        <img src="assets/logo-icon.svg" alt="Syslens Icon" width="140" height="140">
+        <h4>Icon - Dark Background</h4>
+      </div>
+
+      <div class="logo-card dark">
+        <img src="assets/logo-full.svg" alt="Syslens Full Logo" width="280" height="90">
+        <h4>Full Logo - Dark Background</h4>
+      </div>
+
+      <div class="logo-card dark">
+        <img src="assets/favicon.svg" alt="Syslens Favicon" width="64" height="64">
+        <h4>Favicon</h4>
+      </div>
+    </div>
+
+    <div style="margin-top: 2rem; padding: 1.5rem; background: var(--syslens-bg-secondary); border-radius: var(--syslens-radius-md); border-left: 4px solid var(--syslens-electric-blue);">
+      <h4 style="margin-bottom: 0.5rem;">Logo Usage Guidelines</h4>
+      <ul style="color: var(--syslens-text-secondary); line-height: 1.8; list-style-position: inside;">
+        <li>Maintain minimum clear space equal to the lens diameter</li>
+        <li>Do not stretch, distort, or add effects</li>
+        <li>Optimized for dark backgrounds (primary use case)</li>
+        <li>Minimum size: 24px for icon, 120px for full logo</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- Colors Section -->
+  <section id="colors">
+    <h2>Color Palette</h2>
+    <p class="section-intro">
+      Syslens uses a dark theme optimized for extended viewing sessions, with vibrant accent colors for data visualization.
+    </p>
+
+    <h3 style="margin-top: 2rem; margin-bottom: 1rem; font-size: var(--syslens-text-xl);">Primary Colors</h3>
+    <div class="color-grid">
+      <div class="color-swatch">
+        <div class="color-preview" style="background: #0F172A;"></div>
+        <div class="color-info">
+          <div class="color-name">Deep Space</div>
+          <div class="color-hex">#0F172A</div>
+        </div>
+      </div>
+
+      <div class="color-swatch">
+        <div class="color-preview" style="background: #3B82F6;"></div>
+        <div class="color-info">
+          <div class="color-name">Electric Blue</div>
+          <div class="color-hex">#3B82F6</div>
+        </div>
+      </div>
+
+      <div class="color-swatch">
+        <div class="color-preview" style="background: #8B5CF6;"></div>
+        <div class="color-info">
+          <div class="color-name">Cyber Purple</div>
+          <div class="color-hex">#8B5CF6</div>
+        </div>
+      </div>
+    </div>
+
+    <h3 style="margin-top: 2rem; margin-bottom: 1rem; font-size: var(--syslens-text-xl);">Data Visualization</h3>
+    <div class="color-grid">
+      <div class="color-swatch">
+        <div class="color-preview" style="background: #10B981;"></div>
+        <div class="color-info">
+          <div class="color-name">Success Green</div>
+          <div class="color-hex">#10B981</div>
+        </div>
+      </div>
+
+      <div class="color-swatch">
+        <div class="color-preview" style="background: #F59E0B;"></div>
+        <div class="color-info">
+          <div class="color-name">Warning Amber</div>
+          <div class="color-hex">#F59E0B</div>
+        </div>
+      </div>
+
+      <div class="color-swatch">
+        <div class="color-preview" style="background: #EF4444;"></div>
+        <div class="color-info">
+          <div class="color-name">Critical Red</div>
+          <div class="color-hex">#EF4444</div>
+        </div>
+      </div>
+
+      <div class="color-swatch">
+        <div class="color-preview" style="background: #06B6D4;"></div>
+        <div class="color-info">
+          <div class="color-name">Info Cyan</div>
+          <div class="color-hex">#06B6D4</div>
+        </div>
+      </div>
+    </div>
+
+    <h3 style="margin-top: 2rem; margin-bottom: 1rem; font-size: var(--syslens-text-xl);">Neutral Scale</h3>
+    <div class="color-grid">
+      <div class="color-swatch">
+        <div class="color-preview" style="background: #020617;"></div>
+        <div class="color-info">
+          <div class="color-name">Slate 950</div>
+          <div class="color-hex">#020617</div>
+        </div>
+      </div>
+
+      <div class="color-swatch">
+        <div class="color-preview" style="background: #0F172A;"></div>
+        <div class="color-info">
+          <div class="color-name">Slate 900</div>
+          <div class="color-hex">#0F172A</div>
+        </div>
+      </div>
+
+      <div class="color-swatch">
+        <div class="color-preview" style="background: #1E293B;"></div>
+        <div class="color-info">
+          <div class="color-name">Slate 800</div>
+          <div class="color-hex">#1E293B</div>
+        </div>
+      </div>
+
+      <div class="color-swatch">
+        <div class="color-preview" style="background: #334155;"></div>
+        <div class="color-info">
+          <div class="color-name">Slate 700</div>
+          <div class="color-hex">#334155</div>
+        </div>
+      </div>
+
+      <div class="color-swatch">
+        <div class="color-preview" style="background: #94A3B8;"></div>
+        <div class="color-info">
+          <div class="color-name">Slate 400</div>
+          <div class="color-hex">#94A3B8</div>
+        </div>
+      </div>
+
+      <div class="color-swatch">
+        <div class="color-preview" style="background: #E2E8F0;"></div>
+        <div class="color-info">
+          <div class="color-name">Slate 200</div>
+          <div class="color-hex">#E2E8F0</div>
+        </div>
+      </div>
+    </div>
+
+    <h3 style="margin-top: 2rem; margin-bottom: 1rem; font-size: var(--syslens-text-xl);">Gradients</h3>
+    <div class="gradient-demo" style="background: var(--syslens-gradient-primary);">
+      Primary Gradient
+    </div>
+  </section>
+
+  <!-- Typography Section -->
+  <section id="typography">
+    <h2>Typography</h2>
+    <p class="section-intro">
+      Syslens uses Inter for UI and JetBrains Mono for data display, ensuring clarity and readability across all contexts.
+    </p>
+
+    <h3 style="margin-top: 2rem; margin-bottom: 1rem; font-size: var(--syslens-text-xl);">Headings</h3>
+
+    <div class="type-specimen">
+      <div class="type-label">H1 - Display Large</div>
+      <h1>System Monitor Dashboard</h1>
+    </div>
+
+    <div class="type-specimen">
+      <div class="type-label">H2 - Display Medium</div>
+      <h2>Performance Metrics</h2>
+    </div>
+
+    <div class="type-specimen">
+      <div class="type-label">H3 - Section Heading</div>
+      <h3>CPU & Memory</h3>
+    </div>
+
+    <div class="type-specimen">
+      <div class="type-label">H4 - Subsection Heading</div>
+      <h4>Process Details</h4>
+    </div>
+
+    <h3 style="margin-top: 2rem; margin-bottom: 1rem; font-size: var(--syslens-text-xl);">Body Text</h3>
+
+    <div class="type-specimen">
+      <div class="type-label">Body - Regular</div>
+      <p>Syslens provides real-time visibility into your system's performance, allowing you to monitor CPU, memory, disk, and network activity with precision and clarity.</p>
+    </div>
+
+    <div class="type-specimen">
+      <div class="type-label">Body - Small</div>
+      <p class="syslens-body-sm">View detailed information about running processes, resource consumption, and system health metrics.</p>
+    </div>
+
+    <h3 style="margin-top: 2rem; margin-bottom: 1rem; font-size: var(--syslens-text-xl);">Data Display</h3>
+
+    <div class="type-specimen">
+      <div class="type-label">Metric Value</div>
+      <div class="syslens-metric">87.5%</div>
+    </div>
+
+    <div class="type-specimen">
+      <div class="type-label">Data Value</div>
+      <div class="syslens-data-value">16,384 MB</div>
+    </div>
+
+    <div class="type-specimen">
+      <div class="type-label">Monospace Code</div>
+      <code>C:\Windows\System32\svchost.exe</code>
+    </div>
+
+    <h3 style="margin-top: 2rem; margin-bottom: 1rem; font-size: var(--syslens-text-xl);">UI Elements</h3>
+
+    <div class="type-specimen">
+      <div class="type-label">Label</div>
+      <div class="syslens-label">CPU Usage</div>
+    </div>
+
+    <div class="type-specimen">
+      <div class="type-label">Caption</div>
+      <div class="syslens-caption">Last updated: 2 seconds ago</div>
+    </div>
+  </section>
+
+  <!-- Components Section -->
+  <section id="components">
+    <h2>UI Components</h2>
+    <p class="section-intro">
+      Common UI patterns and components used throughout Syslens.
+    </p>
+
+    <h3 style="margin-top: 2rem; margin-bottom: 1rem; font-size: var(--syslens-text-xl);">Buttons</h3>
+    <div class="example-row">
+      <button class="btn btn-primary">Primary Action</button>
+      <button class="btn btn-secondary">Secondary Action</button>
+      <button class="btn btn-outline">Outline Button</button>
+    </div>
+
+    <h3 style="margin-top: 2rem; margin-bottom: 1rem; font-size: var(--syslens-text-xl);">Status Badges</h3>
+    <div class="example-row">
+      <span class="status-badge status-success">Running</span>
+      <span class="status-badge status-warning">Warning</span>
+      <span class="status-badge status-error">Critical</span>
+      <span class="status-badge status-info">Info</span>
+    </div>
+
+    <h3 style="margin-top: 2rem; margin-bottom: 1rem; font-size: var(--syslens-text-xl);">Cards</h3>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem;">
+      <div class="card">
+        <h3>Hardware Information</h3>
+        <p>View detailed specifications about your system's CPU, motherboard, and memory configuration.</p>
+      </div>
+
+      <div class="metric-card">
+        <div class="metric-value">42.8%</div>
+        <div class="metric-label">CPU Usage</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Spacing & Layout Section -->
+  <section id="spacing">
+    <h2>Spacing & Layout</h2>
+    <p class="section-intro">
+      Consistent spacing creates visual rhythm and hierarchy.
+    </p>
+
+    <div style="margin-top: 2rem;">
+      <h4 style="margin-bottom: 1rem;">Spacing Scale</h4>
+      <div style="display: grid; gap: 0.5rem;">
+        <div style="display: flex; align-items: center; gap: 1rem;">
+          <div style="width: 100px; font-family: var(--syslens-font-mono); font-size: var(--syslens-text-sm); color: var(--syslens-text-secondary);">XS (0.25rem)</div>
+          <div style="height: 24px; width: 16px; background: var(--syslens-electric-blue); border-radius: var(--syslens-radius-sm);"></div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 1rem;">
+          <div style="width: 100px; font-family: var(--syslens-font-mono); font-size: var(--syslens-text-sm); color: var(--syslens-text-secondary);">SM (0.5rem)</div>
+          <div style="height: 24px; width: 32px; background: var(--syslens-electric-blue); border-radius: var(--syslens-radius-sm);"></div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 1rem;">
+          <div style="width: 100px; font-family: var(--syslens-font-mono); font-size: var(--syslens-text-sm); color: var(--syslens-text-secondary);">MD (1rem)</div>
+          <div style="height: 24px; width: 64px; background: var(--syslens-electric-blue); border-radius: var(--syslens-radius-sm);"></div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 1rem;">
+          <div style="width: 100px; font-family: var(--syslens-font-mono); font-size: var(--syslens-text-sm); color: var(--syslens-text-secondary);">LG (1.5rem)</div>
+          <div style="height: 24px; width: 96px; background: var(--syslens-electric-blue); border-radius: var(--syslens-radius-sm);"></div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 1rem;">
+          <div style="width: 100px; font-family: var(--syslens-font-mono); font-size: var(--syslens-text-sm); color: var(--syslens-text-secondary);">XL (2rem)</div>
+          <div style="height: 24px; width: 128px; background: var(--syslens-electric-blue); border-radius: var(--syslens-radius-sm);"></div>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top: 2rem;">
+      <h4 style="margin-bottom: 1rem;">Border Radius</h4>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 1rem;">
+        <div style="text-align: center;">
+          <div style="width: 80px; height: 80px; background: var(--syslens-cyber-purple); border-radius: var(--syslens-radius-sm); margin: 0 auto 0.5rem;"></div>
+          <div class="syslens-caption">Small (0.25rem)</div>
+        </div>
+        <div style="text-align: center;">
+          <div style="width: 80px; height: 80px; background: var(--syslens-cyber-purple); border-radius: var(--syslens-radius-md); margin: 0 auto 0.5rem;"></div>
+          <div class="syslens-caption">Medium (0.5rem)</div>
+        </div>
+        <div style="text-align: center;">
+          <div style="width: 80px; height: 80px; background: var(--syslens-cyber-purple); border-radius: var(--syslens-radius-lg); margin: 0 auto 0.5rem;"></div>
+          <div class="syslens-caption">Large (0.75rem)</div>
+        </div>
+        <div style="text-align: center;">
+          <div style="width: 80px; height: 80px; background: var(--syslens-cyber-purple); border-radius: var(--syslens-radius-xl); margin: 0 auto 0.5rem;"></div>
+          <div class="syslens-caption">XL (1rem)</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer style="text-align: center; margin-top: 4rem; padding-top: 2rem; border-top: 1px solid var(--syslens-border-default); color: var(--syslens-text-secondary);">
+    <p>&copy; 2025 Syslens - Version 1.0</p>
+  </footer>
+</body>
+</html>

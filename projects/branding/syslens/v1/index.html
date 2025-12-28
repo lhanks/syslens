@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Syslens Brand Assets - v1</title>
+  <link rel="stylesheet" href="assets/colors.css">
+  <link rel="stylesheet" href="assets/fonts.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: var(--syslens-bg-primary);
+      color: var(--syslens-text-primary);
+      padding: 2rem;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    nav {
+      background: var(--syslens-bg-card);
+      padding: 1rem;
+      border-radius: var(--syslens-radius-lg);
+      margin-bottom: 2rem;
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    nav a {
+      padding: 0.5rem 1rem;
+      border-radius: var(--syslens-radius-md);
+      transition: background var(--syslens-transition-fast);
+    }
+
+    nav a:hover {
+      background: var(--syslens-bg-hover);
+      text-decoration: none;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+      gap: 2rem;
+      margin-top: 2rem;
+    }
+
+    .card {
+      background: var(--syslens-bg-card);
+      border: 1px solid var(--syslens-border-subtle);
+      border-radius: var(--syslens-radius-lg);
+      padding: 1.5rem;
+      transition: transform var(--syslens-transition-fast), box-shadow var(--syslens-transition-fast);
+    }
+
+    .card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--syslens-shadow-md);
+    }
+
+    .card h3 {
+      margin-bottom: 1rem;
+      font-size: var(--syslens-text-xl);
+    }
+
+    .preview {
+      background: var(--syslens-bg-secondary);
+      padding: 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: var(--syslens-radius-md);
+      margin-bottom: 1rem;
+      min-height: 200px;
+    }
+
+    .preview.dark {
+      background: var(--syslens-slate-950);
+    }
+
+    .preview.light {
+      background: var(--syslens-slate-200);
+    }
+
+    .meta {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--syslens-border-default);
+    }
+
+    .meta-item {
+      display: flex;
+      justify-content: space-between;
+      font-size: var(--syslens-text-sm);
+    }
+
+    .meta-label {
+      color: var(--syslens-text-secondary);
+    }
+
+    .meta-value {
+      font-family: var(--syslens-font-mono);
+      color: var(--syslens-text-primary);
+    }
+
+    .download-btn {
+      display: inline-block;
+      padding: 0.5rem 1rem;
+      background: var(--syslens-action-primary);
+      color: white;
+      text-decoration: none;
+      border-radius: var(--syslens-radius-md);
+      font-size: var(--syslens-text-sm);
+      font-weight: var(--syslens-weight-medium);
+      transition: background var(--syslens-transition-fast);
+      margin-top: 1rem;
+    }
+
+    .download-btn:hover {
+      background: var(--syslens-action-primary-hover);
+      text-decoration: none;
+    }
+
+    .info-box {
+      background: var(--syslens-bg-card);
+      border-left: 4px solid var(--syslens-electric-blue);
+      padding: 1.5rem;
+      border-radius: var(--syslens-radius-md);
+      margin-bottom: 2rem;
+    }
+
+    .info-box h3 {
+      margin-bottom: 0.5rem;
+    }
+
+    .info-box p {
+      color: var(--syslens-text-secondary);
+      line-height: 1.6;
+    }
+
+    .tag {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      background: rgba(59, 130, 246, 0.2);
+      color: var(--syslens-electric-blue);
+      border-radius: var(--syslens-radius-full);
+      font-size: var(--syslens-text-xs);
+      font-weight: var(--syslens-weight-medium);
+      text-transform: uppercase;
+      letter-spacing: var(--syslens-tracking-wide);
+      margin-top: 0.5rem;
+    }
+  </style>
+</head>
+<body>
+  <header style="margin-bottom: 3rem;">
+    <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
+      <img src="assets/logo-icon.svg" alt="Syslens Icon" width="60" height="60">
+      <div>
+        <h1 style="margin-bottom: 0.25rem;">Syslens Brand Assets</h1>
+        <p style="color: var(--syslens-text-secondary); font-size: var(--syslens-text-lg);">
+          Version 1.0 - December 2025
+        </p>
+      </div>
+    </div>
+  </header>
+
+  <nav>
+    <a href="index.html" style="background: var(--syslens-bg-hover);">Asset Gallery</a>
+    <a href="styleguide.html">Style Guide</a>
+    <a href="example-site.html">Example Site</a>
+    <a href="../BRAND.md">Brand Document</a>
+  </nav>
+
+  <div class="info-box">
+    <h3>About This Brand</h3>
+    <p>
+      Syslens is a desktop system information dashboard that provides real-time visibility into CPU, memory, disk, and network performance.
+      The brand identity combines professional precision with modern aesthetics, using a lens metaphor to represent clarity and focus.
+    </p>
+    <div class="tag">Clarity for your system</div>
+  </div>
+
+  <h2 style="margin-bottom: 1.5rem;">Logo Assets</h2>
+  <div class="grid">
+    <!-- Logo Icon -->
+    <div class="card">
+      <h3>Logo Icon</h3>
+      <div class="preview dark">
+        <img src="assets/logo-icon.svg" alt="Syslens Icon" width="180" height="180">
+      </div>
+      <div class="meta">
+        <div class="meta-item">
+          <span class="meta-label">Format</span>
+          <span class="meta-value">SVG</span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label">Size</span>
+          <span class="meta-value">256x256</span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label">Usage</span>
+          <span class="meta-value">App icon, avatars</span>
+        </div>
+      </div>
+      <a href="assets/logo-icon.svg" download class="download-btn">Download SVG</a>
+    </div>
+
+    <!-- Full Logo -->
+    <div class="card">
+      <h3>Full Logo + Wordmark</h3>
+      <div class="preview dark">
+        <img src="assets/logo-full.svg" alt="Syslens Full Logo" width="320" height="100">
+      </div>
+      <div class="meta">
+        <div class="meta-item">
+          <span class="meta-label">Format</span>
+          <span class="meta-value">SVG</span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label">Size</span>
+          <span class="meta-value">512x160</span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label">Usage</span>
+          <span class="meta-value">Headers, splash screens</span>
+        </div>
+      </div>
+      <a href="assets/logo-full.svg" download class="download-btn">Download SVG</a>
+    </div>
+
+    <!-- Favicon -->
+    <div class="card">
+      <h3>Favicon</h3>
+      <div class="preview dark">
+        <img src="assets/favicon.svg" alt="Syslens Favicon" width="96" height="96">
+      </div>
+      <div class="meta">
+        <div class="meta-item">
+          <span class="meta-label">Format</span>
+          <span class="meta-value">SVG</span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label">Size</span>
+          <span class="meta-value">32x32</span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label">Usage</span>
+          <span class="meta-value">Browser tab, bookmarks</span>
+        </div>
+      </div>
+      <a href="assets/favicon.svg" download class="download-btn">Download SVG</a>
+    </div>
+  </div>
+
+  <h2 style="margin-top: 3rem; margin-bottom: 1.5rem;">Design System Assets</h2>
+  <div class="grid">
+    <!-- Colors CSS -->
+    <div class="card">
+      <h3>Color Palette</h3>
+      <div class="preview" style="background: linear-gradient(135deg, #3B82F6 0%, #8B5CF6 50%, #06B6D4 100%); min-height: 120px;">
+      </div>
+      <p style="color: var(--syslens-text-secondary); font-size: var(--syslens-text-sm); margin-bottom: 1rem;">
+        Complete color system with CSS custom properties including primary colors, data visualization colors, and neutral scale.
+      </p>
+      <div class="meta">
+        <div class="meta-item">
+          <span class="meta-label">Format</span>
+          <span class="meta-value">CSS</span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label">Variables</span>
+          <span class="meta-value">50+ colors</span>
+        </div>
+      </div>
+      <a href="assets/colors.css" download class="download-btn">Download CSS</a>
+    </div>
+
+    <!-- Typography CSS -->
+    <div class="card">
+      <h3>Typography System</h3>
+      <div class="preview">
+        <div style="text-align: center;">
+          <div style="font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem;">SYSLENS</div>
+          <div style="font-family: var(--syslens-font-mono); font-size: 1.5rem; color: var(--syslens-electric-blue);">87.5%</div>
+        </div>
+      </div>
+      <p style="color: var(--syslens-text-secondary); font-size: var(--syslens-text-sm); margin-bottom: 1rem;">
+        Typography definitions with Inter for UI and JetBrains Mono for data display. Includes complete type scale and utility classes.
+      </p>
+      <div class="meta">
+        <div class="meta-item">
+          <span class="meta-label">Format</span>
+          <span class="meta-value">CSS</span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label">Fonts</span>
+          <span class="meta-value">Inter, JetBrains Mono</span>
+        </div>
+      </div>
+      <a href="assets/fonts.css" download class="download-btn">Download CSS</a>
+    </div>
+  </div>
+
+  <div class="info-box" style="margin-top: 3rem;">
+    <h3>Quick Start</h3>
+    <p style="margin-bottom: 1rem;">To use these brand assets in your project, include both CSS files in your HTML:</p>
+    <pre style="background: var(--syslens-bg-secondary); padding: 1rem; border-radius: var(--syslens-radius-md); overflow-x: auto;"><code>&lt;link rel="stylesheet" href="assets/colors.css"&gt;
+&lt;link rel="stylesheet" href="assets/fonts.css"&gt;</code></pre>
+  </div>
+
+  <div style="margin-top: 3rem; padding: 2rem; background: var(--syslens-bg-card); border-radius: var(--syslens-radius-lg); text-align: center;">
+    <h3 style="margin-bottom: 1rem;">Need Help?</h3>
+    <p style="color: var(--syslens-text-secondary); margin-bottom: 1.5rem;">
+      View the complete style guide for usage guidelines, component examples, and design patterns.
+    </p>
+    <a href="styleguide.html" class="download-btn" style="margin: 0;">View Style Guide</a>
+  </div>
+
+  <footer style="text-align: center; margin-top: 4rem; padding-top: 2rem; border-top: 1px solid var(--syslens-border-default); color: var(--syslens-text-secondary);">
+    <p>&copy; 2025 Syslens - All brand assets included</p>
+  </footer>
+</body>
+</html>

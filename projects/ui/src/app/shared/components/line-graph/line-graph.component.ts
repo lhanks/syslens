@@ -6,6 +6,16 @@ export interface GraphDataPoint {
   label?: string;
 }
 
+// Color hex values matching Tailwind config
+const COLOR_MAP: Record<string, string> = {
+  'syslens-accent-blue': '#3b82f6',
+  'syslens-accent-green': '#22c55e',
+  'syslens-accent-yellow': '#eab308',
+  'syslens-accent-red': '#ef4444',
+  'syslens-accent-purple': '#8b5cf6',
+  'syslens-accent-cyan': '#06b6d4',
+};
+
 @Component({
   selector: 'app-line-graph',
   standalone: true,
@@ -20,8 +30,7 @@ export interface GraphDataPoint {
             [attr.y1]="y"
             [attr.x2]="width"
             [attr.y2]="y"
-            stroke="currentColor"
-            class="text-syslens-border"
+            stroke="#333333"
             stroke-opacity="0.3"
           />
         }
@@ -31,7 +40,8 @@ export interface GraphDataPoint {
       @if (series1Path()) {
         <path
           [attr.d]="series1AreaPath()"
-          [class]="'fill-' + series1Color + '/10'"
+          [attr.fill]="getColor(series1Color)"
+          fill-opacity="0.1"
           class="transition-all duration-300"
         />
       }
@@ -40,7 +50,8 @@ export interface GraphDataPoint {
       @if (series2Path()) {
         <path
           [attr.d]="series2AreaPath()"
-          [class]="'fill-' + series2Color + '/10'"
+          [attr.fill]="getColor(series2Color)"
+          fill-opacity="0.1"
           class="transition-all duration-300"
         />
       }
@@ -50,7 +61,7 @@ export interface GraphDataPoint {
         <path
           [attr.d]="series1Path()"
           fill="none"
-          [class]="'stroke-' + series1Color"
+          [attr.stroke]="getColor(series1Color)"
           stroke-width="2"
           stroke-linecap="round"
           stroke-linejoin="round"
@@ -63,7 +74,7 @@ export interface GraphDataPoint {
         <path
           [attr.d]="series2Path()"
           fill="none"
-          [class]="'stroke-' + series2Color"
+          [attr.stroke]="getColor(series2Color)"
           stroke-width="2"
           stroke-linecap="round"
           stroke-linejoin="round"
@@ -144,5 +155,9 @@ export class LineGraphComponent {
       x: (index / Math.max(data.length - 1, 1)) * this.width,
       y: padding + effectiveHeight - (value / maxVal) * effectiveHeight
     }));
+  }
+
+  getColor(colorName: string): string {
+    return COLOR_MAP[colorName] ?? '#22c55e'; // Default to green
   }
 }

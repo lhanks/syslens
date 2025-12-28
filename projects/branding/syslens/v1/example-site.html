@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Syslens - Clarity for Your System</title>
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="assets/colors.css">
+  <link rel="stylesheet" href="assets/fonts.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: var(--syslens-bg-primary);
+      color: var(--syslens-text-primary);
+    }
+
+    /* Header */
+    header {
+      border-bottom: 1px solid var(--syslens-border-subtle);
+      background: rgba(15, 23, 42, 0.8);
+      backdrop-filter: blur(10px);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .header-content {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 1.5rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo-container {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .logo-text {
+      font-size: var(--syslens-text-2xl);
+      font-weight: var(--syslens-weight-bold);
+      letter-spacing: var(--syslens-tracking-tight);
+    }
+
+    nav ul {
+      display: flex;
+      gap: 2rem;
+      list-style: none;
+    }
+
+    nav a {
+      color: var(--syslens-text-secondary);
+      text-decoration: none;
+      font-weight: var(--syslens-weight-medium);
+      transition: color var(--syslens-transition-fast);
+    }
+
+    nav a:hover {
+      color: var(--syslens-text-primary);
+    }
+
+    /* Hero Section */
+    .hero {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 6rem 2rem;
+      text-align: center;
+    }
+
+    .hero h1 {
+      font-size: var(--syslens-text-5xl);
+      margin-bottom: 1.5rem;
+      background: var(--syslens-gradient-primary);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero-subtitle {
+      font-size: var(--syslens-text-xl);
+      color: var(--syslens-text-secondary);
+      max-width: 700px;
+      margin: 0 auto 3rem;
+      line-height: var(--syslens-leading-relaxed);
+    }
+
+    .cta-buttons {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      padding: 1rem 2rem;
+      border-radius: var(--syslens-radius-lg);
+      font-weight: var(--syslens-weight-semibold);
+      font-size: var(--syslens-text-base);
+      cursor: pointer;
+      border: none;
+      transition: all var(--syslens-transition-fast);
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    .btn-primary {
+      background: var(--syslens-action-primary);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: var(--syslens-action-primary-hover);
+      box-shadow: var(--syslens-shadow-glow);
+      transform: translateY(-2px);
+    }
+
+    .btn-secondary {
+      background: transparent;
+      border: 2px solid var(--syslens-action-primary);
+      color: var(--syslens-action-primary);
+      padding: calc(1rem - 2px) calc(2rem - 2px);
+    }
+
+    .btn-secondary:hover {
+      background: var(--syslens-action-primary);
+      color: white;
+    }
+
+    /* Features Section */
+    .features {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 6rem 2rem;
+      background: var(--syslens-bg-secondary);
+    }
+
+    .section-header {
+      text-align: center;
+      margin-bottom: 4rem;
+    }
+
+    .section-title {
+      font-size: var(--syslens-text-4xl);
+      margin-bottom: 1rem;
+    }
+
+    .section-subtitle {
+      font-size: var(--syslens-text-lg);
+      color: var(--syslens-text-secondary);
+    }
+
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 2rem;
+    }
+
+    .feature-card {
+      background: var(--syslens-bg-card);
+      padding: 2rem;
+      border-radius: var(--syslens-radius-lg);
+      border: 1px solid var(--syslens-border-subtle);
+      transition: transform var(--syslens-transition-normal), box-shadow var(--syslens-transition-normal);
+    }
+
+    .feature-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--syslens-shadow-lg);
+      border-color: var(--syslens-action-primary);
+    }
+
+    .feature-icon {
+      width: 48px;
+      height: 48px;
+      background: var(--syslens-gradient-primary);
+      border-radius: var(--syslens-radius-lg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 1.5rem;
+      font-size: 1.5rem;
+    }
+
+    .feature-card h3 {
+      margin-bottom: 1rem;
+      font-size: var(--syslens-text-xl);
+    }
+
+    .feature-card p {
+      color: var(--syslens-text-secondary);
+      line-height: var(--syslens-leading-relaxed);
+    }
+
+    /* Metrics Showcase */
+    .metrics {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 6rem 2rem;
+    }
+
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1.5rem;
+      margin-top: 3rem;
+    }
+
+    .metric-card {
+      background: var(--syslens-bg-card);
+      padding: 2rem;
+      border-radius: var(--syslens-radius-lg);
+      border-left: 4px solid var(--syslens-electric-blue);
+      transition: border-color var(--syslens-transition-fast);
+    }
+
+    .metric-card:nth-child(2) {
+      border-left-color: var(--syslens-cyber-purple);
+    }
+
+    .metric-card:nth-child(3) {
+      border-left-color: var(--syslens-success-green);
+    }
+
+    .metric-card:nth-child(4) {
+      border-left-color: var(--syslens-info-cyan);
+    }
+
+    .metric-value {
+      font-family: var(--syslens-font-mono);
+      font-size: var(--syslens-text-4xl);
+      font-weight: var(--syslens-weight-bold);
+      margin-bottom: 0.5rem;
+      color: var(--syslens-text-primary);
+    }
+
+    .metric-label {
+      font-size: var(--syslens-text-sm);
+      color: var(--syslens-text-secondary);
+      text-transform: uppercase;
+      letter-spacing: var(--syslens-tracking-wide);
+    }
+
+    /* CTA Section */
+    .cta-section {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 6rem 2rem;
+      background: var(--syslens-bg-secondary);
+      text-align: center;
+    }
+
+    .cta-content {
+      max-width: 800px;
+      margin: 0 auto;
+      background: var(--syslens-bg-card);
+      padding: 4rem 3rem;
+      border-radius: var(--syslens-radius-xl);
+      border: 1px solid var(--syslens-border-default);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .cta-content::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: var(--syslens-gradient-primary);
+    }
+
+    .cta-content h2 {
+      margin-bottom: 1rem;
+    }
+
+    .cta-content p {
+      color: var(--syslens-text-secondary);
+      font-size: var(--syslens-text-lg);
+      margin-bottom: 2rem;
+    }
+
+    /* Footer */
+    footer {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 3rem 2rem;
+      border-top: 1px solid var(--syslens-border-subtle);
+    }
+
+    .footer-content {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 3rem;
+      margin-bottom: 2rem;
+    }
+
+    .footer-section h4 {
+      margin-bottom: 1rem;
+      font-size: var(--syslens-text-lg);
+    }
+
+    .footer-section ul {
+      list-style: none;
+    }
+
+    .footer-section li {
+      margin-bottom: 0.5rem;
+    }
+
+    .footer-section a {
+      color: var(--syslens-text-secondary);
+      text-decoration: none;
+      transition: color var(--syslens-transition-fast);
+    }
+
+    .footer-section a:hover {
+      color: var(--syslens-action-primary);
+    }
+
+    .footer-bottom {
+      text-align: center;
+      padding-top: 2rem;
+      border-top: 1px solid var(--syslens-border-subtle);
+      color: var(--syslens-text-secondary);
+    }
+
+    @media (max-width: 768px) {
+      .hero h1 {
+        font-size: var(--syslens-text-3xl);
+      }
+
+      .hero-subtitle {
+        font-size: var(--syslens-text-base);
+      }
+
+      nav ul {
+        display: none;
+      }
+
+      .cta-content {
+        padding: 2rem 1.5rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header>
+    <div class="header-content">
+      <div class="logo-container">
+        <img src="assets/logo-icon.svg" alt="Syslens" width="40" height="40">
+        <span class="logo-text">SYSLENS</span>
+      </div>
+      <nav>
+        <ul>
+          <li><a href="#features">Features</a></li>
+          <li><a href="#metrics">Why Syslens</a></li>
+          <li><a href="#download">Download</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <h1>Clarity for Your System</h1>
+    <p class="hero-subtitle">
+      Real-time monitoring and detailed insights into your system's performance.
+      Track CPU, memory, disk, and network activity with precision and elegance.
+    </p>
+    <div class="cta-buttons">
+      <a href="#download" class="btn btn-primary">Download for Windows</a>
+      <a href="#features" class="btn btn-secondary">Learn More</a>
+    </div>
+  </section>
+
+  <!-- Features Section -->
+  <section class="features" id="features">
+    <div class="section-header">
+      <h2 class="section-title">Powerful Monitoring Features</h2>
+      <p class="section-subtitle">Everything you need to understand your system's performance</p>
+    </div>
+
+    <div class="feature-grid">
+      <div class="feature-card">
+        <div class="feature-icon">📊</div>
+        <h3>Real-Time Graphs</h3>
+        <p>
+          Live visualizations of system metrics with customizable time ranges. Watch your system's performance unfold in real-time.
+        </p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">💻</div>
+        <h3>Hardware Details</h3>
+        <p>
+          Comprehensive information about your CPU, motherboard, memory, and storage devices. Know your system inside and out.
+        </p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">⚡</div>
+        <h3>Process Monitor</h3>
+        <p>
+          Track running processes with CPU and memory usage. Sort, search, and manage applications with precision.
+        </p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">🌐</div>
+        <h3>Network Activity</h3>
+        <p>
+          Monitor upload and download speeds, network adapters, and connection details. Stay informed about network performance.
+        </p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">💾</div>
+        <h3>Storage Insights</h3>
+        <p>
+          View disk usage, partition details, and I/O statistics. Manage your storage effectively.
+        </p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">🎯</div>
+        <h3>Clean Interface</h3>
+        <p>
+          Beautiful dark theme optimized for extended monitoring sessions. Focus on what matters without distraction.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Metrics Showcase -->
+  <section class="metrics" id="metrics">
+    <div class="section-header">
+      <h2 class="section-title">Built for Power Users</h2>
+      <p class="section-subtitle">Precision monitoring for developers and system administrators</p>
+    </div>
+
+    <div class="metrics-grid">
+      <div class="metric-card">
+        <div class="metric-value">3ms</div>
+        <div class="metric-label">Update Interval</div>
+      </div>
+
+      <div class="metric-card">
+        <div class="metric-value">50+</div>
+        <div class="metric-label">System Metrics</div>
+      </div>
+
+      <div class="metric-card">
+        <div class="metric-value">0%</div>
+        <div class="metric-label">CPU Overhead</div>
+      </div>
+
+      <div class="metric-card">
+        <div class="metric-value">24/7</div>
+        <div class="metric-label">Monitoring</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Section -->
+  <section class="cta-section" id="download">
+    <div class="cta-content">
+      <h2>Ready to Monitor Your System?</h2>
+      <p>
+        Download Syslens for Windows and gain real-time visibility into your system's performance.
+        Free and open source.
+      </p>
+      <div class="cta-buttons">
+        <a href="#" class="btn btn-primary">Download v1.0.0</a>
+        <a href="#" class="btn btn-secondary">View on GitHub</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <div class="footer-content">
+      <div class="footer-section">
+        <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
+          <img src="assets/logo-icon.svg" alt="Syslens" width="32" height="32">
+          <span style="font-weight: var(--syslens-weight-bold); font-size: var(--syslens-text-lg);">SYSLENS</span>
+        </div>
+        <p style="color: var(--syslens-text-secondary); font-size: var(--syslens-text-sm);">
+          Clarity for your system. Real-time monitoring made elegant.
+        </p>
+      </div>
+
+      <div class="footer-section">
+        <h4>Product</h4>
+        <ul>
+          <li><a href="#features">Features</a></li>
+          <li><a href="#download">Download</a></li>
+          <li><a href="#">Documentation</a></li>
+          <li><a href="#">Release Notes</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-section">
+        <h4>Resources</h4>
+        <ul>
+          <li><a href="#">GitHub</a></li>
+          <li><a href="#">Issue Tracker</a></li>
+          <li><a href="#">Community</a></li>
+          <li><a href="#">Support</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-section">
+        <h4>Legal</h4>
+        <ul>
+          <li><a href="#">License</a></li>
+          <li><a href="#">Privacy Policy</a></li>
+          <li><a href="#">Terms of Use</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <p>&copy; 2025 Syslens. Open source software licensed under MIT.</p>
+    </div>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,98 @@
+/**
+ * Syslens Brand Colors
+ * CSS Custom Properties
+ */
+
+:root {
+  /* Primary Brand Colors */
+  --syslens-deep-space: #0F172A;
+  --syslens-electric-blue: #3B82F6;
+  --syslens-cyber-purple: #8B5CF6;
+
+  /* Data Visualization Colors */
+  --syslens-success-green: #10B981;
+  --syslens-warning-amber: #F59E0B;
+  --syslens-critical-red: #EF4444;
+  --syslens-info-cyan: #06B6D4;
+
+  /* Neutral Scale */
+  --syslens-slate-950: #020617;
+  --syslens-slate-900: #0F172A;
+  --syslens-slate-800: #1E293B;
+  --syslens-slate-700: #334155;
+  --syslens-slate-600: #475569;
+  --syslens-slate-500: #64748B;
+  --syslens-slate-400: #94A3B8;
+  --syslens-slate-300: #CBD5E1;
+  --syslens-slate-200: #E2E8F0;
+  --syslens-slate-100: #F1F5F9;
+  --syslens-white: #FFFFFF;
+
+  /* Semantic Colors */
+  --syslens-bg-primary: var(--syslens-slate-900);
+  --syslens-bg-secondary: var(--syslens-slate-950);
+  --syslens-bg-card: var(--syslens-slate-800);
+  --syslens-bg-hover: var(--syslens-slate-700);
+
+  --syslens-text-primary: var(--syslens-slate-200);
+  --syslens-text-secondary: var(--syslens-slate-400);
+  --syslens-text-inverse: var(--syslens-slate-900);
+
+  --syslens-border-default: var(--syslens-slate-700);
+  --syslens-border-subtle: var(--syslens-slate-800);
+
+  --syslens-action-primary: var(--syslens-electric-blue);
+  --syslens-action-primary-hover: #60A5FA;
+  --syslens-action-secondary: var(--syslens-cyber-purple);
+  --syslens-action-secondary-hover: #A78BFA;
+
+  /* Gradients */
+  --syslens-gradient-primary: linear-gradient(135deg, var(--syslens-electric-blue) 0%, var(--syslens-cyber-purple) 100%);
+  --syslens-gradient-glow: linear-gradient(135deg, rgba(59, 130, 246, 0.3) 0%, rgba(139, 92, 246, 0.3) 100%);
+
+  /* Shadows */
+  --syslens-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.5);
+  --syslens-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
+  --syslens-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
+  --syslens-shadow-glow: 0 0 20px rgba(59, 130, 246, 0.3);
+
+  /* Spacing */
+  --syslens-space-xs: 0.25rem;
+  --syslens-space-sm: 0.5rem;
+  --syslens-space-md: 1rem;
+  --syslens-space-lg: 1.5rem;
+  --syslens-space-xl: 2rem;
+  --syslens-space-2xl: 3rem;
+
+  /* Border Radius */
+  --syslens-radius-sm: 0.25rem;
+  --syslens-radius-md: 0.5rem;
+  --syslens-radius-lg: 0.75rem;
+  --syslens-radius-xl: 1rem;
+  --syslens-radius-full: 9999px;
+
+  /* Transitions */
+  --syslens-transition-fast: 150ms ease-in-out;
+  --syslens-transition-normal: 250ms ease-in-out;
+  --syslens-transition-slow: 350ms ease-in-out;
+}
+
+/* Dark theme (default) */
+body {
+  background-color: var(--syslens-bg-primary);
+  color: var(--syslens-text-primary);
+}
+
+/* Utility Classes */
+.syslens-bg-primary { background-color: var(--syslens-bg-primary); }
+.syslens-bg-secondary { background-color: var(--syslens-bg-secondary); }
+.syslens-bg-card { background-color: var(--syslens-bg-card); }
+
+.syslens-text-primary { color: var(--syslens-text-primary); }
+.syslens-text-secondary { color: var(--syslens-text-secondary); }
+
+.syslens-border { border: 1px solid var(--syslens-border-default); }
+.syslens-border-subtle { border: 1px solid var(--syslens-border-subtle); }
+
+.syslens-gradient-primary { background: var(--syslens-gradient-primary); }
+.syslens-shadow-glow { box-shadow: var(--syslens-shadow-glow); }

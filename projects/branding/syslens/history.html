@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Syslens Brand - Version History</title>
+  <link rel="stylesheet" href="v1/assets/colors.css">
+  <link rel="stylesheet" href="v1/assets/fonts.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: var(--syslens-bg-primary);
+      color: var(--syslens-text-primary);
+      padding: 2rem;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    header {
+      margin-bottom: 3rem;
+      padding-bottom: 2rem;
+      border-bottom: 2px solid var(--syslens-border-default);
+    }
+
+    .version-card {
+      background: var(--syslens-bg-card);
+      border: 1px solid var(--syslens-border-subtle);
+      border-radius: var(--syslens-radius-lg);
+      padding: 2rem;
+      margin-bottom: 2rem;
+    }
+
+    .version-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--syslens-border-default);
+    }
+
+    .version-badge {
+      display: inline-block;
+      padding: 0.5rem 1rem;
+      background: var(--syslens-gradient-primary);
+      color: white;
+      border-radius: var(--syslens-radius-full);
+      font-weight: var(--syslens-weight-semibold);
+      font-size: var(--syslens-text-sm);
+    }
+
+    .version-date {
+      color: var(--syslens-text-secondary);
+      font-size: var(--syslens-text-sm);
+    }
+
+    .logo-showcase {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1.5rem;
+      margin-top: 1.5rem;
+    }
+
+    .logo-preview {
+      background: var(--syslens-bg-secondary);
+      padding: 1.5rem;
+      border-radius: var(--syslens-radius-md);
+      text-align: center;
+    }
+
+    .logo-preview img {
+      margin-bottom: 0.5rem;
+    }
+
+    .logo-label {
+      font-size: var(--syslens-text-xs);
+      color: var(--syslens-text-secondary);
+      text-transform: uppercase;
+      letter-spacing: var(--syslens-tracking-wide);
+    }
+
+    .changes-list {
+      list-style: none;
+      margin-top: 1rem;
+    }
+
+    .changes-list li {
+      padding: 0.5rem 0;
+      padding-left: 1.5rem;
+      position: relative;
+      color: var(--syslens-text-secondary);
+      line-height: 1.6;
+    }
+
+    .changes-list li::before {
+      content: '→';
+      position: absolute;
+      left: 0;
+      color: var(--syslens-electric-blue);
+    }
+
+    .links {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    .link-btn {
+      padding: 0.5rem 1rem;
+      background: var(--syslens-action-primary);
+      color: white;
+      text-decoration: none;
+      border-radius: var(--syslens-radius-md);
+      font-size: var(--syslens-text-sm);
+      font-weight: var(--syslens-weight-medium);
+      transition: background var(--syslens-transition-fast);
+    }
+
+    .link-btn:hover {
+      background: var(--syslens-action-primary-hover);
+    }
+
+    .link-btn.secondary {
+      background: transparent;
+      border: 1px solid var(--syslens-action-primary);
+      color: var(--syslens-action-primary);
+    }
+
+    .link-btn.secondary:hover {
+      background: var(--syslens-action-primary);
+      color: white;
+    }
+
+    .status-current {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      background: rgba(16, 185, 129, 0.2);
+      color: var(--syslens-success-green);
+      border: 1px solid var(--syslens-success-green);
+      border-radius: var(--syslens-radius-full);
+      font-size: var(--syslens-text-xs);
+      font-weight: var(--syslens-weight-medium);
+      text-transform: uppercase;
+      letter-spacing: var(--syslens-tracking-wide);
+      margin-left: 1rem;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1 style="margin-bottom: 0.5rem;">Syslens Brand History</h1>
+    <p style="color: var(--syslens-text-secondary); font-size: var(--syslens-text-lg);">
+      Complete version history of brand identity iterations
+    </p>
+  </header>
+
+  <!-- Version 1 -->
+  <div class="version-card">
+    <div class="version-header">
+      <div>
+        <span class="version-badge">Version 1.0</span>
+        <span class="status-current">Current</span>
+      </div>
+      <span class="version-date">December 2025</span>
+    </div>
+
+    <h2 style="margin-bottom: 1rem;">Initial Brand Identity</h2>
+    <p style="color: var(--syslens-text-secondary); line-height: 1.6; margin-bottom: 1.5rem;">
+      First complete brand identity for Syslens, establishing the visual language for a professional
+      system monitoring desktop application. Features lens metaphor combined with real-time graph visualization.
+    </p>
+
+    <h3 style="margin-bottom: 1rem; font-size: var(--syslens-text-lg);">Logo Variations</h3>
+    <div class="logo-showcase">
+      <div class="logo-preview">
+        <img src="v1/assets/logo-icon.svg" alt="Version 1 Icon" width="100" height="100">
+        <div class="logo-label">Icon</div>
+      </div>
+      <div class="logo-preview">
+        <img src="v1/assets/logo-full.svg" alt="Version 1 Full Logo" width="200" height="60">
+        <div class="logo-label">Full Logo</div>
+      </div>
+      <div class="logo-preview">
+        <img src="v1/assets/favicon.svg" alt="Version 1 Favicon" width="48" height="48">
+        <div class="logo-label">Favicon</div>
+      </div>
+    </div>
+
+    <h3 style="margin-top: 2rem; margin-bottom: 1rem; font-size: var(--syslens-text-lg);">Key Features</h3>
+    <ul class="changes-list">
+      <li>Circular lens icon with embedded system graph visualization</li>
+      <li>Blue-to-purple gradient representing dynamic, live data</li>
+      <li>Dark theme color system optimized for extended viewing</li>
+      <li>Inter font for UI, JetBrains Mono for data display</li>
+      <li>50+ color variables including data visualization palette</li>
+      <li>Complete typography scale with monospace for metrics</li>
+      <li>Comprehensive style guide with component examples</li>
+      <li>Example landing page demonstrating brand application</li>
+    </ul>
+
+    <h3 style="margin-top: 2rem; margin-bottom: 1rem; font-size: var(--syslens-text-lg);">Color Palette</h3>
+    <div style="display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 1rem;">
+      <div style="display: flex; align-items: center; gap: 0.5rem;">
+        <div style="width: 40px; height: 40px; background: #3B82F6; border-radius: var(--syslens-radius-md);"></div>
+        <span style="font-family: var(--syslens-font-mono); font-size: var(--syslens-text-sm); color: var(--syslens-text-secondary);">Electric Blue</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 0.5rem;">
+        <div style="width: 40px; height: 40px; background: #8B5CF6; border-radius: var(--syslens-radius-md);"></div>
+        <span style="font-family: var(--syslens-font-mono); font-size: var(--syslens-text-sm); color: var(--syslens-text-secondary);">Cyber Purple</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 0.5rem;">
+        <div style="width: 40px; height: 40px; background: #10B981; border-radius: var(--syslens-radius-md);"></div>
+        <span style="font-family: var(--syslens-font-mono); font-size: var(--syslens-text-sm); color: var(--syslens-text-secondary);">Success Green</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 0.5rem;">
+        <div style="width: 40px; height: 40px; background: #06B6D4; border-radius: var(--syslens-radius-md);"></div>
+        <span style="font-family: var(--syslens-font-mono); font-size: var(--syslens-text-sm); color: var(--syslens-text-secondary);">Info Cyan</span>
+      </div>
+    </div>
+
+    <h3 style="margin-top: 2rem; margin-bottom: 1rem; font-size: var(--syslens-text-lg);">Design Rationale</h3>
+    <ul class="changes-list">
+      <li><strong>Name:</strong> "Syslens" chosen for clarity, memorability, and available domains (.io, .app, .dev)</li>
+      <li><strong>Lens Metaphor:</strong> Represents clarity, focus, and viewing system details</li>
+      <li><strong>Graph Integration:</strong> Embedded charts show real-time monitoring purpose</li>
+      <li><strong>Dark Theme:</strong> Reduces eye strain during extended monitoring sessions</li>
+      <li><strong>Gradient Usage:</strong> Suggests dynamic, live data flow</li>
+      <li><strong>Professional Palette:</strong> Technical without being cold, approachable without being playful</li>
+      <li><strong>Monospace Typography:</strong> Essential for numeric data alignment and readability</li>
+    </ul>
+
+    <div class="links">
+      <a href="v1/index.html" class="link-btn">View Assets</a>
+      <a href="v1/styleguide.html" class="link-btn">Style Guide</a>
+      <a href="v1/example-site.html" class="link-btn secondary">Example Site</a>
+      <a href="v1/README.md" class="link-btn secondary">Version Notes</a>
+    </div>
+  </div>
+
+  <!-- Placeholder for future versions -->
+  <div style="text-align: center; padding: 3rem; background: var(--syslens-bg-card); border-radius: var(--syslens-radius-lg); border: 2px dashed var(--syslens-border-default);">
+    <h3 style="margin-bottom: 0.5rem; color: var(--syslens-text-secondary);">Future Versions</h3>
+    <p style="color: var(--syslens-text-secondary); font-size: var(--syslens-text-sm);">
+      Brand iterations will appear here as the identity evolves
+    </p>
+  </div>
+
+  <footer style="text-align: center; margin-top: 4rem; padding-top: 2rem; border-top: 1px solid var(--syslens-border-default); color: var(--syslens-text-secondary);">
+    <p>&copy; 2025 Syslens - Brand version history</p>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,178 @@
+/**
+ * Syslens Typography System
+ * Font definitions and type scale
+ */
+
+:root {
+  /* Font Families */
+  --syslens-font-display: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --syslens-font-body: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --syslens-font-mono: "JetBrains Mono", "Consolas", "Monaco", "Courier New", monospace;
+
+  /* Font Weights */
+  --syslens-weight-regular: 400;
+  --syslens-weight-medium: 500;
+  --syslens-weight-semibold: 600;
+  --syslens-weight-bold: 700;
+
+  /* Font Sizes */
+  --syslens-text-xs: 0.75rem;      /* 12px */
+  --syslens-text-sm: 0.875rem;     /* 14px */
+  --syslens-text-base: 1rem;       /* 16px */
+  --syslens-text-lg: 1.125rem;     /* 18px */
+  --syslens-text-xl: 1.25rem;      /* 20px */
+  --syslens-text-2xl: 1.5rem;      /* 24px */
+  --syslens-text-3xl: 1.875rem;    /* 30px */
+  --syslens-text-4xl: 2.25rem;     /* 36px */
+  --syslens-text-5xl: 3rem;        /* 48px */
+
+  /* Line Heights */
+  --syslens-leading-tight: 1.25;
+  --syslens-leading-snug: 1.375;
+  --syslens-leading-normal: 1.5;
+  --syslens-leading-relaxed: 1.625;
+  --syslens-leading-loose: 2;
+
+  /* Letter Spacing */
+  --syslens-tracking-tight: -0.02em;
+  --syslens-tracking-normal: 0em;
+  --syslens-tracking-wide: 0.05em;
+}
+
+/* Base Typography */
+body {
+  font-family: var(--syslens-font-body);
+  font-size: var(--syslens-text-base);
+  font-weight: var(--syslens-weight-regular);
+  line-height: var(--syslens-leading-normal);
+  letter-spacing: var(--syslens-tracking-normal);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Headings */
+h1, .syslens-h1 {
+  font-family: var(--syslens-font-display);
+  font-size: var(--syslens-text-4xl);
+  font-weight: var(--syslens-weight-bold);
+  line-height: var(--syslens-leading-tight);
+  letter-spacing: var(--syslens-tracking-tight);
+  color: var(--syslens-text-primary);
+}
+
+h2, .syslens-h2 {
+  font-family: var(--syslens-font-display);
+  font-size: var(--syslens-text-3xl);
+  font-weight: var(--syslens-weight-bold);
+  line-height: var(--syslens-leading-tight);
+  letter-spacing: var(--syslens-tracking-tight);
+  color: var(--syslens-text-primary);
+}
+
+h3, .syslens-h3 {
+  font-family: var(--syslens-font-display);
+  font-size: var(--syslens-text-2xl);
+  font-weight: var(--syslens-weight-semibold);
+  line-height: var(--syslens-leading-snug);
+  letter-spacing: var(--syslens-tracking-tight);
+  color: var(--syslens-text-primary);
+}
+
+h4, .syslens-h4 {
+  font-family: var(--syslens-font-display);
+  font-size: var(--syslens-text-xl);
+  font-weight: var(--syslens-weight-semibold);
+  line-height: var(--syslens-leading-snug);
+  color: var(--syslens-text-primary);
+}
+
+h5, .syslens-h5 {
+  font-family: var(--syslens-font-display);
+  font-size: var(--syslens-text-lg);
+  font-weight: var(--syslens-weight-semibold);
+  line-height: var(--syslens-leading-normal);
+  color: var(--syslens-text-primary);
+}
+
+h6, .syslens-h6 {
+  font-family: var(--syslens-font-display);
+  font-size: var(--syslens-text-base);
+  font-weight: var(--syslens-weight-semibold);
+  line-height: var(--syslens-leading-normal);
+  letter-spacing: var(--syslens-tracking-wide);
+  text-transform: uppercase;
+  color: var(--syslens-text-secondary);
+}
+
+/* Body Text */
+p, .syslens-body {
+  font-size: var(--syslens-text-base);
+  line-height: var(--syslens-leading-relaxed);
+  color: var(--syslens-text-primary);
+}
+
+.syslens-body-sm {
+  font-size: var(--syslens-text-sm);
+  line-height: var(--syslens-leading-normal);
+}
+
+.syslens-body-lg {
+  font-size: var(--syslens-text-lg);
+  line-height: var(--syslens-leading-relaxed);
+}
+
+/* Data/Monospace */
+.syslens-mono, code, pre {
+  font-family: var(--syslens-font-mono);
+  font-size: var(--syslens-text-sm);
+  font-weight: var(--syslens-weight-regular);
+}
+
+.syslens-metric {
+  font-family: var(--syslens-font-mono);
+  font-size: var(--syslens-text-2xl);
+  font-weight: var(--syslens-weight-medium);
+  line-height: var(--syslens-leading-tight);
+  color: var(--syslens-text-primary);
+}
+
+.syslens-data-value {
+  font-family: var(--syslens-font-mono);
+  font-size: var(--syslens-text-base);
+  font-weight: var(--syslens-weight-medium);
+  color: var(--syslens-text-primary);
+}
+
+/* Labels and UI Text */
+.syslens-label {
+  font-size: var(--syslens-text-sm);
+  font-weight: var(--syslens-weight-medium);
+  letter-spacing: var(--syslens-tracking-wide);
+  text-transform: uppercase;
+  color: var(--syslens-text-secondary);
+}
+
+.syslens-caption {
+  font-size: var(--syslens-text-xs);
+  font-weight: var(--syslens-weight-regular);
+  line-height: var(--syslens-leading-normal);
+  color: var(--syslens-text-secondary);
+}
+
+/* Links */
+a, .syslens-link {
+  color: var(--syslens-action-primary);
+  text-decoration: none;
+  transition: color var(--syslens-transition-fast);
+}
+
+a:hover, .syslens-link:hover {
+  color: var(--syslens-action-primary-hover);
+  text-decoration: underline;
+}
+
+/* Font Import for Inter */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+/* Font Import for JetBrains Mono */
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap');
