@@ -28,7 +28,10 @@
       "Bash(./bin/*:*)",
       "Bash(./bin/build-ui:*)",
       "Bash(./bin/build-backend:*)",
-      "Skill(ct)"
+      "Skill(ct)",
+      "Bash(source C:/dev/syslens/etc/.env)",
+      "Bash(./bin/setup-rust:*)",
+      "Bash(rmdir:*)"
     ],
     "deny": []
   }

@@ -4,44 +4,92 @@ set -euo pipefail
 # Check if Rust is already installed
 if command -v cargo &> /dev/null; then
     echo "Rust is already installed: $(cargo --version)"
-    exit 0
 fi
-
-echo "Rust/Cargo not found. Installing..."
-echo ""
 
 # Detect OS and install accordingly
 if [[ "$OSTYPE" == "msys" || "$OSTYPE" == "mingw"* || "$OSTYPE" == "cygwin" ]]; then
     # Windows (Git Bash, MSYS2, Cygwin)
-    if command -v winget &> /dev/null; then
-        echo "Installing via winget..."
-        winget install Rustlang.Rustup --accept-package-agreements --accept-source-agreements
-    else
-        echo "winget not found. Please install Rust manually:"
-        echo "  https://rustup.rs"
+
+    # Check for Visual Studio (any version with C++ tools)
+    VS_PATH=""
+    for version in 18 17 16 2026 2022 2019; do
+        for edition in Professional Enterprise Community BuildTools; do
+            for base in "/c/Program Files/Microsoft Visual Studio" "/c/Program Files (x86)/Microsoft Visual Studio"; do
+                path="$base/$version/$edition"
+                if [[ -d "$path" ]]; then
+                    VS_PATH="$path"
+                    break 3
+                fi
+            done
+        done
+    done
+
+    if [[ -z "$VS_PATH" ]]; then
+        echo "Visual Studio Build Tools not found."
         echo ""
-        echo "Or run this in PowerShell:"
-        echo "  winget install Rustlang.Rustup"
-        exit 1
+        echo "Rust on Windows requires Visual Studio Build Tools with C++ workload."
+        echo ""
+        echo "Install via winget:"
+        echo "  winget install Microsoft.VisualStudio.2022.BuildTools"
+        echo ""
+        echo "Or download from:"
+        echo "  https://visualstudio.microsoft.com/visual-cpp-build-tools/"
+        echo ""
+        echo "During installation, select 'Desktop development with C++' workload."
+        echo ""
+
+        read -p "Would you like to install Build Tools now? (y/n) " -n 1 -r
+        echo
+        if [[ $REPLY =~ ^[Yy]$ ]]; then
+            if command -v winget &> /dev/null; then
+                echo "Installing Visual Studio Build Tools..."
+                winget install Microsoft.VisualStudio.2022.BuildTools --override "--wait --passive --add Microsoft.VisualStudio.Workload.VCTools --includeRecommended"
+            else
+                echo "winget not available. Please install manually."
+                exit 1
+            fi
+        else
+            echo "Please install Build Tools and run this script again."
+            exit 1
+        fi
+    else
+        echo "Visual Studio found at: $VS_PATH"
     fi
+
+    # Install Rust if not present
+    if ! command -v cargo &> /dev/null; then
+        echo ""
+        echo "Installing Rust..."
+        if command -v winget &> /dev/null; then
+            winget install Rustlang.Rustup --accept-package-agreements --accept-source-agreements
+        else
+            echo "winget not found. Please install Rust manually from https://rustup.rs"
+            exit 1
+        fi
+    fi
+
 elif [[ "$OSTYPE" == "darwin"* ]]; then
     # macOS
-    if command -v brew &> /dev/null; then
-        echo "Installing via Homebrew..."
-        brew install rustup-init
-        rustup-init -y
-    else
-        echo "Installing via rustup.rs..."
-        curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+    if ! command -v cargo &> /dev/null; then
+        if command -v brew &> /dev/null; then
+            echo "Installing via Homebrew..."
+            brew install rustup-init
+            rustup-init -y
+        else
+            echo "Installing via rustup.rs..."
+            curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+        fi
     fi
 else
     # Linux
-    echo "Installing via rustup.rs..."
-    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+    if ! command -v cargo &> /dev/null; then
+        echo "Installing via rustup.rs..."
+        curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+    fi
 fi
 
 echo ""
-echo "Rust installed successfully!"
+echo "Rust setup complete!"
 echo ""
 echo "IMPORTANT: Restart your terminal for PATH changes to take effect."
 echo "Then run: ./bin/setup"

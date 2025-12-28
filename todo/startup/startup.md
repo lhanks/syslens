@@ -29,6 +29,8 @@ Tech Stack: Tauri 2.0 (Rust) + Angular 21 + Tailwind CSS
 - [x] 3.4 Implement storage info collector (drives, partitions, volumes, S.M.A.R.T.)
 - [x] 3.5 Create Tauri commands for all collectors
 - [ ] 3.6 Add real-time metrics polling
+- [ ] 3.7 Enhance device information collection (manufacturer, model, serial, BIOS/UEFI for all devices)
+- [ ] 3.8 Add complete IP configuration data (ipconfig /all) for network connections
 
 ## 4. Frontend Implementation (Angular)
 
@@ -41,6 +43,9 @@ Tech Stack: Tauri 2.0 (Rust) + Angular 21 + Tailwind CSS
 - [x] 4.7 Implement Storage Info feature component
 - [ ] 4.8 Add real-time data refresh with signals
 - [x] 4.9 Create shared UI components (info cards, progress bars, copy buttons)
+- [ ] 4.10 Format numeric values to show 1 decimal place (avoid long digit strings)
+- [ ] 4.11 Add click-through from summary to detailed information views
+- [ ] 4.12 Implement progressive data loading (prioritize current tab, preload others)
 
 ## 5. Quality
 
@@ -66,8 +71,8 @@ Tech Stack: Tauri 2.0 (Rust) + Angular 21 + Tailwind CSS
 
 ## Progress
 
-- Total Tasks: 32
+- Total Tasks: 37
 - Completed: 20
-- Remaining: 12
+- Remaining: 17
 
 Last Updated: 2025-12-28
