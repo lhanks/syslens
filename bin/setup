@@ -1,0 +1,60 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+UI_DIR="$PROJECT_ROOT/projects/ui"
+BACKEND_DIR="$PROJECT_ROOT/projects/backend"
+
+echo "================================"
+echo "  Syslens Project Setup"
+echo "================================"
+echo ""
+
+# Step 1: Check/Install Rust
+echo "[1/4] Checking Rust installation..."
+if ! command -v cargo &> /dev/null; then
+    echo "Rust not found. Running setup-rust..."
+    "$SCRIPT_DIR/setup-rust"
+    echo ""
+    echo "Please restart your terminal and run ./bin/setup again."
+    exit 0
+fi
+echo "  ✓ Rust $(cargo --version | cut -d' ' -f2)"
+
+# Step 2: Install frontend dependencies
+echo ""
+echo "[2/4] Installing frontend dependencies..."
+cd "$UI_DIR"
+if [[ -d "node_modules" ]]; then
+    echo "  ✓ node_modules already exists"
+else
+    npm install
+    echo "  ✓ npm install complete"
+fi
+
+# Step 3: Install backend dependencies
+echo ""
+echo "[3/4] Installing backend dependencies..."
+cd "$BACKEND_DIR"
+cargo fetch
+echo "  ✓ cargo fetch complete"
+
+# Step 4: Verify builds
+echo ""
+echo "[4/4] Verifying builds..."
+cd "$PROJECT_ROOT"
+
+echo "  Building UI..."
+"$SCRIPT_DIR/build-ui" > /dev/null 2>&1 && echo "  ✓ UI build successful" || echo "  ✗ UI build failed"
+
+echo "  Building backend..."
+cargo build --manifest-path "$BACKEND_DIR/Cargo.toml" > /dev/null 2>&1 && echo "  ✓ Backend build successful" || echo "  ✗ Backend build failed (this is expected if Tauri prerequisites are missing)"
+
+echo ""
+echo "================================"
+echo "  Setup Complete!"
+echo "================================"
+echo ""
+echo "Run the app with: ./bin/run-app"
+echo ""

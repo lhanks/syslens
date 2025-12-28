@@ -25,7 +25,7 @@ impl NetworkCollector {
                 name: name.clone(),
                 description: name.clone(),
                 adapter_type: Self::detect_adapter_type(name),
-                mac_address: format_mac_address(data.mac_address().as_ref()),
+                mac_address: data.mac_address().to_string(),
                 status: if data.total_received() > 0 || data.total_transmitted() > 0 {
                     AdapterStatus::Up
                 } else {

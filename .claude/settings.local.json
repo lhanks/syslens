@@ -24,7 +24,11 @@
       "Read(*)",
       "Edit(*)",
       "Write(*)",
-      "Bash(\"/c/Users/lesli/.cargo/bin/cargo\" --version)"
+      "Bash(\"/c/Users/lesli/.cargo/bin/cargo\" --version)",
+      "Bash(./bin/*:*)",
+      "Bash(./bin/build-ui:*)",
+      "Bash(./bin/build-backend:*)",
+      "Skill(ct)"
     ],
     "deny": []
   }

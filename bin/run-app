@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+UI_DIR="$PROJECT_ROOT/projects/ui"
+BACKEND_DIR="$PROJECT_ROOT/projects/backend"
+
+# Check if Rust/Cargo is available
+if command -v cargo &> /dev/null; then
+    echo "Starting Syslens desktop app..."
+    cd "$BACKEND_DIR"
+    cargo tauri dev
+else
+    echo "Rust not installed. Starting UI in browser mode..."
+    echo "Open http://localhost:4200 in your browser"
+    echo ""
+    cd "$UI_DIR"
+    [[ ! -d "node_modules" ]] && npm install
+    npm start
+fi

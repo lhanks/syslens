@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+echo "Note: Syslens is a desktop application and does not use a traditional database."
+echo "This script is a placeholder for future local storage migrations if needed."
+echo ""
+echo "No migrations to run."

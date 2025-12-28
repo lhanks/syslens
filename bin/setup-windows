@@ -1,0 +1,173 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+echo "================================"
+echo "  Syslens Windows Dev Setup"
+echo "================================"
+echo ""
+
+# Find Visual Studio installation (prefer newest)
+find_vs() {
+    for version in 18 17 16; do
+        for edition in Professional Enterprise Community BuildTools; do
+            for base in "/c/Program Files/Microsoft Visual Studio" "/c/Program Files (x86)/Microsoft Visual Studio"; do
+                path="$base/$version/$edition"
+                if [[ -d "$path" ]]; then
+                    echo "$path"
+                    return 0
+                fi
+            done
+        done
+    done
+    return 1
+}
+
+# Check if C++ tools are installed in a VS path
+has_cpp_tools() {
+    local vs_path="$1"
+    if [[ -d "$vs_path/VC/Tools/MSVC" ]]; then
+        # Check if there's at least one version with link.exe
+        if find "$vs_path/VC/Tools/MSVC" -name "link.exe" -print -quit 2>/dev/null | grep -q .; then
+            return 0
+        fi
+    fi
+    return 1
+}
+
+# Get VS version number from path
+get_vs_version() {
+    local vs_path="$1"
+    if [[ "$vs_path" == *"/18/"* ]]; then echo "18"
+    elif [[ "$vs_path" == *"/17/"* ]]; then echo "17"
+    elif [[ "$vs_path" == *"/16/"* ]]; then echo "16"
+    else echo "unknown"
+    fi
+}
+
+echo "[1/4] Checking Visual Studio..."
+
+VS_PATH=$(find_vs || echo "")
+
+if [[ -z "$VS_PATH" ]]; then
+    echo "  Visual Studio not found. Installing Build Tools..."
+    winget install Microsoft.VisualStudio.2022.BuildTools \
+        --override "--wait --passive --add Microsoft.VisualStudio.Workload.VCTools --includeRecommended" \
+        --accept-package-agreements --accept-source-agreements
+    echo "  ✓ Build Tools installed"
+    VS_PATH=$(find_vs || echo "")
+elif has_cpp_tools "$VS_PATH"; then
+    VS_VERSION=$(get_vs_version "$VS_PATH")
+    echo "  ✓ Found VS $VS_VERSION with C++ tools at: $VS_PATH"
+else
+    VS_VERSION=$(get_vs_version "$VS_PATH")
+    echo "  Found VS $VS_VERSION at: $VS_PATH"
+    echo "  ✗ C++ tools NOT installed"
+    echo ""
+    echo "  Installing C++ workload..."
+
+    # Determine the correct product ID based on edition
+    if [[ "$VS_PATH" == *"Professional"* ]]; then
+        PRODUCT_ID="Microsoft.VisualStudio.Product.Professional"
+    elif [[ "$VS_PATH" == *"Enterprise"* ]]; then
+        PRODUCT_ID="Microsoft.VisualStudio.Product.Enterprise"
+    elif [[ "$VS_PATH" == *"Community"* ]]; then
+        PRODUCT_ID="Microsoft.VisualStudio.Product.Community"
+    else
+        PRODUCT_ID="Microsoft.VisualStudio.Product.BuildTools"
+    fi
+
+    # Map version number to year for winget
+    case "$VS_VERSION" in
+        18) VS_YEAR="2026" ;;
+        17) VS_YEAR="2022" ;;
+        16) VS_YEAR="2019" ;;
+        *) VS_YEAR="2022" ;;
+    esac
+
+    echo "  Running Visual Studio Installer to add C++ workload..."
+    echo "  This will open the Visual Studio Installer UI."
+    echo ""
+
+    # Use VS Installer to modify existing installation
+    VS_INSTALLER="/c/Program Files (x86)/Microsoft Visual Studio/Installer/vs_installer.exe"
+    if [[ -f "$VS_INSTALLER" ]]; then
+        "$VS_INSTALLER" modify --installPath "$(cygpath -w "$VS_PATH")" \
+            --add Microsoft.VisualStudio.Workload.VCTools \
+            --includeRecommended \
+            --passive
+        echo "  ✓ C++ workload installation started"
+        echo ""
+        echo "  Please wait for the installer to complete, then run this script again."
+        exit 0
+    else
+        echo "  ✗ VS Installer not found. Please manually add C++ workload:"
+        echo "    1. Open Visual Studio Installer"
+        echo "    2. Click 'Modify' on your VS installation"
+        echo "    3. Select 'Desktop development with C++'"
+        echo "    4. Click 'Modify' to install"
+        exit 1
+    fi
+fi
+
+# Step 2: Check/Install Rust
+echo ""
+echo "[2/4] Checking Rust..."
+
+# Source cargo env if available
+[[ -f "$HOME/.cargo/env" ]] && source "$HOME/.cargo/env"
+
+if ! command -v cargo &> /dev/null; then
+    echo "  Installing Rust..."
+    winget install Rustlang.Rustup --accept-package-agreements --accept-source-agreements
+    echo "  ✓ Rust installed"
+    echo ""
+    echo "  IMPORTANT: Restart your terminal, then run: ./bin/setup-windows"
+    exit 0
+else
+    echo "  ✓ $(cargo --version)"
+fi
+
+# Step 3: Check/Install Tauri CLI
+echo ""
+echo "[3/4] Checking Tauri CLI..."
+
+if ! command -v cargo-tauri &> /dev/null; then
+    echo "  Installing Tauri CLI..."
+    cargo install tauri-cli
+    echo "  ✓ Tauri CLI installed"
+else
+    TAURI_VERSION=$(cargo tauri --version 2>/dev/null || echo "unknown")
+    echo "  ✓ $TAURI_VERSION"
+fi
+
+# Step 4: Run project setup
+echo ""
+echo "[4/4] Setting up project..."
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/../etc/.env" 2>/dev/null || true
+
+# Install npm dependencies
+echo "  Installing frontend dependencies..."
+cd "$SCRIPT_DIR/../projects/ui"
+if [[ ! -d "node_modules" ]]; then
+    npm install > /dev/null 2>&1
+fi
+echo "  ✓ npm dependencies installed"
+
+# Build backend
+echo "  Building backend..."
+cd "$SCRIPT_DIR/../projects/backend"
+if cargo build 2>/dev/null; then
+    echo "  ✓ Backend build successful"
+else
+    echo "  ✗ Backend build failed - check errors above"
+fi
+
+echo ""
+echo "================================"
+echo "  Setup Complete!"
+echo "================================"
+echo ""
+echo "Run the app: ./bin/run-app"
+echo ""

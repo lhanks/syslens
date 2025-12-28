@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Check if Rust is already installed
+if command -v cargo &> /dev/null; then
+    echo "Rust is already installed: $(cargo --version)"
+    exit 0
+fi
+
+echo "Rust/Cargo not found. Installing..."
+echo ""
+
+# Detect OS and install accordingly
+if [[ "$OSTYPE" == "msys" || "$OSTYPE" == "mingw"* || "$OSTYPE" == "cygwin" ]]; then
+    # Windows (Git Bash, MSYS2, Cygwin)
+    if command -v winget &> /dev/null; then
+        echo "Installing via winget..."
+        winget install Rustlang.Rustup --accept-package-agreements --accept-source-agreements
+    else
+        echo "winget not found. Please install Rust manually:"
+        echo "  https://rustup.rs"
+        echo ""
+        echo "Or run this in PowerShell:"
+        echo "  winget install Rustlang.Rustup"
+        exit 1
+    fi
+elif [[ "$OSTYPE" == "darwin"* ]]; then
+    # macOS
+    if command -v brew &> /dev/null; then
+        echo "Installing via Homebrew..."
+        brew install rustup-init
+        rustup-init -y
+    else
+        echo "Installing via rustup.rs..."
+        curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+    fi
+else
+    # Linux
+    echo "Installing via rustup.rs..."
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+fi
+
+echo ""
+echo "Rust installed successfully!"
+echo ""
+echo "IMPORTANT: Restart your terminal for PATH changes to take effect."
+echo "Then run: ./bin/setup"
