@@ -569,8 +569,201 @@ impl HardwareCollector {
     }
 
     /// Get connected monitors
+    #[cfg(target_os = "windows")]
     pub fn get_monitors() -> Vec<Monitor> {
-        // Would need platform-specific implementation
+        use wmi::{COMLibrary, WMIConnection};
+
+        #[derive(serde::Deserialize, Debug)]
+        #[serde(rename = "Win32_DesktopMonitor")]
+        struct Win32DesktopMonitor {
+            #[serde(rename = "DeviceID")]
+            device_id: Option<String>,
+            #[serde(rename = "Name")]
+            name: Option<String>,
+            #[serde(rename = "MonitorManufacturer")]
+            manufacturer: Option<String>,
+            #[serde(rename = "ScreenWidth")]
+            screen_width: Option<u32>,
+            #[serde(rename = "ScreenHeight")]
+            screen_height: Option<u32>,
+        }
+
+        #[derive(serde::Deserialize, Debug)]
+        #[serde(rename = "Win32_VideoController")]
+        struct Win32VideoController {
+            #[serde(rename = "CurrentHorizontalResolution")]
+            current_horizontal_resolution: Option<u32>,
+            #[serde(rename = "CurrentVerticalResolution")]
+            current_vertical_resolution: Option<u32>,
+            #[serde(rename = "CurrentRefreshRate")]
+            current_refresh_rate: Option<u32>,
+            #[serde(rename = "VideoModeDescription")]
+            video_mode_description: Option<String>,
+        }
+
+        let mut monitors = Vec::new();
+
+        if let Some(com) = COMLibrary::new().ok() {
+            if let Ok(wmi_con) = WMIConnection::new(com) {
+                // Get video controller info for refresh rate
+                let video_info: Result<Vec<Win32VideoController>, _> = wmi_con.query();
+                let (refresh_rate, resolution) = if let Ok(controllers) = &video_info {
+                    if let Some(controller) = controllers.first() {
+                        let rate = controller.current_refresh_rate.unwrap_or(60);
+                        let res = match (controller.current_horizontal_resolution, controller.current_vertical_resolution) {
+                            (Some(w), Some(h)) => format!("{}x{}", w, h),
+                            _ => controller.video_mode_description.clone().unwrap_or_else(|| "Unknown".to_string()),
+                        };
+                        (rate, res)
+                    } else {
+                        (60, "Unknown".to_string())
+                    }
+                } else {
+                    (60, "Unknown".to_string())
+                };
+
+                // Get monitor info
+                let monitor_info: Result<Vec<Win32DesktopMonitor>, _> = wmi_con.query();
+                if let Ok(wmi_monitors) = monitor_info {
+                    for (idx, mon) in wmi_monitors.into_iter().enumerate() {
+                        let name = mon.name.unwrap_or_else(|| format!("Display {}", idx + 1));
+
+                        // Try to get resolution from monitor, fall back to video controller
+                        let mon_resolution = match (mon.screen_width, mon.screen_height) {
+                            (Some(w), Some(h)) if w > 0 && h > 0 => format!("{}x{}", w, h),
+                            _ => resolution.clone(),
+                        };
+
+                        monitors.push(Monitor {
+                            id: mon.device_id.unwrap_or_else(|| format!("monitor-{}", idx)),
+                            name,
+                            manufacturer: mon.manufacturer,
+                            resolution: mon_resolution,
+                            size_inches: None, // Would need EDID parsing
+                            connection: "Unknown".to_string(), // WMI doesn't provide this directly
+                            hdr_support: false, // Would need more advanced API
+                            refresh_rate_hz: refresh_rate,
+                        });
+                    }
+                }
+
+                // If no monitors from WMI, try to create from video controller
+                if monitors.is_empty() {
+                    if let Ok(controllers) = video_info {
+                        for (idx, controller) in controllers.into_iter().enumerate() {
+                            let res = match (controller.current_horizontal_resolution, controller.current_vertical_resolution) {
+                                (Some(w), Some(h)) => format!("{}x{}", w, h),
+                                _ => controller.video_mode_description.unwrap_or_else(|| "Unknown".to_string()),
+                            };
+
+                            monitors.push(Monitor {
+                                id: format!("display-{}", idx),
+                                name: format!("Display {}", idx + 1),
+                                manufacturer: None,
+                                resolution: res,
+                                size_inches: None,
+                                connection: "Unknown".to_string(),
+                                hdr_support: false,
+                                refresh_rate_hz: controller.current_refresh_rate.unwrap_or(60),
+                            });
+                        }
+                    }
+                }
+            }
+        }
+
+        // Fallback: Use EnumDisplayMonitors if WMI returns nothing
+        if monitors.is_empty() {
+            monitors = Self::get_monitors_from_gdi();
+        }
+
+        monitors
+    }
+
+    #[cfg(target_os = "windows")]
+    fn get_monitors_from_gdi() -> Vec<Monitor> {
+        use windows::Win32::Graphics::Gdi::{
+            EnumDisplayDevicesW, EnumDisplaySettingsW, DEVMODEW, DISPLAY_DEVICEW,
+            ENUM_CURRENT_SETTINGS,
+        };
+
+        const DISPLAY_DEVICE_ACTIVE: u32 = 0x00000001;
+
+        let mut monitors = Vec::new();
+        let mut device_idx = 0u32;
+
+        loop {
+            let mut display_device = DISPLAY_DEVICEW {
+                cb: std::mem::size_of::<DISPLAY_DEVICEW>() as u32,
+                ..Default::default()
+            };
+
+            let result = unsafe {
+                EnumDisplayDevicesW(None, device_idx, &mut display_device, 0)
+            };
+
+            if !result.as_bool() {
+                break;
+            }
+
+            // Check if this is an active display
+            if (display_device.StateFlags & DISPLAY_DEVICE_ACTIVE) != 0 {
+                let device_name: String = display_device.DeviceName
+                    .iter()
+                    .take_while(|&&c| c != 0)
+                    .map(|&c| c as u8 as char)
+                    .collect();
+
+                let device_string: String = display_device.DeviceString
+                    .iter()
+                    .take_while(|&&c| c != 0)
+                    .map(|&c| c as u8 as char)
+                    .collect();
+
+                // Get display settings
+                let mut dev_mode = DEVMODEW {
+                    dmSize: std::mem::size_of::<DEVMODEW>() as u16,
+                    ..Default::default()
+                };
+
+                let settings_result = unsafe {
+                    EnumDisplaySettingsW(
+                        windows::core::PCWSTR(display_device.DeviceName.as_ptr()),
+                        ENUM_CURRENT_SETTINGS,
+                        &mut dev_mode,
+                    )
+                };
+
+                let (resolution, refresh_rate) = if settings_result.as_bool() {
+                    (
+                        format!("{}x{}", dev_mode.dmPelsWidth, dev_mode.dmPelsHeight),
+                        dev_mode.dmDisplayFrequency,
+                    )
+                } else {
+                    ("Unknown".to_string(), 60)
+                };
+
+                monitors.push(Monitor {
+                    id: device_name.clone(),
+                    name: if device_string.is_empty() { device_name } else { device_string },
+                    manufacturer: None,
+                    resolution,
+                    size_inches: None,
+                    connection: "Unknown".to_string(),
+                    hdr_support: false,
+                    refresh_rate_hz: refresh_rate,
+                });
+            }
+
+            device_idx += 1;
+        }
+
+        monitors
+    }
+
+    #[cfg(not(target_os = "windows"))]
+    pub fn get_monitors() -> Vec<Monitor> {
+        // Linux/macOS implementation would go here
         Vec::new()
     }
 

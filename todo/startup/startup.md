@@ -9,7 +9,7 @@ Tech Stack: Tauri 2.0 (Rust) + Angular 21 + Tailwind CSS
 ** IMPORTANT ** Process the tasks below (in this section).  Expand them if needed and put them in the appropriate sections below.
 ** IMPORTANT ** Do not remove this section. Just clear out the tasks once processed.
 
-- Displays are not being captured. We need to get the display information working.
+- Add a status bar to show the current task being executed. Mainly interested in feedback while the app is capturing data.
 - Keep track of historical data. Add network traffic graph.
 - Add a process list (like task manager) tab.
 - speed up the startup time when running the application.
@@ -40,6 +40,7 @@ Tech Stack: Tauri 2.0 (Rust) + Angular 21 + Tailwind CSS
 - [x] 3.5 Create Tauri commands for all collectors
 - [ ] 3.6 Add real-time metrics polling
 - [x] 3.14 Fix memory speed to show XMP/rated speed instead of JEDEC base speed
+- [x] 3.15 Implement Windows monitor/display information collector (WMI + GDI fallback)
 - [x] 3.7 Enhance device information collection (manufacturer, model, serial, BIOS/UEFI for all devices)
 - [x] 3.8 Add complete IP configuration data (ipconfig /all) for network connections
 - [x] 3.9 Add GPU vendor information (manufacturer, model, driver version, driver link)
@@ -94,8 +95,8 @@ Tech Stack: Tauri 2.0 (Rust) + Angular 21 + Tailwind CSS
 
 ## Progress
 
-- Total Tasks: 50
-- Completed: 38
+- Total Tasks: 51
+- Completed: 39
 - Remaining: 12
 
 Last Updated: 2025-12-28
