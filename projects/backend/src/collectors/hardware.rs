@@ -46,8 +46,8 @@ impl HardwareCollector {
         let mut sys = System::new();
         sys.refresh_cpu_all();
 
-        // Need to wait a bit and refresh again for accurate usage
-        std::thread::sleep(std::time::Duration::from_millis(200));
+        // Need to wait a bit and refresh again for accurate usage (50ms is sufficient)
+        std::thread::sleep(std::time::Duration::from_millis(50));
         sys.refresh_cpu_all();
 
         let cpus = sys.cpus();

@@ -207,9 +207,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private previousNetworkStats: Map<string, { bytesReceived: number; bytesSent: number; timestamp: number }> = new Map();
 
   ngOnInit(): void {
-    this.loadSystemInfo();
-    this.loadHardwareInfo();
-    this.startRealtimeUpdates();
+    this.loadInitialData();
   }
 
   ngOnDestroy(): void {
@@ -217,52 +215,42 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  private loadSystemInfo(): void {
-    this.systemService.getDeviceInfo()
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(info => {
-        this.deviceName = info.computerName;
-      });
+  private loadInitialData(): void {
+    // Parallelize ALL initial data fetches for faster startup
+    forkJoin({
+      deviceInfo: this.systemService.getDeviceInfo(),
+      osInfo: this.systemService.getOsInfo(),
+      cpuInfo: this.hardwareService.getCpuInfo(),
+      memoryInfo: this.hardwareService.getMemoryInfo(),
+      volumes: this.storageService.getVolumes(),
+      adapters: this.networkService.getNetworkAdapters()
+    }).pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(({ deviceInfo, osInfo, cpuInfo, memoryInfo, volumes, adapters }) => {
+      // System info
+      this.deviceName = deviceInfo.computerName;
+      this.osName = osInfo.name;
+      this.osVersion = osInfo.version;
 
-    this.systemService.getOsInfo()
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(info => {
-        this.osName = info.name;
-        this.osVersion = info.version;
-      });
-  }
+      // Hardware info
+      this.cpuName = cpuInfo.name;
+      this.memoryTotalBytes = memoryInfo.totalBytes;
 
-  private loadHardwareInfo(): void {
-    this.hardwareService.getCpuInfo()
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(info => {
-        this.cpuName = info.name;
-      });
+      // Storage - get system volume
+      const systemVolume = volumes.find(v => v.isSystem) || volumes[0];
+      if (systemVolume) {
+        this.diskTotalBytes = systemVolume.totalBytes;
+        this.diskUsedBytes = systemVolume.usedBytes;
+        this.diskUsage = systemVolume.percentUsed;
+      }
 
-    this.hardwareService.getMemoryInfo()
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(info => {
-        this.memoryTotalBytes = info.totalBytes;
-      });
+      // Network adapters
+      this.activeAdapters = adapters.filter(a => a.status === 'Up');
+      this.networkAdapterCount = this.activeAdapters.length;
 
-    this.storageService.getVolumes()
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(volumes => {
-        // Get the system volume (usually C:)
-        const systemVolume = volumes.find(v => v.isSystem) || volumes[0];
-        if (systemVolume) {
-          this.diskTotalBytes = systemVolume.totalBytes;
-          this.diskUsedBytes = systemVolume.usedBytes;
-          this.diskUsage = systemVolume.percentUsed;
-        }
-      });
-
-    this.networkService.getNetworkAdapters()
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(adapters => {
-        this.activeAdapters = adapters.filter(a => a.status === 'Up');
-        this.networkAdapterCount = this.activeAdapters.length;
-      });
+      // Start polling AFTER initial data is loaded (deferred startup)
+      this.startRealtimeUpdates();
+    });
   }
 
   private startRealtimeUpdates(): void {
