@@ -143,7 +143,14 @@ impl HardwareCollector {
                     total_bytes += capacity;
 
                     if speed_mhz == 0 {
-                        speed_mhz = module.speed.unwrap_or(0);
+                        // Try to get the rated speed from WMI first
+                        let wmi_speed = module.speed.unwrap_or(0);
+                        // Also try to extract rated speed from part number (e.g., "6000" from "FLBD516G6000HC38GBKT")
+                        let part_speed = module.part_number.as_ref()
+                            .map(|pn| Self::extract_speed_from_part_number(pn))
+                            .unwrap_or(0);
+                        // Use the higher of the two (part number often has XMP speed, WMI has JEDEC speed)
+                        speed_mhz = wmi_speed.max(part_speed);
                     }
 
                     if memory_type == "Unknown" {
@@ -152,6 +159,16 @@ impl HardwareCollector {
                             .unwrap_or_else(|| "Unknown".to_string());
                     }
 
+                    let part_number = module.part_number
+                        .unwrap_or_else(|| "Unknown".to_string())
+                        .trim()
+                        .to_string();
+
+                    // Get rated speed - prefer part number extraction over WMI for XMP speeds
+                    let wmi_speed = module.speed.unwrap_or(0);
+                    let part_speed = Self::extract_speed_from_part_number(&part_number);
+                    let rated_speed = wmi_speed.max(part_speed);
+
                     modules.push(MemoryModule {
                         slot: module.device_locator.unwrap_or_else(|| "Unknown".to_string()),
                         capacity_bytes: capacity,
@@ -159,15 +176,12 @@ impl HardwareCollector {
                             .unwrap_or_else(|| "Unknown".to_string())
                             .trim()
                             .to_string(),
-                        part_number: module.part_number
-                            .unwrap_or_else(|| "Unknown".to_string())
-                            .trim()
-                            .to_string(),
+                        part_number,
                         serial_number: module.serial_number
                             .unwrap_or_else(|| "Unknown".to_string())
                             .trim()
                             .to_string(),
-                        speed_mhz: module.speed.unwrap_or(0),
+                        speed_mhz: rated_speed,
                         configured_speed_mhz: module.configured_clock_speed.unwrap_or(0),
                     });
                 }
@@ -229,6 +243,33 @@ impl HardwareCollector {
             30 => "LPDDR4".to_string(),
             _ => format!("Type {}", type_code),
         }
+    }
+
+    /// Extract DDR speed rating from memory part number
+    /// Common patterns: "6000" in "FLBD516G6000HC38GBKT", "5600" in "CMK32GX5M2B5600C36"
+    #[cfg(target_os = "windows")]
+    fn extract_speed_from_part_number(part_number: &str) -> u32 {
+        use regex::Regex;
+
+        // Look for common DDR5/DDR4 speed patterns (4-digit numbers in typical speed ranges)
+        // DDR5: 4800, 5200, 5600, 6000, 6400, 6800, 7200, 7600, 8000, etc.
+        // DDR4: 2133, 2400, 2666, 3000, 3200, 3600, 4000, 4400, etc.
+        lazy_static::lazy_static! {
+            static ref SPEED_REGEX: Regex = Regex::new(r"(\d{4})").unwrap();
+        }
+
+        for cap in SPEED_REGEX.captures_iter(part_number) {
+            if let Some(m) = cap.get(1) {
+                if let Ok(speed) = m.as_str().parse::<u32>() {
+                    // Check if it's in a valid DDR speed range
+                    if (2133..=8400).contains(&speed) {
+                        return speed;
+                    }
+                }
+            }
+        }
+
+        0
     }
 
     /// Get real-time memory metrics
