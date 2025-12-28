@@ -10,12 +10,12 @@ import {
   MotherboardInfo, Monitor
 } from '@core/models';
 import { ProgressRingComponent } from '@shared/components';
-import { BytesPipe } from '@shared/pipes';
+import { BytesPipe, DecimalPipe } from '@shared/pipes';
 
 @Component({
   selector: 'app-hardware',
   standalone: true,
-  imports: [CommonModule, ProgressRingComponent, BytesPipe],
+  imports: [CommonModule, ProgressRingComponent, BytesPipe, DecimalPipe],
   template: `
     <div class="p-6 space-y-6">
       <!-- Header -->
@@ -47,11 +47,11 @@ import { BytesPipe } from '@shared/pipes';
                 </div>
                 <div>
                   <p class="text-xs text-syslens-text-muted">Base Clock</p>
-                  <p class="text-sm text-syslens-text-primary">{{ cpuInfo.baseClockMhz / 1000 | number:'1.1-2' }} GHz</p>
+                  <p class="text-sm text-syslens-text-primary">{{ cpuInfo.baseClockMhz / 1000 | decimal:1 }} GHz</p>
                 </div>
                 <div>
                   <p class="text-xs text-syslens-text-muted">Max Clock</p>
-                  <p class="text-sm text-syslens-text-primary">{{ cpuInfo.maxClockMhz / 1000 | number:'1.1-2' }} GHz</p>
+                  <p class="text-sm text-syslens-text-primary">{{ cpuInfo.maxClockMhz / 1000 | decimal:1 }} GHz</p>
                 </div>
                 <div>
                   <p class="text-xs text-syslens-text-muted">Socket</p>
@@ -64,7 +64,7 @@ import { BytesPipe } from '@shared/pipes';
                 <div class="flex gap-4 text-sm">
                   <span class="text-syslens-text-secondary">L1: {{ cpuInfo.cache.l1DataKb + cpuInfo.cache.l1InstructionKb }} KB</span>
                   <span class="text-syslens-text-secondary">L2: {{ cpuInfo.cache.l2Kb }} KB</span>
-                  <span class="text-syslens-text-secondary">L3: {{ cpuInfo.cache.l3Kb / 1024 | number:'1.0-0' }} MB</span>
+                  <span class="text-syslens-text-secondary">L3: {{ cpuInfo.cache.l3Kb / 1024 | decimal:0 }} MB</span>
                 </div>
               </div>
             </div>
@@ -78,7 +78,7 @@ import { BytesPipe } from '@shared/pipes';
               />
               @if (cpuMetrics?.currentClockMhz) {
                 <p class="text-sm text-syslens-text-secondary">
-                  {{ cpuMetrics!.currentClockMhz / 1000 | number:'1.1-2' }} GHz
+                  {{ cpuMetrics!.currentClockMhz / 1000 | decimal:1 }} GHz
                 </p>
               }
               @if (cpuMetrics?.temperature) {

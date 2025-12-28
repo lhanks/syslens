@@ -1,10 +1,11 @@
 import { Component, Input, computed, input } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { DecimalPipe } from '@shared/pipes';
 
 @Component({
   selector: 'app-progress-ring',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, DecimalPipe],
   template: `
     <div class="relative inline-flex items-center justify-center">
       <svg [attr.width]="size()" [attr.height]="size()" class="transform -rotate-90">
@@ -31,7 +32,7 @@ import { CommonModule } from '@angular/common';
       </svg>
       <div class="absolute inset-0 flex flex-col items-center justify-center">
         <span class="text-lg font-semibold font-mono text-syslens-text-primary">
-          {{ value() }}%
+          {{ value() | decimal:1 }}%
         </span>
         @if (label()) {
           <span class="text-xs text-syslens-text-muted">{{ label() }}</span>

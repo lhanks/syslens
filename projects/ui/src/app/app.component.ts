@@ -1,6 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { SidebarComponent } from './shared/components/sidebar/sidebar.component';
+import { PreloadService } from '@core/services';
 
 @Component({
   selector: 'app-root',
@@ -23,4 +24,7 @@ import { SidebarComponent } from './shared/components/sidebar/sidebar.component'
 })
 export class AppComponent {
   title = 'Syslens';
+
+  // Inject PreloadService to initialize background preloading
+  private preloadService = inject(PreloadService);
 }

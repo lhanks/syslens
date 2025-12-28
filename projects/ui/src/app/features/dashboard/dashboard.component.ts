@@ -5,7 +5,7 @@ import { Subject, takeUntil, combineLatest } from 'rxjs';
 
 import { HardwareService, SystemService, NetworkService, StorageService } from '@core/services';
 import { CpuMetrics, MemoryMetrics, CpuInfo, MemoryInfo } from '@core/models';
-import { StatCardComponent, ProgressRingComponent } from '@shared/components';
+import { ProgressRingComponent } from '@shared/components';
 import { BytesPipe, UptimePipe } from '@shared/pipes';
 
 @Component({
@@ -14,7 +14,7 @@ import { BytesPipe, UptimePipe } from '@shared/pipes';
   imports: [
     CommonModule,
     RouterLink,
-    StatCardComponent,
+    
     ProgressRingComponent,
     BytesPipe,
     UptimePipe
@@ -54,17 +54,17 @@ import { BytesPipe, UptimePipe } from '@shared/pipes';
       <!-- Real-time Metrics -->
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <!-- CPU Usage -->
-        <div class="card flex flex-col items-center">
+        <a routerLink="/hardware" class="card-hover flex flex-col items-center cursor-pointer">
           <app-progress-ring
             [value]="cpuUsage"
             label="CPU"
             [size]="100"
           />
           <p class="mt-2 text-sm text-syslens-text-secondary">{{ cpuName }}</p>
-        </div>
+        </a>
 
         <!-- Memory Usage -->
-        <div class="card flex flex-col items-center">
+        <a routerLink="/hardware" class="card-hover flex flex-col items-center cursor-pointer">
           <app-progress-ring
             [value]="memoryUsage"
             label="Memory"
@@ -74,10 +74,10 @@ import { BytesPipe, UptimePipe } from '@shared/pipes';
           <p class="mt-2 text-sm text-syslens-text-secondary">
             {{ memoryUsedBytes | bytes }} / {{ memoryTotalBytes | bytes }}
           </p>
-        </div>
+        </a>
 
         <!-- Primary Disk -->
-        <div class="card flex flex-col items-center">
+        <a routerLink="/storage" class="card-hover flex flex-col items-center cursor-pointer">
           <app-progress-ring
             [value]="diskUsage"
             label="Disk"
@@ -87,10 +87,10 @@ import { BytesPipe, UptimePipe } from '@shared/pipes';
           <p class="mt-2 text-sm text-syslens-text-secondary">
             {{ diskUsedBytes | bytes }} / {{ diskTotalBytes | bytes }}
           </p>
-        </div>
+        </a>
 
         <!-- Network -->
-        <div class="card">
+        <a routerLink="/network" class="card-hover cursor-pointer">
           <h3 class="text-sm text-syslens-text-muted mb-2">Network</h3>
           <div class="space-y-2">
             <div class="flex justify-between items-center">
@@ -103,7 +103,7 @@ import { BytesPipe, UptimePipe } from '@shared/pipes';
             </div>
           </div>
           <p class="mt-3 text-xs text-syslens-text-muted">{{ networkAdapterCount }} adapter(s)</p>
-        </div>
+        </a>
       </div>
 
       <!-- Quick Navigation -->

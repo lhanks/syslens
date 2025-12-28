@@ -1,5 +1,6 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
+import { PreloadService } from '@core/services';
 
 interface NavItem {
   label: string;
@@ -36,6 +37,7 @@ interface NavItem {
             [routerLink]="item.route"
             routerLinkActive="bg-syslens-bg-hover border-syslens-accent-blue text-syslens-text-primary"
             [routerLinkActiveOptions]="{ exact: item.route === '/dashboard' }"
+            (mouseenter)="onNavHover(item.route)"
             class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-syslens-text-secondary
                    hover:bg-syslens-bg-hover hover:text-syslens-text-primary transition-colors
                    border border-transparent"
@@ -61,6 +63,8 @@ interface NavItem {
   `]
 })
 export class SidebarComponent {
+  private preloadService = inject(PreloadService);
+
   navItems: NavItem[] = [
     {
       label: 'Dashboard',
@@ -103,4 +107,14 @@ export class SidebarComponent {
       </svg>`
     }
   ];
+
+  /**
+   * Trigger priority preload when user hovers over a navigation link.
+   * This provides instant loading when the user clicks.
+   */
+  onNavHover(route: string): void {
+    // Extract view name from route (e.g., '/hardware' -> 'hardware')
+    const view = route.replace('/', '') || 'dashboard';
+    this.preloadService.priorityPreload(view);
+  }
 }

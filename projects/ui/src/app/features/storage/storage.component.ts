@@ -4,12 +4,12 @@ import { Subject, takeUntil } from 'rxjs';
 
 import { StorageService } from '@core/services';
 import { PhysicalDisk, Volume, DiskHealth, DiskPerformance, NetworkDrive } from '@core/models';
-import { BytesPipe } from '@shared/pipes';
+import { BytesPipe, DecimalPipe } from '@shared/pipes';
 
 @Component({
   selector: 'app-storage',
   standalone: true,
-  imports: [CommonModule, BytesPipe],
+  imports: [CommonModule, BytesPipe, DecimalPipe],
   template: `
     <div class="p-6 space-y-6">
       <!-- Header -->
@@ -170,7 +170,7 @@ import { BytesPipe } from '@shared/pipes';
                     </div>
                     <div>
                       <p class="text-xs text-syslens-text-muted">Active Time</p>
-                      <p class="font-mono text-syslens-text-primary">{{ perf.activeTimePercent | number:'1.0-0' }}%</p>
+                      <p class="font-mono text-syslens-text-primary">{{ perf.activeTimePercent | decimal:0 }}%</p>
                     </div>
                   </div>
                 </div>

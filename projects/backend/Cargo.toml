@@ -29,6 +29,8 @@ windows = { version = "0.58", features = [
     "Win32_System_SystemInformation",
     "Win32_System_Registry",
     "Win32_System_WindowsProgramming",
+    "Win32_System_Threading",
+    "Win32_System_ProcessStatus",
     "Win32_Security",
     "Win32_NetworkManagement_IpHelper",
     "Win32_NetworkManagement_Ndis",
@@ -41,7 +43,7 @@ windows = { version = "0.58", features = [
     "Win32_System_Ole",
     "Win32_System_Wmi",
 ] }
-wmi = "0.13"
+wmi = "0.14"
 
 # Async runtime
 tokio = { version = "1", features = ["full"] }

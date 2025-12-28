@@ -5,6 +5,19 @@ Tech Stack: Tauri 2.0 (Rust) + Angular 21 + Tailwind CSS
 
 ---
 
+## 0 New Tasks 
+
+** IMPORTANT ** Do not remove this section. Just clear out the tasks once processed.
+
+- Process the tasks below.  Expand them if needed and put them in the appropriate sections below.
+
+- The vendor information is missing for the following devices:
+    - GPU
+    - Memory
+    - Motherboard
+        - We need to add as much detail as possible to the motherboard information. Both configuration and options. Include an image of the motherboard if possible. 
+- For all devices, link to the driver pages and other vendor documentation if available.
+ 
 ## 1. Setup
 
 - [x] 1.1 Review project specs in specs/ folder
@@ -29,8 +42,8 @@ Tech Stack: Tauri 2.0 (Rust) + Angular 21 + Tailwind CSS
 - [x] 3.4 Implement storage info collector (drives, partitions, volumes, S.M.A.R.T.)
 - [x] 3.5 Create Tauri commands for all collectors
 - [ ] 3.6 Add real-time metrics polling
-- [ ] 3.7 Enhance device information collection (manufacturer, model, serial, BIOS/UEFI for all devices)
-- [ ] 3.8 Add complete IP configuration data (ipconfig /all) for network connections
+- [x] 3.7 Enhance device information collection (manufacturer, model, serial, BIOS/UEFI for all devices)
+- [x] 3.8 Add complete IP configuration data (ipconfig /all) for network connections
 
 ## 4. Frontend Implementation (Angular)
 
@@ -43,9 +56,9 @@ Tech Stack: Tauri 2.0 (Rust) + Angular 21 + Tailwind CSS
 - [x] 4.7 Implement Storage Info feature component
 - [ ] 4.8 Add real-time data refresh with signals
 - [x] 4.9 Create shared UI components (info cards, progress bars, copy buttons)
-- [ ] 4.10 Format numeric values to show 1 decimal place (avoid long digit strings)
-- [ ] 4.11 Add click-through from summary to detailed information views
-- [ ] 4.12 Implement progressive data loading (prioritize current tab, preload others)
+- [x] 4.10 Format numeric values to show 1 decimal place (avoid long digit strings)
+- [x] 4.11 Add click-through from summary to detailed information views
+- [x] 4.12 Implement progressive data loading (prioritize current tab, preload others)
 
 ## 5. Quality
 
@@ -72,7 +85,7 @@ Tech Stack: Tauri 2.0 (Rust) + Angular 21 + Tailwind CSS
 ## Progress
 
 - Total Tasks: 37
-- Completed: 20
-- Remaining: 17
+- Completed: 25
+- Remaining: 12
 
 Last Updated: 2025-12-28
