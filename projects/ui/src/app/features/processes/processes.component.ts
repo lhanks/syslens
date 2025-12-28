@@ -1,11 +1,15 @@
 import { Component, OnInit, OnDestroy, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Subject, takeUntil } from 'rxjs';
+import { Subject, takeUntil, interval, forkJoin, of } from 'rxjs';
+import { startWith, switchMap, catchError } from 'rxjs/operators';
 
-import { ProcessService, StatusService, HardwareService, StorageService, NetworkHistoryService } from '@core/services';
-import { ProcessInfo, ProcessSummary, CpuMetrics, MemoryInfo, MemoryMetrics, DiskPerformance } from '@core/models';
+import { ProcessService, StatusService, HardwareService, StorageService, NetworkHistoryService, NetworkService } from '@core/services';
+import { ProcessInfo, ProcessSummary, CpuMetrics, MemoryInfo, MemoryMetrics, DiskPerformance, NetworkAdapter, AdapterStats } from '@core/models';
 import { BytesPipe } from '@shared/pipes';
+import { LineGraphComponent } from '@shared/components';
+
+const MAX_HISTORY_POINTS = 60;
 
 type SortColumn = 'name' | 'pid' | 'cpuUsage' | 'memoryBytes' | 'status';
 type SortDirection = 'asc' | 'desc';
@@ -13,7 +17,7 @@ type SortDirection = 'asc' | 'desc';
 @Component({
   selector: 'app-processes',
   standalone: true,
-  imports: [CommonModule, FormsModule, BytesPipe],
+  imports: [CommonModule, FormsModule, BytesPipe, LineGraphComponent],
   template: `
     <div class="p-6 space-y-6">
       <!-- Header -->
@@ -46,9 +50,9 @@ type SortDirection = 'asc' | 'desc';
       <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <!-- CPU -->
         <div class="card">
-          <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-lg bg-syslens-accent-blue/20 flex items-center justify-center">
-              <svg class="w-5 h-5 text-syslens-accent-blue" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <div class="flex items-center gap-3 mb-2">
+            <div class="w-8 h-8 rounded-lg bg-syslens-accent-blue/20 flex items-center justify-center">
+              <svg class="w-4 h-4 text-syslens-accent-blue" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                   d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
               </svg>
@@ -58,37 +62,43 @@ type SortDirection = 'asc' | 'desc';
               <p class="text-lg font-bold text-syslens-text-primary">{{ cpuUsage().toFixed(1) }}%</p>
             </div>
           </div>
-          <div class="mt-2 h-1.5 bg-syslens-bg-tertiary rounded-full overflow-hidden">
-            <div class="h-full bg-syslens-accent-blue rounded-full transition-all"
-                 [style.width.%]="cpuUsage()"></div>
-          </div>
+          <app-line-graph
+            [series1]="cpuHistory()"
+            [maxValue]="100"
+            [width]="200"
+            [height]="40"
+            series1Color="syslens-accent-blue"
+          />
         </div>
 
         <!-- Memory -->
         <div class="card">
-          <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-lg bg-syslens-accent-purple/20 flex items-center justify-center">
-              <svg class="w-5 h-5 text-syslens-accent-purple" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <div class="flex items-center gap-3 mb-2">
+            <div class="w-8 h-8 rounded-lg bg-syslens-accent-purple/20 flex items-center justify-center">
+              <svg class="w-4 h-4 text-syslens-accent-purple" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                   d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
               </svg>
             </div>
             <div class="flex-1">
               <p class="text-xs text-syslens-text-muted">Memory</p>
-              <p class="text-lg font-bold text-syslens-text-primary">{{ memoryUsage().toFixed(1) }}%</p>
+              <p class="text-sm font-bold text-syslens-text-primary">{{ memoryUsedBytes() | bytes }} / {{ memoryTotalBytes() | bytes }}</p>
             </div>
           </div>
-          <div class="mt-2 h-1.5 bg-syslens-bg-tertiary rounded-full overflow-hidden">
-            <div class="h-full bg-syslens-accent-purple rounded-full transition-all"
-                 [style.width.%]="memoryUsage()"></div>
-          </div>
+          <app-line-graph
+            [series1]="memoryHistory()"
+            [maxValue]="100"
+            [width]="200"
+            [height]="40"
+            series1Color="syslens-accent-purple"
+          />
         </div>
 
         <!-- Disk -->
         <div class="card">
-          <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-lg bg-syslens-accent-cyan/20 flex items-center justify-center">
-              <svg class="w-5 h-5 text-syslens-accent-cyan" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <div class="flex items-center gap-3 mb-2">
+            <div class="w-8 h-8 rounded-lg bg-syslens-accent-cyan/20 flex items-center justify-center">
+              <svg class="w-4 h-4 text-syslens-accent-cyan" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                   d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4" />
               </svg>
@@ -98,17 +108,20 @@ type SortDirection = 'asc' | 'desc';
               <p class="text-lg font-bold text-syslens-text-primary">{{ diskActivity().toFixed(0) }}%</p>
             </div>
           </div>
-          <div class="mt-2 h-1.5 bg-syslens-bg-tertiary rounded-full overflow-hidden">
-            <div class="h-full bg-syslens-accent-cyan rounded-full transition-all"
-                 [style.width.%]="diskActivity()"></div>
-          </div>
+          <app-line-graph
+            [series1]="diskHistory()"
+            [maxValue]="100"
+            [width]="200"
+            [height]="40"
+            series1Color="syslens-accent-cyan"
+          />
         </div>
 
         <!-- Network -->
         <div class="card">
-          <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-lg bg-syslens-accent-green/20 flex items-center justify-center">
-              <svg class="w-5 h-5 text-syslens-accent-green" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <div class="flex items-center gap-3 mb-2">
+            <div class="w-8 h-8 rounded-lg bg-syslens-accent-green/20 flex items-center justify-center">
+              <svg class="w-4 h-4 text-syslens-accent-green" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                   d="M8 16l2.879-2.879m0 0a3 3 0 104.243-4.242 3 3 0 00-4.243 4.242zM21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
@@ -121,6 +134,15 @@ type SortDirection = 'asc' | 'desc';
               </div>
             </div>
           </div>
+          <app-line-graph
+            [series1]="networkDownloadHistory()"
+            [series2]="networkUploadHistory()"
+            [maxValue]="networkMaxSpeed()"
+            [width]="200"
+            [height]="40"
+            series1Color="syslens-accent-green"
+            series2Color="syslens-accent-blue"
+          />
         </div>
       </div>
 
@@ -302,7 +324,12 @@ export class ProcessesComponent implements OnInit, OnDestroy {
   private hardwareService = inject(HardwareService);
   private storageService = inject(StorageService);
   private networkHistoryService = inject(NetworkHistoryService);
+  private networkService = inject(NetworkService);
   private destroy$ = new Subject<void>();
+
+  // Network tracking
+  private activeAdapters: NetworkAdapter[] = [];
+  private previousNetworkStats = new Map<string, { bytesReceived: number; bytesSent: number; timestamp: number }>();
 
   Math = Math;
 
@@ -321,6 +348,11 @@ export class ProcessesComponent implements OnInit, OnDestroy {
   private memoryMetrics = signal<MemoryMetrics | null>(null);
   private diskPerformance = signal<DiskPerformance[]>([]);
 
+  // History arrays for graphs
+  cpuHistory = signal<number[]>([]);
+  memoryHistory = signal<number[]>([]);
+  diskHistory = signal<number[]>([]);
+
   cpuUsage = computed(() => this.cpuMetrics()?.totalUsage ?? 0);
 
   memoryUsage = computed(() => {
@@ -329,6 +361,9 @@ export class ProcessesComponent implements OnInit, OnDestroy {
     if (!info || !metrics) return 0;
     return (metrics.inUseBytes / info.totalBytes) * 100;
   });
+
+  memoryUsedBytes = computed(() => this.memoryMetrics()?.inUseBytes ?? 0);
+  memoryTotalBytes = computed(() => this.memoryInfo()?.totalBytes ?? 0);
 
   diskActivity = computed(() => {
     const perf = this.diskPerformance();
@@ -347,6 +382,22 @@ export class ProcessesComponent implements OnInit, OnDestroy {
     const points = this.networkHistoryService.dataPoints();
     if (points.length === 0) return 0;
     return points[points.length - 1].uploadSpeed;
+  });
+
+  networkDownloadHistory = computed(() => {
+    return this.networkHistoryService.dataPoints().map(p => p.downloadSpeed);
+  });
+
+  networkUploadHistory = computed(() => {
+    return this.networkHistoryService.dataPoints().map(p => p.uploadSpeed);
+  });
+
+  networkMaxSpeed = computed(() => {
+    const points = this.networkHistoryService.dataPoints();
+    if (points.length === 0) return 1;
+    const maxDown = Math.max(...points.map(p => p.downloadSpeed));
+    const maxUp = Math.max(...points.map(p => p.uploadSpeed));
+    return Math.max(maxDown, maxUp, 1);
   });
 
   filteredProcesses = computed(() => {
@@ -437,6 +488,13 @@ export class ProcessesComponent implements OnInit, OnDestroy {
     this.hardwareService.getMemoryInfo()
       .pipe(takeUntil(this.destroy$))
       .subscribe(info => this.memoryInfo.set(info));
+
+    // Load network adapters for speed tracking
+    this.networkService.getNetworkAdapters()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(adapters => {
+        this.activeAdapters = adapters.filter(a => a.status === 'Up');
+      });
   }
 
   private startPolling(): void {
@@ -449,17 +507,99 @@ export class ProcessesComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe(summary => this.summary.set(summary));
 
-    // System metrics polling
+    // System metrics polling with history tracking
     this.hardwareService.getCpuMetricsPolling()
       .pipe(takeUntil(this.destroy$))
-      .subscribe(metrics => this.cpuMetrics.set(metrics));
+      .subscribe(metrics => {
+        this.cpuMetrics.set(metrics);
+        if (metrics) {
+          this.pushToHistory(this.cpuHistory, metrics.totalUsage);
+        }
+      });
 
     this.hardwareService.getMemoryMetricsPolling()
       .pipe(takeUntil(this.destroy$))
-      .subscribe(metrics => this.memoryMetrics.set(metrics));
+      .subscribe(metrics => {
+        this.memoryMetrics.set(metrics);
+        if (metrics && this.memoryInfo()) {
+          const usage = (metrics.inUseBytes / this.memoryInfo()!.totalBytes) * 100;
+          this.pushToHistory(this.memoryHistory, usage);
+        }
+      });
 
     this.storageService.getDiskPerformancePolling()
       .pipe(takeUntil(this.destroy$))
-      .subscribe(perf => this.diskPerformance.set(perf));
+      .subscribe(perf => {
+        this.diskPerformance.set(perf);
+        if (perf.length > 0) {
+          const maxActivity = Math.max(...perf.map(d => d.activeTimePercent));
+          this.pushToHistory(this.diskHistory, maxActivity);
+        }
+      });
+
+    // Network stats polling
+    interval(1000).pipe(
+      startWith(0),
+      takeUntil(this.destroy$),
+      switchMap(() => {
+        if (this.activeAdapters.length === 0) {
+          return of([]);
+        }
+        const statsRequests = this.activeAdapters.map(adapter =>
+          this.networkService.getAdapterStats(adapter.id).pipe(
+            catchError(() => of(null))
+          )
+        );
+        return forkJoin(statsRequests);
+      })
+    ).subscribe(allStats => {
+      this.calculateNetworkSpeeds(allStats.filter((s): s is AdapterStats => s !== null));
+    });
+  }
+
+  private calculateNetworkSpeeds(currentStats: AdapterStats[]): void {
+    let totalDownloadSpeed = 0;
+    let totalUploadSpeed = 0;
+    const now = Date.now();
+
+    for (const stats of currentStats) {
+      const previous = this.previousNetworkStats.get(stats.adapterId);
+
+      if (previous) {
+        const timeDeltaSeconds = (now - previous.timestamp) / 1000;
+        if (timeDeltaSeconds > 0) {
+          const downloadDelta = stats.bytesReceived - previous.bytesReceived;
+          const uploadDelta = stats.bytesSent - previous.bytesSent;
+
+          if (downloadDelta >= 0) {
+            totalDownloadSpeed += downloadDelta / timeDeltaSeconds;
+          }
+          if (uploadDelta >= 0) {
+            totalUploadSpeed += uploadDelta / timeDeltaSeconds;
+          }
+        }
+      }
+
+      this.previousNetworkStats.set(stats.adapterId, {
+        bytesReceived: stats.bytesReceived,
+        bytesSent: stats.bytesSent,
+        timestamp: now
+      });
+    }
+
+    // Update the shared network history service
+    this.networkHistoryService.addDataPoint(
+      Math.round(totalDownloadSpeed),
+      Math.round(totalUploadSpeed)
+    );
+  }
+
+  private pushToHistory(historySignal: ReturnType<typeof signal<number[]>>, value: number): void {
+    const current = historySignal();
+    const updated = [...current, value];
+    if (updated.length > MAX_HISTORY_POINTS) {
+      updated.shift();
+    }
+    historySignal.set(updated);
   }
 }

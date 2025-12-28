@@ -35,7 +35,8 @@
       "Bash(bash:*)",
       "mcp__chrome-devtools__get_console_message",
       "Bash(\"/c/Users/lesli/.cargo/bin/cargo\" tauri dev)",
-      "Bash(./bin/run-app-prod:*)"
+      "Bash(./bin/run-app-prod:*)",
+      "Bash(\"/c/Users/lesli/.cargo/bin/cargo\" check)"
     ],
     "deny": []
   }
