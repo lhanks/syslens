@@ -3,8 +3,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subject, takeUntil } from 'rxjs';
 
-import { ProcessService, StatusService } from '@core/services';
-import { ProcessInfo, ProcessSummary } from '@core/models';
+import { ProcessService, StatusService, HardwareService, StorageService, NetworkHistoryService } from '@core/services';
+import { ProcessInfo, ProcessSummary, CpuMetrics, MemoryInfo, MemoryMetrics, DiskPerformance } from '@core/models';
 import { BytesPipe } from '@shared/pipes';
 
 type SortColumn = 'name' | 'pid' | 'cpuUsage' | 'memoryBytes' | 'status';
@@ -23,7 +23,7 @@ type SortDirection = 'asc' | 'desc';
           <p class="text-syslens-text-secondary">Running processes and system activity</p>
         </div>
 
-        <!-- Summary Stats -->
+        <!-- Process Summary Stats -->
         @if (summary()) {
           <div class="flex gap-6 text-sm">
             <div class="text-center">
@@ -40,6 +40,88 @@ type SortDirection = 'asc' | 'desc';
             </div>
           </div>
         }
+      </div>
+
+      <!-- System Resource Summary -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <!-- CPU -->
+        <div class="card">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-lg bg-syslens-accent-blue/20 flex items-center justify-center">
+              <svg class="w-5 h-5 text-syslens-accent-blue" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
+              </svg>
+            </div>
+            <div class="flex-1">
+              <p class="text-xs text-syslens-text-muted">CPU</p>
+              <p class="text-lg font-bold text-syslens-text-primary">{{ cpuUsage().toFixed(1) }}%</p>
+            </div>
+          </div>
+          <div class="mt-2 h-1.5 bg-syslens-bg-tertiary rounded-full overflow-hidden">
+            <div class="h-full bg-syslens-accent-blue rounded-full transition-all"
+                 [style.width.%]="cpuUsage()"></div>
+          </div>
+        </div>
+
+        <!-- Memory -->
+        <div class="card">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-lg bg-syslens-accent-purple/20 flex items-center justify-center">
+              <svg class="w-5 h-5 text-syslens-accent-purple" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+              </svg>
+            </div>
+            <div class="flex-1">
+              <p class="text-xs text-syslens-text-muted">Memory</p>
+              <p class="text-lg font-bold text-syslens-text-primary">{{ memoryUsage().toFixed(1) }}%</p>
+            </div>
+          </div>
+          <div class="mt-2 h-1.5 bg-syslens-bg-tertiary rounded-full overflow-hidden">
+            <div class="h-full bg-syslens-accent-purple rounded-full transition-all"
+                 [style.width.%]="memoryUsage()"></div>
+          </div>
+        </div>
+
+        <!-- Disk -->
+        <div class="card">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-lg bg-syslens-accent-cyan/20 flex items-center justify-center">
+              <svg class="w-5 h-5 text-syslens-accent-cyan" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4" />
+              </svg>
+            </div>
+            <div class="flex-1">
+              <p class="text-xs text-syslens-text-muted">Disk</p>
+              <p class="text-lg font-bold text-syslens-text-primary">{{ diskActivity().toFixed(0) }}%</p>
+            </div>
+          </div>
+          <div class="mt-2 h-1.5 bg-syslens-bg-tertiary rounded-full overflow-hidden">
+            <div class="h-full bg-syslens-accent-cyan rounded-full transition-all"
+                 [style.width.%]="diskActivity()"></div>
+          </div>
+        </div>
+
+        <!-- Network -->
+        <div class="card">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-lg bg-syslens-accent-green/20 flex items-center justify-center">
+              <svg class="w-5 h-5 text-syslens-accent-green" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M8 16l2.879-2.879m0 0a3 3 0 104.243-4.242 3 3 0 00-4.243 4.242zM21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <div class="flex-1">
+              <p class="text-xs text-syslens-text-muted">Network</p>
+              <div class="flex gap-2 text-sm">
+                <span class="text-syslens-accent-green">↓{{ networkDown() | bytes }}/s</span>
+                <span class="text-syslens-accent-blue">↑{{ networkUp() | bytes }}/s</span>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- Search and Filters -->
@@ -217,10 +299,14 @@ type SortDirection = 'asc' | 'desc';
 export class ProcessesComponent implements OnInit, OnDestroy {
   private processService = inject(ProcessService);
   private statusService = inject(StatusService);
+  private hardwareService = inject(HardwareService);
+  private storageService = inject(StorageService);
+  private networkHistoryService = inject(NetworkHistoryService);
   private destroy$ = new Subject<void>();
 
   Math = Math;
 
+  // Process data
   processes = signal<ProcessInfo[]>([]);
   summary = signal<ProcessSummary | null>(null);
   searchTerm = signal('');
@@ -228,6 +314,40 @@ export class ProcessesComponent implements OnInit, OnDestroy {
   sortDirection = signal<SortDirection>('desc');
   currentPage = signal(0);
   pageSize = 50;
+
+  // System metrics
+  private cpuMetrics = signal<CpuMetrics | null>(null);
+  private memoryInfo = signal<MemoryInfo | null>(null);
+  private memoryMetrics = signal<MemoryMetrics | null>(null);
+  private diskPerformance = signal<DiskPerformance[]>([]);
+
+  cpuUsage = computed(() => this.cpuMetrics()?.totalUsage ?? 0);
+
+  memoryUsage = computed(() => {
+    const info = this.memoryInfo();
+    const metrics = this.memoryMetrics();
+    if (!info || !metrics) return 0;
+    return (metrics.inUseBytes / info.totalBytes) * 100;
+  });
+
+  diskActivity = computed(() => {
+    const perf = this.diskPerformance();
+    if (perf.length === 0) return 0;
+    // Return the max active time across all disks
+    return Math.max(...perf.map(d => d.activeTimePercent));
+  });
+
+  networkDown = computed(() => {
+    const points = this.networkHistoryService.dataPoints();
+    if (points.length === 0) return 0;
+    return points[points.length - 1].downloadSpeed;
+  });
+
+  networkUp = computed(() => {
+    const points = this.networkHistoryService.dataPoints();
+    if (points.length === 0) return 0;
+    return points[points.length - 1].uploadSpeed;
+  });
 
   filteredProcesses = computed(() => {
     const term = this.searchTerm().toLowerCase();
@@ -312,9 +432,15 @@ export class ProcessesComponent implements OnInit, OnDestroy {
     this.processService.getProcessSummary()
       .pipe(takeUntil(this.destroy$))
       .subscribe(summary => this.summary.set(summary));
+
+    // Load system metrics
+    this.hardwareService.getMemoryInfo()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(info => this.memoryInfo.set(info));
   }
 
   private startPolling(): void {
+    // Process polling
     this.processService.getProcessesPolling(3000)
       .pipe(takeUntil(this.destroy$))
       .subscribe(processes => this.processes.set(processes));
@@ -322,5 +448,18 @@ export class ProcessesComponent implements OnInit, OnDestroy {
     this.processService.getProcessSummaryPolling(3000)
       .pipe(takeUntil(this.destroy$))
       .subscribe(summary => this.summary.set(summary));
+
+    // System metrics polling
+    this.hardwareService.getCpuMetricsPolling()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(metrics => this.cpuMetrics.set(metrics));
+
+    this.hardwareService.getMemoryMetricsPolling()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(metrics => this.memoryMetrics.set(metrics));
+
+    this.storageService.getDiskPerformancePolling()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(perf => this.diskPerformance.set(perf));
   }
 }

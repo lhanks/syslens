@@ -8,9 +8,7 @@ Tech Stack: Tauri 2.0 (Rust) + Angular 21 + Tailwind CSS
 ## 0 New Tasks
 ** IMPORTANT ** Process the tasks below (in this section).  Expand them if needed and put them in the appropriate sections below.
 ** IMPORTANT ** Do not remove this section. Just clear out the tasks once processed.
-
-- For device information, we want to display deep detail about the device. We need to add more information to the device information. Explore ways to find information on the internet if necessary.
-- Add a process list (like task manager) tab.  
+  
 
 ## 1. Setup
 
@@ -72,6 +70,10 @@ Tech Stack: Tauri 2.0 (Rust) + Angular 21 + Tailwind CSS
 - [x] 4.21 Restore last active route on app restart (state persistence)
 - [x] 4.22 Add status bar showing data capture operations in progress
 - [x] 4.23 Add real-time network traffic graph on dashboard (60-second history)
+- [x] 4.24 Add process list tab with real-time monitoring (sortable, searchable, paginated)
+- [x] 4.25 Add system summary stats (CPU/Memory/Disk/Network) to processes page header
+- [ ] 4.26 Add graph history visualization for all metrics (CPU, memory, disk, network)
+- [ ] 4.27 Add deep device information with internet lookup (specs, images, documentation links)
 
 ## 5. Quality
 
@@ -97,8 +99,8 @@ Tech Stack: Tauri 2.0 (Rust) + Angular 21 + Tailwind CSS
 
 ## Progress
 
-- Total Tasks: 52
-- Completed: 40
-- Remaining: 12
+- Total Tasks: 55
+- Completed: 42
+- Remaining: 13
 
 Last Updated: 2025-12-28
