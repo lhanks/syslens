@@ -6,11 +6,15 @@ Tech Stack: Tauri 2.0 (Rust) + Angular 21 + Tailwind CSS
 ---
 
 ## 0 New Tasks
-
-- Process the tasks below.  Expand them if needed and put them in the appropriate sections below.
-
+** IMPORTANT ** Process the tasks below (in this section).  Expand them if needed and put them in the appropriate sections below.
 ** IMPORTANT ** Do not remove this section. Just clear out the tasks once processed.
- 
+
+- Displays are not being captured. We need to get the display information working.
+- Keep track of historical data. Add network traffic graph.
+- Add a process list (like task manager) tab.
+- speed up the startup time when running the application.
+- create run-app-prod. You may need to allow for having dev and prod builds. The main objective here is to get near prod performance.  
+
 ## 1. Setup
 
 - [x] 1.1 Review project specs in specs/ folder
@@ -35,6 +39,7 @@ Tech Stack: Tauri 2.0 (Rust) + Angular 21 + Tailwind CSS
 - [x] 3.4 Implement storage info collector (drives, partitions, volumes, S.M.A.R.T.)
 - [x] 3.5 Create Tauri commands for all collectors
 - [ ] 3.6 Add real-time metrics polling
+- [x] 3.14 Fix memory speed to show XMP/rated speed instead of JEDEC base speed
 - [x] 3.7 Enhance device information collection (manufacturer, model, serial, BIOS/UEFI for all devices)
 - [x] 3.8 Add complete IP configuration data (ipconfig /all) for network connections
 - [x] 3.9 Add GPU vendor information (manufacturer, model, driver version, driver link)
@@ -46,6 +51,7 @@ Tech Stack: Tauri 2.0 (Rust) + Angular 21 + Tailwind CSS
 ## 4. Frontend Implementation (Angular)
 
 - [x] 4.1 Set up Tailwind CSS and base styles
+- [x] 4.19 Dim primary text color for reduced eye strain (#ffffff → #e5e5e5)
 - [x] 4.2 Create Tauri service wrapper for IPC
 - [x] 4.3 Build dashboard layout with navigation
 - [x] 4.4 Implement System Info feature component
@@ -53,6 +59,7 @@ Tech Stack: Tauri 2.0 (Rust) + Angular 21 + Tailwind CSS
 - [x] 4.6 Implement Hardware Info feature component
 - [x] 4.7 Implement Storage Info feature component
 - [ ] 4.8 Add real-time data refresh with signals
+- [x] 4.18 Fix network stats real-time updates on dashboard (download/upload speeds)
 - [x] 4.9 Create shared UI components (info cards, progress bars, copy buttons)
 - [x] 4.10 Format numeric values to show 1 decimal place (avoid long digit strings)
 - [x] 4.11 Add click-through from summary to detailed information views
@@ -87,8 +94,8 @@ Tech Stack: Tauri 2.0 (Rust) + Angular 21 + Tailwind CSS
 
 ## Progress
 
-- Total Tasks: 47
-- Completed: 35
+- Total Tasks: 50
+- Completed: 38
 - Remaining: 12
 
 Last Updated: 2025-12-28

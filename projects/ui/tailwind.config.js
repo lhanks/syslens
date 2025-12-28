@@ -20,7 +20,7 @@ module.exports = {
             'secondary': '#404040',
           },
           'text': {
-            'primary': '#ffffff',
+            'primary': '#e5e5e5',
             'secondary': '#a0a0a0',
             'muted': '#666666',
           },

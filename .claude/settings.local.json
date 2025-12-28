@@ -32,7 +32,8 @@
       "Bash(source C:/dev/syslens/etc/.env)",
       "Bash(./bin/setup-rust:*)",
       "Bash(rmdir:*)",
-      "Bash(bash:*)"
+      "Bash(bash:*)",
+      "mcp__chrome-devtools__get_console_message"
     ],
     "deny": []
   }
