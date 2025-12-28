@@ -9,11 +9,12 @@ Tech Stack: Tauri 2.0 (Rust) + Angular 21 + Tailwind CSS
 ** IMPORTANT ** Process the tasks below (in this section).  Expand them if needed and put them in the appropriate sections below.
 ** IMPORTANT ** Do not remove this section. Just clear out the tasks once processed.
 
+- For device information, we want to dipslay deep detail about the device. We need to add more information to the device information. Explore ways to find information on the internet if necessary.
+- Update app to reopen in its previous state.
 - Add a status bar to show the current task being executed. Mainly interested in feedback while the app is capturing data.
 - Keep track of historical data. Add network traffic graph.
 - Add a process list (like task manager) tab.
-- speed up the startup time when running the application.
-- create run-app-prod. You may need to allow for having dev and prod builds. The main objective here is to get near prod performance.  
+- speed up the startup time when running the application.  
 
 ## 1. Setup
 
@@ -28,6 +29,7 @@ Tech Stack: Tauri 2.0 (Rust) + Angular 21 + Tailwind CSS
 
 - [ ] 2.1 Configure GitHub Actions CI pipeline
 - [x] 2.2 Set up build scripts in bin/ folder
+- [x] 2.5 Create run-app-prod script for production builds with bundled assets
 - [ ] 2.3 Configure Tauri build for Windows installer
 - [ ] 2.4 Set up code signing (optional, for later)
 
@@ -95,8 +97,8 @@ Tech Stack: Tauri 2.0 (Rust) + Angular 21 + Tailwind CSS
 
 ## Progress
 
-- Total Tasks: 51
-- Completed: 39
+- Total Tasks: 52
+- Completed: 40
 - Remaining: 12
 
 Last Updated: 2025-12-28

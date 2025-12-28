@@ -33,7 +33,9 @@
       "Bash(./bin/setup-rust:*)",
       "Bash(rmdir:*)",
       "Bash(bash:*)",
-      "mcp__chrome-devtools__get_console_message"
+      "mcp__chrome-devtools__get_console_message",
+      "Bash(\"/c/Users/lesli/.cargo/bin/cargo\" tauri dev)",
+      "Bash(./bin/run-app-prod:*)"
     ],
     "deny": []
   }

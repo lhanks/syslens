@@ -1,0 +1,110 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+UI_DIR="$PROJECT_ROOT/projects/ui"
+BACKEND_DIR="$PROJECT_ROOT/projects/backend"
+
+# Detect OS for executable name and cargo path
+if [[ "$OSTYPE" == "msys" || "$OSTYPE" == "cygwin" || "$OSTYPE" == "win32" ]]; then
+    EXE_NAME="syslens.exe"
+    # Try common Windows cargo locations
+    if command -v cargo &> /dev/null; then
+        CARGO="cargo"
+    elif [[ -f "$HOME/.cargo/bin/cargo" ]]; then
+        CARGO="$HOME/.cargo/bin/cargo"
+    elif [[ -f "/c/Users/$USER/.cargo/bin/cargo" ]]; then
+        CARGO="/c/Users/$USER/.cargo/bin/cargo"
+    else
+        echo "ERROR: Rust/Cargo not found."
+        echo ""
+        echo "Install Rust:"
+        echo "  Windows: winget install Rustlang.Rustup"
+        echo "  Or visit: https://rustup.rs"
+        exit 1
+    fi
+else
+    EXE_NAME="syslens"
+    if ! command -v cargo &> /dev/null; then
+        echo "ERROR: Rust/Cargo not found."
+        echo ""
+        echo "Install Rust: https://rustup.rs"
+        exit 1
+    fi
+    CARGO="cargo"
+fi
+
+# Tauri builds to target/release with bundled assets
+RELEASE_EXE="$BACKEND_DIR/target/release/$EXE_NAME"
+
+# Parse arguments
+FORCE_BUILD=false
+SKIP_UI=false
+
+for arg in "$@"; do
+    case $arg in
+        --rebuild)
+            FORCE_BUILD=true
+            ;;
+        --skip-ui)
+            SKIP_UI=true
+            ;;
+        --help|-h)
+            echo "Usage: run-app-prod [OPTIONS]"
+            echo ""
+            echo "Run Syslens in production mode (optimized release build)."
+            echo ""
+            echo "Options:"
+            echo "  --rebuild    Force rebuild even if release binary exists"
+            echo "  --skip-ui    Skip UI rebuild (use existing dist)"
+            echo "  -h, --help   Show this help message"
+            exit 0
+            ;;
+    esac
+done
+
+# Check if we need to build
+NEEDS_BUILD=false
+
+if [[ ! -f "$RELEASE_EXE" ]]; then
+    echo "Release build not found. Building..."
+    NEEDS_BUILD=true
+elif [[ "$FORCE_BUILD" == "true" ]]; then
+    echo "Force rebuild requested..."
+    NEEDS_BUILD=true
+fi
+
+if [[ "$NEEDS_BUILD" == "true" ]]; then
+    # Ensure UI dependencies are installed (beforeBuildCommand handles the actual build)
+    if [[ "$SKIP_UI" != "true" ]]; then
+        cd "$UI_DIR"
+        if [[ ! -d "node_modules" ]]; then
+            echo "Installing UI dependencies..."
+            npm install
+        fi
+    fi
+
+    # Build with Tauri (handles both frontend and backend with proper asset bundling)
+    echo ""
+    echo "Building Syslens (release mode with bundled assets)..."
+    cd "$BACKEND_DIR"
+
+    # Use cargo tauri build for proper asset embedding
+    # The --no-bundle flag skips creating installers but keeps the executable
+    "$CARGO" tauri build --no-bundle
+
+    echo "Build complete."
+    echo ""
+fi
+
+# Run the release executable
+if [[ -f "$RELEASE_EXE" ]]; then
+    echo "Starting Syslens (production mode)..."
+    echo ""
+    "$RELEASE_EXE"
+else
+    echo "ERROR: Release executable not found at: $RELEASE_EXE"
+    echo "Try running with --rebuild flag."
+    exit 1
+fi
