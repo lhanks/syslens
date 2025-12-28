@@ -73,18 +73,161 @@ impl HardwareCollector {
 
     /// Get memory static information
     pub fn get_memory_info() -> MemoryInfo {
-        let mut sys = System::new();
-        sys.refresh_memory_specifics(MemoryRefreshKind::everything());
+        #[cfg(target_os = "windows")]
+        {
+            Self::get_memory_info_windows()
+        }
+
+        #[cfg(not(target_os = "windows"))]
+        {
+            let mut sys = System::new();
+            sys.refresh_memory_specifics(MemoryRefreshKind::everything());
+
+            MemoryInfo {
+                total_bytes: sys.total_memory(),
+                usable_bytes: sys.total_memory(),
+                memory_type: "Unknown".to_string(),
+                speed_mhz: 0,
+                slots_used: 0,
+                slots_total: 0,
+                max_capacity_bytes: sys.total_memory(),
+                modules: Vec::new(),
+            }
+        }
+    }
+
+    #[cfg(target_os = "windows")]
+    fn get_memory_info_windows() -> MemoryInfo {
+        use wmi::{COMLibrary, WMIConnection};
+        use serde::Deserialize;
+
+        #[derive(Deserialize, Debug)]
+        #[serde(rename = "Win32_PhysicalMemory")]
+        #[serde(rename_all = "PascalCase")]
+        struct Win32PhysicalMemory {
+            capacity: Option<u64>,
+            manufacturer: Option<String>,
+            part_number: Option<String>,
+            serial_number: Option<String>,
+            speed: Option<u32>,
+            configured_clock_speed: Option<u32>,
+            device_locator: Option<String>,
+            memory_type: Option<u32>,
+        }
+
+        #[derive(Deserialize, Debug)]
+        #[serde(rename = "Win32_PhysicalMemoryArray")]
+        #[serde(rename_all = "PascalCase")]
+        struct Win32PhysicalMemoryArray {
+            max_capacity: Option<u64>,
+            memory_devices: Option<u32>,
+        }
+
+        let mut modules = Vec::new();
+        let mut total_bytes = 0u64;
+        let mut memory_type = "Unknown".to_string();
+        let mut speed_mhz = 0u32;
+        let mut slots_total = 0u32;
+        let mut max_capacity_bytes = 0u64;
+
+        // Try to initialize COM, or assume it's already initialized
+        let com = COMLibrary::new()
+            .or_else(|_| COMLibrary::without_security())
+            .unwrap_or_else(|_| unsafe { COMLibrary::assume_initialized() });
+
+        if let Ok(wmi_con) = WMIConnection::new(com) {
+            // Get memory modules
+            if let Ok(results) = wmi_con.query::<Win32PhysicalMemory>() {
+                for module in results {
+                    let capacity = module.capacity.unwrap_or(0);
+                    total_bytes += capacity;
+
+                    if speed_mhz == 0 {
+                        speed_mhz = module.speed.unwrap_or(0);
+                    }
+
+                    if memory_type == "Unknown" {
+                        memory_type = module.memory_type
+                            .map(|t| Self::decode_memory_type(t))
+                            .unwrap_or_else(|| "Unknown".to_string());
+                    }
+
+                    modules.push(MemoryModule {
+                        slot: module.device_locator.unwrap_or_else(|| "Unknown".to_string()),
+                        capacity_bytes: capacity,
+                        manufacturer: module.manufacturer
+                            .unwrap_or_else(|| "Unknown".to_string())
+                            .trim()
+                            .to_string(),
+                        part_number: module.part_number
+                            .unwrap_or_else(|| "Unknown".to_string())
+                            .trim()
+                            .to_string(),
+                        serial_number: module.serial_number
+                            .unwrap_or_else(|| "Unknown".to_string())
+                            .trim()
+                            .to_string(),
+                        speed_mhz: module.speed.unwrap_or(0),
+                        configured_speed_mhz: module.configured_clock_speed.unwrap_or(0),
+                    });
+                }
+            }
+
+            // Get memory array info for max capacity and slots
+            if let Ok(results) = wmi_con.query::<Win32PhysicalMemoryArray>() {
+                if let Some(array) = results.into_iter().next() {
+                    max_capacity_bytes = array.max_capacity.unwrap_or(0) * 1024; // Convert KB to bytes
+                    slots_total = array.memory_devices.unwrap_or(0);
+                }
+            }
+        }
 
         MemoryInfo {
-            total_bytes: sys.total_memory(),
-            usable_bytes: sys.total_memory(), // Same as total for basic info
-            memory_type: "DDR4".to_string(), // Would need WMI for actual type
-            speed_mhz: 0, // Would need WMI
-            slots_used: 0,
-            slots_total: 0,
-            max_capacity_bytes: sys.total_memory(),
-            modules: Vec::new(), // Would need WMI for module details
+            total_bytes,
+            usable_bytes: total_bytes,
+            memory_type,
+            speed_mhz,
+            slots_used: modules.len() as u32,
+            slots_total,
+            max_capacity_bytes,
+            modules,
+        }
+    }
+
+    #[cfg(target_os = "windows")]
+    fn decode_memory_type(type_code: u32) -> String {
+        match type_code {
+            0 => "Unknown".to_string(),
+            1 => "Other".to_string(),
+            2 => "DRAM".to_string(),
+            3 => "Synchronous DRAM".to_string(),
+            4 => "Cache DRAM".to_string(),
+            5 => "EDO".to_string(),
+            6 => "EDRAM".to_string(),
+            7 => "VRAM".to_string(),
+            8 => "SRAM".to_string(),
+            9 => "RAM".to_string(),
+            10 => "ROM".to_string(),
+            11 => "Flash".to_string(),
+            12 => "EEPROM".to_string(),
+            13 => "FEPROM".to_string(),
+            14 => "EPROM".to_string(),
+            15 => "CDRAM".to_string(),
+            16 => "3DRAM".to_string(),
+            17 => "SDRAM".to_string(),
+            18 => "SGRAM".to_string(),
+            19 => "RDRAM".to_string(),
+            20 => "DDR".to_string(),
+            21 => "DDR2".to_string(),
+            22 => "DDR2 FB-DIMM".to_string(),
+            24 => "DDR3".to_string(),
+            25 => "FBD2".to_string(),
+            26 => "DDR4".to_string(),
+            27 => "LPDDR".to_string(),
+            28 => "LPDDR2".to_string(),
+            29 => "LPDDR3".to_string(),
+            30 => "LPDDR4".to_string(),
+            _ => format!("Type {}", type_code),
         }
     }
 
@@ -109,17 +252,106 @@ impl HardwareCollector {
 
     /// Get GPU information
     pub fn get_gpu_info() -> Vec<GpuInfo> {
-        // Would need platform-specific implementation or NVML for NVIDIA
-        // For now, return placeholder
         #[cfg(target_os = "windows")]
         {
-            // Would use WMI: Win32_VideoController
-            Vec::new()
+            Self::get_gpu_info_windows()
         }
 
         #[cfg(not(target_os = "windows"))]
         {
             Vec::new()
+        }
+    }
+
+    #[cfg(target_os = "windows")]
+    fn get_gpu_info_windows() -> Vec<GpuInfo> {
+        use wmi::{COMLibrary, WMIConnection};
+        use serde::Deserialize;
+
+        #[derive(Deserialize, Debug)]
+        #[serde(rename = "Win32_VideoController")]
+        #[serde(rename_all = "PascalCase")]
+        struct Win32VideoController {
+            #[serde(rename = "PNPDeviceID")]
+            pnp_device_id: Option<String>,
+            name: Option<String>,
+            adapter_ram: Option<u64>,
+            driver_version: Option<String>,
+            driver_date: Option<String>,
+            video_mode_description: Option<String>,
+            current_refresh_rate: Option<u32>,
+            adapter_compatibility: Option<String>,
+        }
+
+        let mut gpus = Vec::new();
+
+        // Try to initialize COM, or assume it's already initialized
+        let com = COMLibrary::new()
+            .or_else(|_| COMLibrary::without_security())
+            .unwrap_or_else(|_| unsafe { COMLibrary::assume_initialized() });
+
+        if let Ok(wmi_con) = WMIConnection::new(com) {
+            if let Ok(results) = wmi_con.query::<Win32VideoController>() {
+                for (i, gpu) in results.into_iter().enumerate() {
+                    let manufacturer = gpu.adapter_compatibility
+                        .as_ref()
+                        .and_then(|s| Self::extract_gpu_vendor(s))
+                        .unwrap_or_else(|| "Unknown".to_string());
+
+                    let pnp_id = gpu.pnp_device_id.clone();
+                    let driver_link = pnp_id.as_ref()
+                        .and_then(|id| Self::get_gpu_driver_link(&manufacturer, id));
+
+                    let adapter_type = if gpu.name.as_ref()
+                        .map(|n| n.to_lowercase().contains("integrated") || n.to_lowercase().contains("intel uhd"))
+                        .unwrap_or(false)
+                    {
+                        GpuAdapterType::Integrated
+                    } else {
+                        GpuAdapterType::Discrete
+                    };
+
+                    gpus.push(GpuInfo {
+                        id: format!("GPU{}", i),
+                        name: gpu.name.unwrap_or_else(|| "Unknown".to_string()),
+                        manufacturer: manufacturer.clone(),
+                        driver_version: gpu.driver_version.unwrap_or_else(|| "Unknown".to_string()),
+                        driver_date: gpu.driver_date.unwrap_or_else(|| "Unknown".to_string()),
+                        driver_link,
+                        vram_bytes: gpu.adapter_ram.unwrap_or(0),
+                        current_resolution: gpu.video_mode_description.unwrap_or_else(|| "Unknown".to_string()),
+                        refresh_rate_hz: gpu.current_refresh_rate.unwrap_or(0),
+                        adapter_type,
+                        pnp_device_id: pnp_id,
+                    });
+                }
+            }
+        }
+
+        gpus
+    }
+
+    #[cfg(target_os = "windows")]
+    fn extract_gpu_vendor(adapter_compat: &str) -> Option<String> {
+        let lower = adapter_compat.to_lowercase();
+        if lower.contains("nvidia") {
+            Some("NVIDIA".to_string())
+        } else if lower.contains("amd") || lower.contains("ati") {
+            Some("AMD".to_string())
+        } else if lower.contains("intel") {
+            Some("Intel".to_string())
+        } else {
+            Some(adapter_compat.to_string())
+        }
+    }
+
+    #[cfg(target_os = "windows")]
+    fn get_gpu_driver_link(vendor: &str, _pnp_id: &str) -> Option<String> {
+        match vendor.to_lowercase().as_str() {
+            v if v.contains("nvidia") => Some("https://www.nvidia.com/Download/index.aspx".to_string()),
+            v if v.contains("amd") => Some("https://www.amd.com/en/support".to_string()),
+            v if v.contains("intel") => Some("https://www.intel.com/content/www/us/en/download-center/home.html".to_string()),
+            _ => None,
         }
     }
 
@@ -131,13 +363,156 @@ impl HardwareCollector {
 
     /// Get motherboard information
     pub fn get_motherboard_info() -> MotherboardInfo {
-        MotherboardInfo {
-            manufacturer: Self::get_board_manufacturer(),
-            product: Self::get_board_product(),
-            version: String::new(),
-            serial_number: String::new(),
-            chipset: None,
+        #[cfg(target_os = "windows")]
+        {
+            Self::get_motherboard_info_windows()
         }
+
+        #[cfg(not(target_os = "windows"))]
+        {
+            MotherboardInfo {
+                manufacturer: Self::get_board_manufacturer(),
+                product: Self::get_board_product(),
+                version: String::new(),
+                serial_number: String::new(),
+                chipset: None,
+                bios_vendor: None,
+                bios_version: None,
+                bios_release_date: None,
+                support_url: None,
+                image_url: None,
+            }
+        }
+    }
+
+    #[cfg(target_os = "windows")]
+    fn get_motherboard_info_windows() -> MotherboardInfo {
+        use wmi::{COMLibrary, WMIConnection};
+        use serde::Deserialize;
+
+        #[derive(Deserialize, Debug)]
+        #[serde(rename = "Win32_BaseBoard")]
+        #[serde(rename_all = "PascalCase")]
+        struct Win32BaseBoard {
+            manufacturer: Option<String>,
+            product: Option<String>,
+            version: Option<String>,
+            serial_number: Option<String>,
+        }
+
+        #[derive(Deserialize, Debug)]
+        #[serde(rename = "Win32_BIOS")]
+        #[serde(rename_all = "PascalCase")]
+        struct Win32BIOS {
+            manufacturer: Option<String>,
+            #[serde(rename = "SMBIOSBIOSVersion")]
+            smbios_bios_version: Option<String>,
+            release_date: Option<String>,
+        }
+
+        let mut manufacturer = "Unknown".to_string();
+        let mut product = "Unknown".to_string();
+        let mut version = String::new();
+        let mut serial_number = String::new();
+        let mut bios_vendor = None;
+        let mut bios_version = None;
+        let mut bios_release_date = None;
+
+        // Try to initialize COM, or assume it's already initialized
+        let com = COMLibrary::new()
+            .or_else(|_| COMLibrary::without_security())
+            .unwrap_or_else(|_| unsafe { COMLibrary::assume_initialized() });
+
+        if let Ok(wmi_con) = WMIConnection::new(com) {
+            // Get baseboard info
+            if let Ok(results) = wmi_con.query::<Win32BaseBoard>() {
+                if let Some(board) = results.into_iter().next() {
+                    manufacturer = board.manufacturer
+                        .unwrap_or_else(|| "Unknown".to_string())
+                        .trim()
+                        .to_string();
+                    product = board.product
+                        .unwrap_or_else(|| "Unknown".to_string())
+                        .trim()
+                        .to_string();
+                    version = board.version
+                        .unwrap_or_else(|| String::new())
+                        .trim()
+                        .to_string();
+                    serial_number = board.serial_number
+                        .unwrap_or_else(|| String::new())
+                        .trim()
+                        .to_string();
+                }
+            }
+
+            // Get BIOS info
+            if let Ok(results) = wmi_con.query::<Win32BIOS>() {
+                if let Some(bios) = results.into_iter().next() {
+                    bios_vendor = bios.manufacturer.map(|s| s.trim().to_string());
+                    bios_version = bios.smbios_bios_version.map(|s| s.trim().to_string());
+                    bios_release_date = bios.release_date.map(|s| {
+                        // WMI returns date in format: 20231215000000.000000+000
+                        // Extract YYYYMMDD and format as YYYY-MM-DD
+                        if s.len() >= 8 {
+                            let year = &s[0..4];
+                            let month = &s[4..6];
+                            let day = &s[6..8];
+                            format!("{}-{}-{}", year, month, day)
+                        } else {
+                            s.trim().to_string()
+                        }
+                    });
+                }
+            }
+        }
+
+        let support_url = Self::get_motherboard_support_url(&manufacturer, &product);
+        let image_url = Self::get_motherboard_image_url(&manufacturer, &product);
+
+        MotherboardInfo {
+            manufacturer,
+            product,
+            version,
+            serial_number,
+            chipset: None,
+            bios_vendor,
+            bios_version,
+            bios_release_date,
+            support_url,
+            image_url,
+        }
+    }
+
+    #[cfg(target_os = "windows")]
+    fn get_motherboard_support_url(manufacturer: &str, _product: &str) -> Option<String> {
+        let lower = manufacturer.to_lowercase();
+        if lower.contains("asus") {
+            Some("https://www.asus.com/support/".to_string())
+        } else if lower.contains("msi") {
+            Some("https://www.msi.com/support".to_string())
+        } else if lower.contains("gigabyte") {
+            Some("https://www.gigabyte.com/Support".to_string())
+        } else if lower.contains("asrock") {
+            Some("https://www.asrock.com/support/".to_string())
+        } else if lower.contains("evga") {
+            Some("https://www.evga.com/support/".to_string())
+        } else if lower.contains("dell") {
+            Some("https://www.dell.com/support".to_string())
+        } else if lower.contains("hp") || lower.contains("hewlett") {
+            Some("https://support.hp.com/".to_string())
+        } else if lower.contains("lenovo") {
+            Some("https://support.lenovo.com/".to_string())
+        } else {
+            None
+        }
+    }
+
+    #[cfg(target_os = "windows")]
+    fn get_motherboard_image_url(_manufacturer: &str, _product: &str) -> Option<String> {
+        // This would require web scraping or API calls to manufacturer websites
+        // For now, return None - could be enhanced with actual lookups
+        None
     }
 
     /// Get USB devices

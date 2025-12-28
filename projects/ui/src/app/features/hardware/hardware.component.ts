@@ -148,11 +148,20 @@ import { BytesPipe, DecimalPipe } from '@shared/pipes';
               @if (memoryInfo.modules.length > 0) {
                 <div class="mt-4 pt-4 border-t border-syslens-border-primary">
                   <p class="text-xs text-syslens-text-muted mb-2">Installed Modules</p>
-                  <div class="space-y-2">
+                  <div class="space-y-3">
                     @for (module of memoryInfo.modules; track module.slot) {
-                      <div class="flex items-center justify-between text-sm">
-                        <span class="text-syslens-text-secondary">{{ module.slot }}</span>
-                        <span class="text-syslens-text-primary">{{ module.capacityBytes | bytes }} - {{ module.manufacturer }}</span>
+                      <div class="p-2 bg-syslens-bg-primary rounded text-sm">
+                        <div class="flex items-center justify-between mb-1">
+                          <span class="font-medium text-syslens-text-primary">{{ module.slot }}</span>
+                          <span class="text-syslens-text-primary">{{ module.capacityBytes | bytes }}</span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2 text-xs text-syslens-text-muted">
+                          <div>Manufacturer: <span class="text-syslens-text-secondary">{{ module.manufacturer }}</span></div>
+                          <div>Speed: <span class="text-syslens-text-secondary">{{ module.speedMhz }} MHz</span></div>
+                          @if (module.partNumber && module.partNumber !== 'Unknown') {
+                            <div class="col-span-2">Part: <span class="text-syslens-text-secondary">{{ module.partNumber }}</span></div>
+                          }
+                        </div>
                       </div>
                     }
                   </div>
@@ -196,7 +205,22 @@ import { BytesPipe, DecimalPipe } from '@shared/pipes';
                     </div>
                     <div>
                       <p class="text-xs text-syslens-text-muted">Driver Version</p>
-                      <p class="text-syslens-text-primary">{{ gpu.driverVersion }}</p>
+                      <p class="text-syslens-text-primary">
+                        {{ gpu.driverVersion }}
+                        @if (gpu.driverLink) {
+                          <a [href]="gpu.driverLink" target="_blank" class="ml-1 text-syslens-accent-blue hover:underline" title="Download drivers">
+                            ↗
+                          </a>
+                        }
+                      </p>
+                    </div>
+                    <div>
+                      <p class="text-xs text-syslens-text-muted">Driver Date</p>
+                      <p class="text-syslens-text-primary">{{ gpu.driverDate }}</p>
+                    </div>
+                    <div>
+                      <p class="text-xs text-syslens-text-muted">Type</p>
+                      <p class="text-syslens-text-primary">{{ gpu.adapterType }}</p>
                     </div>
                     <div>
                       <p class="text-xs text-syslens-text-muted">Resolution</p>
@@ -280,23 +304,76 @@ import { BytesPipe, DecimalPipe } from '@shared/pipes';
       @if (motherboardInfo) {
         <section class="card">
           <h2 class="section-title">Motherboard</h2>
-          <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div>
-              <p class="text-xs text-syslens-text-muted">Manufacturer</p>
-              <p class="text-sm text-syslens-text-primary">{{ motherboardInfo.manufacturer }}</p>
+          <div class="flex flex-col lg:flex-row gap-6">
+            <div class="flex-1">
+              <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                <div>
+                  <p class="text-xs text-syslens-text-muted">Manufacturer</p>
+                  <p class="text-sm text-syslens-text-primary">
+                    {{ motherboardInfo.manufacturer }}
+                    @if (motherboardInfo.supportUrl) {
+                      <a [href]="motherboardInfo.supportUrl" target="_blank" class="ml-1 text-syslens-accent-blue hover:underline" title="Manufacturer support">
+                        ↗
+                      </a>
+                    }
+                  </p>
+                </div>
+                <div>
+                  <p class="text-xs text-syslens-text-muted">Product</p>
+                  <p class="text-sm text-syslens-text-primary">{{ motherboardInfo.product }}</p>
+                </div>
+                @if (motherboardInfo.version) {
+                  <div>
+                    <p class="text-xs text-syslens-text-muted">Version</p>
+                    <p class="text-sm text-syslens-text-primary">{{ motherboardInfo.version }}</p>
+                  </div>
+                }
+                @if (motherboardInfo.chipset) {
+                  <div>
+                    <p class="text-xs text-syslens-text-muted">Chipset</p>
+                    <p class="text-sm text-syslens-text-primary">{{ motherboardInfo.chipset }}</p>
+                  </div>
+                }
+                @if (motherboardInfo.serialNumber) {
+                  <div>
+                    <p class="text-xs text-syslens-text-muted">Serial Number</p>
+                    <p class="text-sm text-syslens-text-primary">{{ motherboardInfo.serialNumber }}</p>
+                  </div>
+                }
+              </div>
+
+              <!-- BIOS Information -->
+              @if (motherboardInfo.biosVendor || motherboardInfo.biosVersion) {
+                <div class="mt-4 pt-4 border-t border-syslens-border-primary">
+                  <p class="text-xs text-syslens-text-muted mb-2">BIOS Information</p>
+                  <div class="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+                    @if (motherboardInfo.biosVendor) {
+                      <div>
+                        <p class="text-xs text-syslens-text-muted">Vendor</p>
+                        <p class="text-syslens-text-primary">{{ motherboardInfo.biosVendor }}</p>
+                      </div>
+                    }
+                    @if (motherboardInfo.biosVersion) {
+                      <div>
+                        <p class="text-xs text-syslens-text-muted">Version</p>
+                        <p class="text-syslens-text-primary">{{ motherboardInfo.biosVersion }}</p>
+                      </div>
+                    }
+                    @if (motherboardInfo.biosReleaseDate) {
+                      <div>
+                        <p class="text-xs text-syslens-text-muted">Release Date</p>
+                        <p class="text-syslens-text-primary">{{ motherboardInfo.biosReleaseDate }}</p>
+                      </div>
+                    }
+                  </div>
+                </div>
+              }
             </div>
-            <div>
-              <p class="text-xs text-syslens-text-muted">Product</p>
-              <p class="text-sm text-syslens-text-primary">{{ motherboardInfo.product }}</p>
-            </div>
-            <div>
-              <p class="text-xs text-syslens-text-muted">Version</p>
-              <p class="text-sm text-syslens-text-primary">{{ motherboardInfo.version }}</p>
-            </div>
-            @if (motherboardInfo.chipset) {
-              <div>
-                <p class="text-xs text-syslens-text-muted">Chipset</p>
-                <p class="text-sm text-syslens-text-primary">{{ motherboardInfo.chipset }}</p>
+
+            <!-- Motherboard Image (if available) -->
+            @if (motherboardInfo.imageUrl) {
+              <div class="flex items-center justify-center lg:w-64">
+                <img [src]="motherboardInfo.imageUrl" [alt]="motherboardInfo.product" class="max-w-full h-auto rounded-lg">
               </div>
             }
           </div>

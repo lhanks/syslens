@@ -78,16 +78,19 @@ thread_local! {
 
 #[cfg(target_os = "windows")]
 fn get_wmi_connection() -> Option<WMIConnection> {
-    match COMLibrary::new() {
-        Ok(com) => match WMIConnection::new(com) {
-            Ok(wmi) => Some(wmi),
-            Err(e) => {
-                log::warn!("Failed to create WMI connection: {}", e);
-                None
-            }
-        },
+    // Try to initialize COM, or assume it's already initialized
+    let com = COMLibrary::new()
+        .or_else(|_| COMLibrary::without_security())
+        .unwrap_or_else(|_| {
+            // COM already initialized (e.g., by Tauri or sysinfo) - use existing
+            // SAFETY: We've tried other methods, COM must be initialized by the runtime
+            unsafe { COMLibrary::assume_initialized() }
+        });
+
+    match WMIConnection::new(com) {
+        Ok(wmi) => Some(wmi),
         Err(e) => {
-            log::warn!("Failed to initialize COM library: {}", e);
+            log::warn!("Failed to create WMI connection: {}", e);
             None
         }
     }
@@ -518,19 +521,21 @@ impl SystemCollector {
     #[cfg(target_os = "windows")]
     fn get_tpm_info() -> (Option<String>, TpmStatus) {
         // Try to query TPM via WMI in the root\cimv2\Security\MicrosoftTpm namespace
-        if let Some(com) = COMLibrary::new().ok() {
-            if let Some(wmi) = WMIConnection::with_namespace_path("root\\cimv2\\Security\\MicrosoftTpm", com).ok() {
-                let results: Result<Vec<Win32TPM>, _> = wmi.raw_query("SELECT SpecVersion, IsActivated_InitialValue, IsEnabled_InitialValue FROM Win32_Tpm");
-                if let Ok(mut tpms) = results {
-                    if let Some(tpm) = tpms.pop() {
-                        let status = match (tpm.is_enabled_initial_value, tpm.is_activated_initial_value) {
-                            (Some(true), Some(true)) => TpmStatus::Enabled,
-                            (Some(true), _) => TpmStatus::Enabled,
-                            (Some(false), _) => TpmStatus::Disabled,
-                            _ => TpmStatus::Unknown,
-                        };
-                        return (tpm.spec_version, status);
-                    }
+        let com = COMLibrary::new()
+            .or_else(|_| COMLibrary::without_security())
+            .unwrap_or_else(|_| unsafe { COMLibrary::assume_initialized() });
+
+        if let Ok(wmi) = WMIConnection::with_namespace_path("root\\cimv2\\Security\\MicrosoftTpm", com) {
+            let results: Result<Vec<Win32TPM>, _> = wmi.raw_query("SELECT SpecVersion, IsActivated_InitialValue, IsEnabled_InitialValue FROM Win32_Tpm");
+            if let Ok(mut tpms) = results {
+                if let Some(tpm) = tpms.pop() {
+                    let status = match (tpm.is_enabled_initial_value, tpm.is_activated_initial_value) {
+                        (Some(true), Some(true)) => TpmStatus::Enabled,
+                        (Some(true), _) => TpmStatus::Enabled,
+                        (Some(false), _) => TpmStatus::Disabled,
+                        _ => TpmStatus::Unknown,
+                    };
+                    return (tpm.spec_version, status);
                 }
             }
         }

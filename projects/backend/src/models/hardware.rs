@@ -90,10 +90,12 @@ pub struct GpuInfo {
     pub manufacturer: String,
     pub driver_version: String,
     pub driver_date: String,
+    pub driver_link: Option<String>,
     pub vram_bytes: u64,
     pub current_resolution: String,
     pub refresh_rate_hz: u32,
     pub adapter_type: GpuAdapterType,
+    pub pnp_device_id: Option<String>,
 }
 
 /// GPU adapter type
@@ -125,6 +127,11 @@ pub struct MotherboardInfo {
     pub version: String,
     pub serial_number: String,
     pub chipset: Option<String>,
+    pub bios_vendor: Option<String>,
+    pub bios_version: Option<String>,
+    pub bios_release_date: Option<String>,
+    pub support_url: Option<String>,
+    pub image_url: Option<String>,
 }
 
 /// USB device information

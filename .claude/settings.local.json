@@ -31,7 +31,8 @@
       "Skill(ct)",
       "Bash(source C:/dev/syslens/etc/.env)",
       "Bash(./bin/setup-rust:*)",
-      "Bash(rmdir:*)"
+      "Bash(rmdir:*)",
+      "Bash(bash:*)"
     ],
     "deny": []
   }

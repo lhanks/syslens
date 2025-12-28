@@ -5,18 +5,11 @@ Tech Stack: Tauri 2.0 (Rust) + Angular 21 + Tailwind CSS
 
 ---
 
-## 0 New Tasks 
-
-** IMPORTANT ** Do not remove this section. Just clear out the tasks once processed.
+## 0 New Tasks
 
 - Process the tasks below.  Expand them if needed and put them in the appropriate sections below.
 
-- The vendor information is missing for the following devices:
-    - GPU
-    - Memory
-    - Motherboard
-        - We need to add as much detail as possible to the motherboard information. Both configuration and options. Include an image of the motherboard if possible. 
-- For all devices, link to the driver pages and other vendor documentation if available.
+** IMPORTANT ** Do not remove this section. Just clear out the tasks once processed.
  
 ## 1. Setup
 
@@ -44,6 +37,11 @@ Tech Stack: Tauri 2.0 (Rust) + Angular 21 + Tailwind CSS
 - [ ] 3.6 Add real-time metrics polling
 - [x] 3.7 Enhance device information collection (manufacturer, model, serial, BIOS/UEFI for all devices)
 - [x] 3.8 Add complete IP configuration data (ipconfig /all) for network connections
+- [x] 3.9 Add GPU vendor information (manufacturer, model, driver version, driver link)
+- [x] 3.10 Add Memory vendor information (manufacturer, part number, serial, speed)
+- [x] 3.11 Add detailed Motherboard information (manufacturer, model, version, serial, configuration, BIOS info)
+- [x] 3.12 Gather motherboard image URL from manufacturer website based on model
+- [x] 3.13 Add driver/documentation links for all hardware devices
 
 ## 4. Frontend Implementation (Angular)
 
@@ -59,6 +57,11 @@ Tech Stack: Tauri 2.0 (Rust) + Angular 21 + Tailwind CSS
 - [x] 4.10 Format numeric values to show 1 decimal place (avoid long digit strings)
 - [x] 4.11 Add click-through from summary to detailed information views
 - [x] 4.12 Implement progressive data loading (prioritize current tab, preload others)
+- [x] 4.13 Display GPU vendor information in Hardware Info component
+- [x] 4.14 Display Memory vendor information in Hardware Info component
+- [x] 4.15 Display detailed Motherboard information in Hardware Info component
+- [x] 4.16 Add clickable driver/documentation links for all devices
+- [x] 4.17 Display motherboard image if available
 
 ## 5. Quality
 
@@ -84,8 +87,8 @@ Tech Stack: Tauri 2.0 (Rust) + Angular 21 + Tailwind CSS
 
 ## Progress
 
-- Total Tasks: 37
-- Completed: 25
+- Total Tasks: 47
+- Completed: 35
 - Remaining: 12
 
 Last Updated: 2025-12-28

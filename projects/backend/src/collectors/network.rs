@@ -226,17 +226,20 @@ impl NetworkCollector {
     fn get_wmi_adapter_config() -> HashMap<String, Win32NetworkAdapterConfiguration> {
         let mut result = HashMap::new();
 
-        if let Ok(com) = COMLibrary::new() {
-            if let Ok(wmi) = WMIConnection::new(com) {
-                let query = "SELECT Description, DHCPEnabled, DHCPServer, DHCPLeaseObtained, DHCPLeaseExpires, \
-                            DNSServerSearchOrder, DNSDomain, DNSDomainSuffixSearchOrder, Index, MACAddress, MTU \
-                            FROM Win32_NetworkAdapterConfiguration WHERE IPEnabled = TRUE";
+        // Try to initialize COM, or assume it's already initialized
+        let com = COMLibrary::new()
+            .or_else(|_| COMLibrary::without_security())
+            .unwrap_or_else(|_| unsafe { COMLibrary::assume_initialized() });
 
-                if let Ok(configs) = wmi.raw_query::<Win32NetworkAdapterConfiguration>(query) {
-                    for config in configs {
-                        if let Some(ref desc) = config.description {
-                            result.insert(desc.clone(), config);
-                        }
+        if let Ok(wmi) = WMIConnection::new(com) {
+            let query = "SELECT Description, DHCPEnabled, DHCPServer, DHCPLeaseObtained, DHCPLeaseExpires, \
+                        DNSServerSearchOrder, DNSDomain, DNSDomainSuffixSearchOrder, Index, MACAddress, MTU \
+                        FROM Win32_NetworkAdapterConfiguration WHERE IPEnabled = TRUE";
+
+            if let Ok(configs) = wmi.raw_query::<Win32NetworkAdapterConfiguration>(query) {
+                for config in configs {
+                    if let Some(ref desc) = config.description {
+                        result.insert(desc.clone(), config);
                     }
                 }
             }

@@ -67,10 +67,12 @@ export interface GpuInfo {
   manufacturer: string;
   driverVersion: string;
   driverDate: string;
+  driverLink: string | null;
   vramBytes: number;
   currentResolution: string;
   refreshRateHz: number;
   adapterType: 'Discrete' | 'Integrated';
+  pnpDeviceId: string | null;
 }
 
 export interface GpuMetrics {
@@ -89,6 +91,11 @@ export interface MotherboardInfo {
   version: string;
   serialNumber: string;
   chipset: string | null;
+  biosVendor: string | null;
+  biosVersion: string | null;
+  biosReleaseDate: string | null;
+  supportUrl: string | null;
+  imageUrl: string | null;
 }
 
 export interface UsbDevice {
