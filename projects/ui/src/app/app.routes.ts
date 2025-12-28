@@ -37,6 +37,12 @@ export const routes: Routes = [
     title: 'Storage - Syslens'
   },
   {
+    path: 'processes',
+    loadComponent: () => import('./features/processes/processes.component')
+      .then(m => m.ProcessesComponent),
+    title: 'Processes - Syslens'
+  },
+  {
     path: '**',
     redirectTo: 'dashboard'
   }

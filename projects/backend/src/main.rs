@@ -51,6 +51,9 @@ fn main() {
             commands::get_disk_health,
             commands::get_disk_performance,
             commands::get_network_drives,
+            // Process commands
+            commands::get_processes,
+            commands::get_process_summary,
         ])
         .run(tauri::generate_context!())
         .expect("Error while running Syslens application");

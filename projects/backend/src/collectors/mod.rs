@@ -6,8 +6,10 @@ pub mod network;
 pub mod system;
 pub mod hardware;
 pub mod storage;
+pub mod process;
 
 pub use network::NetworkCollector;
 pub use system::SystemCollector;
 pub use hardware::HardwareCollector;
 pub use storage::StorageCollector;
+pub use process::ProcessCollector;
