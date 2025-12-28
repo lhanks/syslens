@@ -4,9 +4,9 @@ import { RouterLink } from '@angular/router';
 import { Subject, takeUntil, interval, forkJoin, of } from 'rxjs';
 import { switchMap, startWith, catchError } from 'rxjs/operators';
 
-import { HardwareService, SystemService, NetworkService, StorageService, StatusService } from '@core/services';
+import { HardwareService, SystemService, NetworkService, StorageService, StatusService, NetworkHistoryService } from '@core/services';
 import { CpuMetrics, MemoryMetrics, CpuInfo, MemoryInfo, NetworkAdapter, AdapterStats } from '@core/models';
-import { ProgressRingComponent } from '@shared/components';
+import { ProgressRingComponent, LineGraphComponent } from '@shared/components';
 import { BytesPipe, UptimePipe } from '@shared/pipes';
 
 @Component({
@@ -15,8 +15,8 @@ import { BytesPipe, UptimePipe } from '@shared/pipes';
   imports: [
     CommonModule,
     RouterLink,
-    
     ProgressRingComponent,
+    LineGraphComponent,
     BytesPipe,
     UptimePipe
   ],
@@ -93,17 +93,28 @@ import { BytesPipe, UptimePipe } from '@shared/pipes';
         <!-- Network -->
         <a routerLink="/network" class="card-hover cursor-pointer">
           <h3 class="text-sm text-syslens-text-muted mb-2">Network</h3>
-          <div class="space-y-2">
+          <div class="mb-2">
+            <app-line-graph
+              [width]="180"
+              [height]="50"
+              [series1]="downloadHistory"
+              [series2]="uploadHistory"
+              [maxValue]="networkHistoryService.maxSpeed()"
+              series1Color="syslens-accent-green"
+              series2Color="syslens-accent-blue"
+            />
+          </div>
+          <div class="space-y-1">
             <div class="flex justify-between items-center">
               <span class="text-xs text-syslens-text-secondary">Download</span>
-              <span class="font-mono text-syslens-accent-green">{{ downloadSpeed | bytes }}/s</span>
+              <span class="font-mono text-xs text-syslens-accent-green">{{ downloadSpeed | bytes }}/s</span>
             </div>
             <div class="flex justify-between items-center">
               <span class="text-xs text-syslens-text-secondary">Upload</span>
-              <span class="font-mono text-syslens-accent-blue">{{ uploadSpeed | bytes }}/s</span>
+              <span class="font-mono text-xs text-syslens-accent-blue">{{ uploadSpeed | bytes }}/s</span>
             </div>
           </div>
-          <p class="mt-3 text-xs text-syslens-text-muted">{{ networkAdapterCount }} adapter(s)</p>
+          <p class="mt-2 text-xs text-syslens-text-muted">{{ networkAdapterCount }} adapter(s)</p>
         </a>
       </div>
 
@@ -178,6 +189,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private networkService = inject(NetworkService);
   private storageService = inject(StorageService);
   private statusService = inject(StatusService);
+  networkHistoryService = inject(NetworkHistoryService);
   private destroy$ = new Subject<void>();
 
   // System info
@@ -206,6 +218,15 @@ export class DashboardComponent implements OnInit, OnDestroy {
   networkAdapterCount = 0;
   private activeAdapters: NetworkAdapter[] = [];
   private previousNetworkStats: Map<string, { bytesReceived: number; bytesSent: number; timestamp: number }> = new Map();
+
+  // Network history for graph
+  get downloadHistory(): number[] {
+    return this.networkHistoryService.dataPoints().map(p => p.downloadSpeed);
+  }
+
+  get uploadHistory(): number[] {
+    return this.networkHistoryService.dataPoints().map(p => p.uploadSpeed);
+  }
 
   ngOnInit(): void {
     this.loadInitialData();
@@ -335,5 +356,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
     this.downloadSpeed = Math.round(totalDownloadSpeed);
     this.uploadSpeed = Math.round(totalUploadSpeed);
+
+    // Record history for graph
+    this.networkHistoryService.addDataPoint(this.downloadSpeed, this.uploadSpeed);
   }
 }

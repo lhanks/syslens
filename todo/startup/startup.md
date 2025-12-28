@@ -10,7 +10,6 @@ Tech Stack: Tauri 2.0 (Rust) + Angular 21 + Tailwind CSS
 ** IMPORTANT ** Do not remove this section. Just clear out the tasks once processed.
 
 - For device information, we want to display deep detail about the device. We need to add more information to the device information. Explore ways to find information on the internet if necessary.
-- Keep track of historical data. Add network traffic graph.
 - Add a process list (like task manager) tab.  
 
 ## 1. Setup
@@ -72,6 +71,7 @@ Tech Stack: Tauri 2.0 (Rust) + Angular 21 + Tailwind CSS
 - [x] 4.20 Parallelize dashboard data loading for faster startup (~500-1000ms improvement)
 - [x] 4.21 Restore last active route on app restart (state persistence)
 - [x] 4.22 Add status bar showing data capture operations in progress
+- [x] 4.23 Add real-time network traffic graph on dashboard (60-second history)
 
 ## 5. Quality
 
