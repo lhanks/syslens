@@ -505,21 +505,66 @@ export class HardwareComponent implements OnInit, OnDestroy {
 
   getCpuDeviceId(): string {
     if (!this.cpuInfo) return '';
-    const manufacturer = this.cpuInfo.manufacturer.toLowerCase().replace(/\s+/g, '-');
-    const model = this.cpuInfo.name.toLowerCase().replace(/\s+/g, '-');
+    const manufacturer = this.normalizeManufacturer(this.cpuInfo.manufacturer);
+    const model = this.cleanModelName(this.cpuInfo.name, manufacturer);
     return `cpu-${manufacturer}-${model}`;
   }
 
   getGpuDeviceId(gpu: GpuInfo): string {
-    const manufacturer = gpu.manufacturer.toLowerCase().replace(/\s+/g, '-');
-    const model = gpu.name.toLowerCase().replace(/\s+/g, '-');
+    const manufacturer = this.normalizeManufacturer(gpu.manufacturer);
+    const model = this.cleanModelName(gpu.name, manufacturer);
     return `gpu-${manufacturer}-${model}`;
   }
 
   getMotherboardDeviceId(): string {
     if (!this.motherboardInfo) return '';
-    const manufacturer = this.motherboardInfo.manufacturer.toLowerCase().replace(/\s+/g, '-');
-    const model = this.motherboardInfo.product.toLowerCase().replace(/\s+/g, '-');
+    const manufacturer = this.normalizeManufacturer(this.motherboardInfo.manufacturer);
+    const model = this.cleanModelName(this.motherboardInfo.product, manufacturer);
     return `mb-${manufacturer}-${model}`;
+  }
+
+  /**
+   * Normalize manufacturer name to a clean identifier.
+   * Handles vendor IDs and long company names.
+   */
+  private normalizeManufacturer(raw: string): string {
+    const lower = raw.toLowerCase();
+
+    // Map common vendor IDs and variations
+    if (lower.includes('authenticamd') || lower.includes('advanced micro')) return 'amd';
+    if (lower.includes('genuineintel') || lower.includes('intel')) return 'intel';
+    if (lower.includes('nvidia')) return 'nvidia';
+    if (lower.includes('micro-star') || lower.includes('msi')) return 'msi';
+    if (lower.includes('asustek') || lower.includes('asus')) return 'asus';
+    if (lower.includes('gigabyte')) return 'gigabyte';
+    if (lower.includes('asrock')) return 'asrock';
+
+    // Default: clean and return
+    return lower.replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  }
+
+  /**
+   * Clean model name by removing manufacturer prefix if present.
+   * Prevents duplication like "gpu-nvidia-nvidia-geforce-rtx-5070".
+   */
+  private cleanModelName(model: string, manufacturer: string): string {
+    let cleaned = model.toLowerCase();
+
+    // Remove manufacturer prefix if present at the start
+    const prefixes = [
+      manufacturer,
+      `${manufacturer} `,
+      `${manufacturer}-`,
+    ];
+
+    for (const prefix of prefixes) {
+      if (cleaned.startsWith(prefix)) {
+        cleaned = cleaned.slice(prefix.length);
+        break;
+      }
+    }
+
+    // Clean and normalize
+    return cleaned.replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '').replace(/^-|-$/g, '');
   }
 }

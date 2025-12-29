@@ -109,15 +109,47 @@ impl LocalDatabaseManager {
             return false;
         }
 
-        // Normalize model names for comparison
-        let db_model = Self::normalize_model(&db_id.model);
-        let search_model = Self::normalize_model(&search_id.model);
+        // Extract and normalize model identifiers
+        let db_model = Self::extract_model_identifier(&db_id.model);
+        let search_model = Self::extract_model_identifier(&search_id.model);
 
-        // Check if one contains the other
-        db_model.contains(&search_model) || search_model.contains(&db_model)
+        log::debug!(
+            "Fuzzy match comparing: db='{}' search='{}'",
+            db_model, search_model
+        );
+
+        // Require exact model identifier match to prevent false positives
+        // e.g., "rtx5070" should only match "rtx5070", not "rtx4090"
+        db_model == search_model
     }
 
-    /// Normalize model name for fuzzy matching.
+    /// Extract the core model identifier from a model name.
+    /// Removes manufacturer prefixes and common suffixes, keeping just the model number.
+    /// "nvidia-geforce-rtx-5070" → "rtx5070"
+    /// "GeForce RTX 5070" → "rtx5070"
+    /// "Ryzen 9 9900X" → "ryzen99900x"
+    fn extract_model_identifier(model: &str) -> String {
+        let lower = model.to_lowercase();
+
+        // Remove common manufacturer prefixes
+        let cleaned = lower
+            .replace("nvidia-", "")
+            .replace("nvidia ", "")
+            .replace("amd-", "")
+            .replace("amd ", "")
+            .replace("intel-", "")
+            .replace("intel ", "")
+            .replace("geforce-", "")
+            .replace("geforce ", "")
+            .replace("radeon-", "")
+            .replace("radeon ", "");
+
+        // Keep only alphanumeric characters
+        cleaned.chars().filter(|c| c.is_alphanumeric()).collect()
+    }
+
+    /// Normalize model name for fuzzy matching (legacy, used for backup matching).
+    #[allow(dead_code)]
     fn normalize_model(model: &str) -> String {
         model
             .to_lowercase()
