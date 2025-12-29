@@ -54,6 +54,7 @@ fn main() {
             // Process commands
             commands::get_processes,
             commands::get_process_summary,
+            commands::kill_process,
             // Device info commands
             commands::get_device_deep_info,
             commands::search_device_info,

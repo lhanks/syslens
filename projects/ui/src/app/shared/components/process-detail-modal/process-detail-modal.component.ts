@@ -256,12 +256,21 @@ type TabType = 'overview' | 'resources' | 'hierarchy';
           <!-- Footer -->
           <div class="p-3 border-t border-syslens-border-primary bg-syslens-bg-tertiary text-xs text-syslens-text-muted flex justify-between items-center">
             <span>PID: {{ process.pid }}</span>
-            <button
-              (click)="requestRefresh()"
-              class="px-3 py-1 bg-syslens-bg-primary rounded hover:bg-syslens-bg-secondary transition-colors"
-            >
-              Refresh
-            </button>
+            <div class="flex gap-2">
+              <button
+                (click)="requestKill()"
+                class="px-3 py-1 bg-syslens-accent-red/20 text-syslens-accent-red rounded hover:bg-syslens-accent-red/30 transition-colors"
+                title="Terminate this process"
+              >
+                End Process
+              </button>
+              <button
+                (click)="requestRefresh()"
+                class="px-3 py-1 bg-syslens-bg-primary rounded hover:bg-syslens-bg-secondary transition-colors"
+              >
+                Refresh
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -276,6 +285,7 @@ export class ProcessDetailModalComponent {
   @Output() closed = new EventEmitter<void>();
   @Output() refreshRequested = new EventEmitter<number>();
   @Output() processSelected = new EventEmitter<ProcessInfo>();
+  @Output() killRequested = new EventEmitter<number>();
 
   activeTab: TabType = 'overview';
   Math = Math;
@@ -306,6 +316,18 @@ export class ProcessDetailModalComponent {
   requestRefresh(): void {
     if (this.process) {
       this.refreshRequested.emit(this.process.pid);
+    }
+  }
+
+  requestKill(): void {
+    if (this.process) {
+      // Confirm before killing
+      const confirmed = confirm(
+        `Are you sure you want to end "${this.process.name}" (PID: ${this.process.pid})?\n\nThis may cause data loss if the process has unsaved work.`
+      );
+      if (confirmed) {
+        this.killRequested.emit(this.process.pid);
+      }
     }
   }
 

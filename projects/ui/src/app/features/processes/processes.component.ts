@@ -2,6 +2,7 @@ import { Component, OnInit, OnDestroy, inject, signal, computed } from '@angular
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subject, takeUntil } from 'rxjs';
+import { invoke } from '@tauri-apps/api/core';
 
 import { ProcessService, StatusService, MetricsHistoryService } from '@core/services';
 import { ProcessInfo, ProcessSummary } from '@core/models';
@@ -323,6 +324,7 @@ type SortDirection = 'asc' | 'desc';
       (closed)="closeModal()"
       (refreshRequested)="handleRefresh()"
       (processSelected)="selectProcess($event)"
+      (killRequested)="handleKillProcess($event)"
     />
   `,
   styles: [`
@@ -468,6 +470,23 @@ export class ProcessesComponent implements OnInit, OnDestroy {
           }
         }
       });
+  }
+
+  async handleKillProcess(pid: number): Promise<void> {
+    try {
+      this.statusService.startOperation('kill-process', `Ending process ${pid}...`);
+      await invoke<boolean>('kill_process', { pid });
+
+      // Close modal and refresh process list
+      this.closeModal();
+      this.handleRefresh();
+      this.statusService.endOperation('kill-process');
+    } catch (error) {
+      this.statusService.endOperation('kill-process');
+      // Show error to user
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      alert(`Failed to end process: ${errorMessage}`);
+    }
   }
 
   private loadInitialData(): void {
