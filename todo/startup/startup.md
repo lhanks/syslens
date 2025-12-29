@@ -18,15 +18,15 @@ Tech Stack: Tauri 2.0 (Rust) + Angular 21 + Tailwind CSS
 ## 2. Infrastructure
 
 - [x] 2.1 Configure GitHub Actions CI pipeline
-- [ ] 2.2 Add state persistence service (cache latest metrics/data for faster startup)
+- [x] 2.2 Add state persistence service (cache latest metrics/data for faster startup)
 - [ ] 2.3 Configure Tauri build for Windows installer
 - [ ] 2.4 Set up code signing (optional, for later)
 
 ## 3. Backend Implementation (Rust)
 
 - [x] 3.6 Add real-time metrics polling
-- [ ] 3.17 Fix display detection (shows "Generic" instead of actual monitor model)
-- [ ] 3.18 Fix processor cache size reporting (currently incorrect)
+- [x] 3.17 Fix display detection (EDID parsing for actual monitor model)
+- [x] 3.18 Fix processor cache size reporting (WMI for L1/L2/L3 cache)
 
 ## 4. Frontend Implementation (Angular)
 
@@ -77,10 +77,10 @@ Tech Stack: Tauri 2.0 (Rust) + Angular 21 + Tailwind CSS
 ## Progress
 
 - Total Tasks: 30
-- Completed: 14
-- Remaining: 16
+- Completed: 17
+- Remaining: 13
 
-Last Updated: 2025-12-28 (Session 4)
+Last Updated: 2025-12-28 (Session 5)
 
 ---
 
@@ -95,6 +95,7 @@ Last Updated: 2025-12-28 (Session 4)
 
 ### Infrastructure
 - [x] 2.2 Set up build scripts in bin/ folder
+- [x] 2.2 Add state persistence service (DataCacheService with localStorage + cache-first pattern)
 - [x] 2.5 Create run-app-prod script for production builds with bundled assets
 
 ### Backend Implementation (Rust)
@@ -144,6 +145,8 @@ Last Updated: 2025-12-28 (Session 4)
 
 ### Backend Implementation (Rust)
 - [x] 3.16 Fix CPU % normalization in process list (divide by core count)
+- [x] 3.17 Fix display detection (EDID parsing from Windows Registry for actual monitor model)
+- [x] 3.18 Fix processor cache size reporting (WMI Win32_Processor + Win32_CacheMemory for L1/L2/L3)
 
 ### Infrastructure
 - [x] 2.1 Configure GitHub Actions CI pipeline (ESLint, Clippy, TypeScript, Rust build)

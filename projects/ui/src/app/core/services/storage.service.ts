@@ -1,40 +1,85 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable, interval, switchMap, startWith, shareReplay } from 'rxjs';
+import {
+  Observable,
+  interval,
+  switchMap,
+  startWith,
+  shareReplay,
+  BehaviorSubject,
+  of,
+  tap,
+  catchError,
+} from 'rxjs';
 import { TauriService } from './tauri.service';
+import { DataCacheService, CacheKeys } from './data-cache.service';
 import {
   PhysicalDisk,
   Partition,
   Volume,
   DiskHealth,
   DiskPerformance,
-  NetworkDrive
+  NetworkDrive,
 } from '../models/storage.model';
 
 /**
  * Service for retrieving storage configuration and metrics.
+ * Uses cache-first pattern: returns cached data immediately, then refreshes in background.
  */
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class StorageService {
   private tauri = inject(TauriService);
+  private cache = inject(DataCacheService);
 
-  // Cached observables
-  private disksCache$: Observable<PhysicalDisk[]> | null = null;
-  private volumesCache$: Observable<Volume[]> | null = null;
+  // BehaviorSubject for cache-first pattern
+  private disks$ = new BehaviorSubject<PhysicalDisk[] | null>(null);
+
+  // Track if fresh data has been fetched
+  private disksFetched = false;
+
+  constructor() {
+    this.loadCachedData();
+  }
+
+  /**
+   * Load cached storage data on startup
+   */
+  private loadCachedData(): void {
+    const disks = this.cache.load<PhysicalDisk[]>(CacheKeys.STORAGE_DEVICES);
+    if (disks) this.disks$.next(disks);
+  }
 
   // --- Physical Disks ---
 
   /**
    * Get all physical disks.
+   * Returns cached data immediately, then fetches fresh data in background.
    */
   getPhysicalDisks(): Observable<PhysicalDisk[]> {
-    if (!this.disksCache$) {
-      this.disksCache$ = this.tauri.invoke<PhysicalDisk[]>('get_physical_disks').pipe(
-        shareReplay(1)
-      );
+    if (!this.disksFetched) {
+      this.disksFetched = true;
+      this.tauri
+        .invoke<PhysicalDisk[]>('get_physical_disks')
+        .pipe(
+          tap((data) => {
+            this.cache.save(CacheKeys.STORAGE_DEVICES, data);
+            this.disks$.next(data);
+          }),
+          catchError((err) => {
+            console.error('Failed to fetch physical disks:', err);
+            return of(null);
+          })
+        )
+        .subscribe();
     }
-    return this.disksCache$;
+
+    return this.disks$.asObservable().pipe(
+      switchMap((data) =>
+        data ? of(data) : this.tauri.invoke<PhysicalDisk[]>('get_physical_disks')
+      ),
+      shareReplay(1)
+    );
   }
 
   /**
@@ -111,11 +156,17 @@ export class StorageService {
   }
 
   /**
-   * Clear cached storage data.
+   * Clear cached storage data (both in-memory and persistent).
    */
   clearCache(): void {
-    this.disksCache$ = null;
-    this.volumesCache$ = null;
+    // Reset fetch flag
+    this.disksFetched = false;
+
+    // Clear in-memory cache
+    this.disks$.next(null);
+
+    // Clear persistent cache
+    this.cache.clear(CacheKeys.STORAGE_DEVICES);
   }
 
   /**
