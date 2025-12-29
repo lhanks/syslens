@@ -6,7 +6,8 @@ Tech Stack: Tauri 2.0 (Rust) + Angular 21 + Tailwind CSS
 ---
 
 ## 0 New Tasks
-** IMPORTANT ** Process the tasks below (in this section).  Expand them if needed and put them in the appropriate sections below.
+
+** IMPORTANT ** Process the tasks below (in this section). Expand them if needed and put them in the appropriate sections below.
 ** IMPORTANT ** Do not remove this section. Just clear out the tasks once processed.
 
 (no new tasks)
@@ -27,6 +28,7 @@ Tech Stack: Tauri 2.0 (Rust) + Angular 21 + Tailwind CSS
 - [x] 3.6 Add real-time metrics polling
 - [x] 3.17 Fix display detection (EDID parsing for actual monitor model)
 - [x] 3.18 Fix processor cache size reporting (WMI for L1/L2/L3 cache)
+- [x] 3.19 Improve RAM vendor detection from part number prefixes
 
 ## 4. Frontend Implementation (Angular)
 
@@ -67,17 +69,17 @@ Tech Stack: Tauri 2.0 (Rust) + Angular 21 + Tailwind CSS
 ## 9. Future Enhancements (Requires Spec Design)
 
 - [ ] 9.1 Get spec agent to design hardware database and AI-enhanced features
-    - Local hardware device database (JSON) with images/specs/drivers/documentation
-    - AI agent for searching device information not in database
-    - Process history database with AI-powered usage pattern analysis
-    - Settings dialog for API keys (AI agent, internet fetcher)
+  - Local hardware device database (JSON) with images/specs/drivers/documentation
+  - AI agent for searching device information not in database
+  - Process history database with AI-powered usage pattern analysis
+  - Settings dialog for API keys (AI agent, internet fetcher)
 
 ---
 
 ## Progress
 
-- Total Tasks: 30
-- Completed: 26
+- Total Tasks: 31
+- Completed: 27
 - Remaining: 4
 
 Last Updated: 2025-12-29 (Session 7)
@@ -87,6 +89,7 @@ Last Updated: 2025-12-29 (Session 7)
 ## Archive (Completed Tasks)
 
 ### Setup
+
 - [x] 1.1 Review project specs in specs/ folder
 - [x] 1.2 Install frontend dependencies (npm install in projects/ui)
 - [x] 1.3 Install backend dependencies (cargo build in projects/backend)
@@ -95,11 +98,13 @@ Last Updated: 2025-12-29 (Session 7)
 - [x] 1.6 Set up IDE extensions (docs/IDE_SETUP.md + .vscode config files)
 
 ### Infrastructure
+
 - [x] 2.2 Set up build scripts in bin/ folder
 - [x] 2.2 Add state persistence service (DataCacheService with localStorage + cache-first pattern)
 - [x] 2.5 Create run-app-prod script for production builds with bundled assets
 
 ### Backend Implementation (Rust)
+
 - [x] 3.1 Implement system info collector (device name, manufacturer, model, serial, BIOS/UEFI)
 - [x] 3.2 Implement network info collector (adapters, IP config, DNS, statistics)
 - [x] 3.3 Implement hardware info collector (CPU, memory, GPU)
@@ -116,6 +121,7 @@ Last Updated: 2025-12-29 (Session 7)
 - [x] 3.15 Implement Windows monitor/display information collector (WMI + GDI fallback)
 
 ### Frontend Implementation (Angular)
+
 - [x] 4.1 Set up Tailwind CSS and base styles
 - [x] 4.2 Create Tauri service wrapper for IPC
 - [x] 4.3 Build dashboard layout with navigation
@@ -145,23 +151,29 @@ Last Updated: 2025-12-29 (Session 7)
 - [x] 4.30 Add smooth interpolated transitions to line graphs (Catmull-Rom splines + requestAnimationFrame)
 
 ### Backend Implementation (Rust)
+
 - [x] 3.16 Fix CPU % normalization in process list (divide by core count)
 - [x] 3.17 Fix display detection (EDID parsing from Windows Registry for actual monitor model)
 - [x] 3.18 Fix processor cache size reporting (WMI Win32_Processor + Win32_CacheMemory for L1/L2/L3)
 
 ### Infrastructure
+
 - [x] 2.1 Configure GitHub Actions CI pipeline (ESLint, Clippy, TypeScript, Rust build)
 - [x] 2.3 Configure Tauri build for Windows installer (NSIS + MSI bundle targets)
 
 ### Backend Implementation (Rust)
+
 - [x] 3.6 Add real-time metrics polling (MetricsHistoryService with 1-second polling)
+- [x] 3.19 Improve RAM vendor detection from part number prefixes (Team Group, G.Skill, Corsair, etc.)
 
 ### Frontend Implementation (Angular)
+
 - [x] 4.8 Add real-time data refresh with signals (MetricsHistoryService uses Angular signals)
 - [x] 4.29 Fix line graphs to have fixed height (consistent yAxisWidth=40 for alignment)
 - [x] 4.31 Add process details dialog (ProcessDetailModalComponent with 3 tabs: Overview, Resources, Hierarchy)
 
 ### Quality
+
 - [x] 5.1 Set up Rust test framework with unit tests (56 tests: models, collectors, services)
 - [x] 5.2 Set up Angular test framework (47 tests: StatusService, DataCacheService, BytesPipe)
 - [x] 5.3 Configure ESLint for frontend (ESLint 9 flat config with Angular plugins)
@@ -169,10 +181,12 @@ Last Updated: 2025-12-29 (Session 7)
 - [x] 5.5 Add pre-commit hooks (lint, format) with Husky
 
 ### Documentation
+
 - [x] 6.1 Complete README with build instructions
 - [x] 6.2 Document Tauri IPC commands (36 commands in docs/TAURI_IPC_COMMANDS.md)
 - [x] 6.3 Add inline code documentation (codebase already well-documented with module/function docs)
 
 ### Release
+
 - [x] 7.1 Test Windows build and installer (NSIS + MSI both passed)
 - [x] 7.2 Create release checklist (docs/RELEASE_CHECKLIST.md)

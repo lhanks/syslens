@@ -298,13 +298,19 @@ impl HardwareCollector {
                     let part_speed = Self::extract_speed_from_part_number(&part_number);
                     let rated_speed = wmi_speed.max(part_speed);
 
+                    // Get manufacturer - prefer WMI, fall back to part number extraction
+                    let wmi_manufacturer = module.manufacturer
+                        .map(|m| m.trim().to_string())
+                        .filter(|m| !m.is_empty() && m != "Unknown");
+
+                    let manufacturer = wmi_manufacturer
+                        .or_else(|| Self::extract_manufacturer_from_part_number(&part_number))
+                        .unwrap_or_else(|| "Unknown".to_string());
+
                     modules.push(MemoryModule {
                         slot: module.device_locator.unwrap_or_else(|| "Unknown".to_string()),
                         capacity_bytes: capacity,
-                        manufacturer: module.manufacturer
-                            .unwrap_or_else(|| "Unknown".to_string())
-                            .trim()
-                            .to_string(),
+                        manufacturer,
                         part_number,
                         serial_number: module.serial_number
                             .unwrap_or_else(|| "Unknown".to_string())
@@ -399,6 +405,90 @@ impl HardwareCollector {
         }
 
         0
+    }
+
+    /// Extract manufacturer from memory part number prefix.
+    /// Many manufacturers use consistent prefixes in their part numbers.
+    #[cfg(target_os = "windows")]
+    fn extract_manufacturer_from_part_number(part_number: &str) -> Option<String> {
+        let upper = part_number.to_uppercase();
+
+        // Team Group patterns: FLBD, TED, TPRD, TF, TZD, TPD, THLD, TLZGD, TLRD, TEAMGROUP
+        if upper.starts_with("FLBD")
+            || upper.starts_with("TED")
+            || upper.starts_with("TPRD")
+            || upper.starts_with("TZD")
+            || upper.starts_with("TPD")
+            || upper.starts_with("THLD")
+            || upper.starts_with("TLZGD")
+            || upper.starts_with("TLRD")
+            || upper.starts_with("TEAMGROUP")
+            || (upper.starts_with("TF") && upper.len() > 4)
+        {
+            return Some("Team Group".to_string());
+        }
+
+        // G.Skill patterns: F5-, F4-, F3-
+        if upper.starts_with("F5-") || upper.starts_with("F4-") || upper.starts_with("F3-") {
+            return Some("G.Skill".to_string());
+        }
+
+        // Corsair patterns: CM (CMK, CMW, CML, CMT, CMH, CMD, CMR, CMS)
+        if upper.starts_with("CM") && upper.len() > 3 {
+            return Some("Corsair".to_string());
+        }
+
+        // Kingston patterns: KHX, KVR, KF, FURY
+        if upper.starts_with("KHX")
+            || upper.starts_with("KVR")
+            || upper.starts_with("KF")
+            || upper.starts_with("FURY")
+        {
+            return Some("Kingston".to_string());
+        }
+
+        // Crucial/Micron patterns: BL, CT, BLS, MTA, MT (not followed by another letter)
+        if upper.starts_with("BL") || upper.starts_with("CT") || upper.starts_with("BLS") {
+            return Some("Crucial".to_string());
+        }
+        if upper.starts_with("MTA") || upper.starts_with("MTC") {
+            return Some("Micron".to_string());
+        }
+
+        // Samsung patterns: M378, M471, M393, M391
+        if upper.starts_with("M378")
+            || upper.starts_with("M471")
+            || upper.starts_with("M393")
+            || upper.starts_with("M391")
+        {
+            return Some("Samsung".to_string());
+        }
+
+        // SK Hynix patterns: HM, HMA, HMAA, HMT, HMCG
+        if upper.starts_with("HMA")
+            || upper.starts_with("HMT")
+            || upper.starts_with("HMCG")
+            || upper.starts_with("HMAA")
+        {
+            return Some("SK Hynix".to_string());
+        }
+
+        // Patriot patterns: PV, PVE, PVSR, PSD
+        if upper.starts_with("PV") || upper.starts_with("PSD") {
+            return Some("Patriot".to_string());
+        }
+
+        // ADATA patterns: AD, AX
+        if upper.starts_with("AD") || upper.starts_with("AX") {
+            return Some("ADATA".to_string());
+        }
+
+        // PNY patterns: MD
+        if upper.starts_with("MD") && upper.len() > 4 {
+            return Some("PNY".to_string());
+        }
+
+        None
     }
 
     /// Get real-time memory metrics
@@ -1263,6 +1353,82 @@ mod tests {
         // No valid speed found
         assert_eq!(HardwareCollector::extract_speed_from_part_number("RANDOMPART123"), 0);
         assert_eq!(HardwareCollector::extract_speed_from_part_number(""), 0);
+    }
+
+    #[cfg(target_os = "windows")]
+    #[test]
+    fn test_extract_manufacturer_from_part_number() {
+        // Team Group
+        assert_eq!(
+            HardwareCollector::extract_manufacturer_from_part_number("FLBD516G6000HC38GBKT"),
+            Some("Team Group".to_string())
+        );
+        assert_eq!(
+            HardwareCollector::extract_manufacturer_from_part_number("TED516G6000C40DC01"),
+            Some("Team Group".to_string())
+        );
+
+        // G.Skill
+        assert_eq!(
+            HardwareCollector::extract_manufacturer_from_part_number("F5-6000J3038F16GX2-TZ5N"),
+            Some("G.Skill".to_string())
+        );
+        assert_eq!(
+            HardwareCollector::extract_manufacturer_from_part_number("F4-3600C16D-16GTZNC"),
+            Some("G.Skill".to_string())
+        );
+
+        // Corsair
+        assert_eq!(
+            HardwareCollector::extract_manufacturer_from_part_number("CMK32GX5M2B5600C36"),
+            Some("Corsair".to_string())
+        );
+        assert_eq!(
+            HardwareCollector::extract_manufacturer_from_part_number("CMW16GX4M2C3200C16"),
+            Some("Corsair".to_string())
+        );
+
+        // Kingston
+        assert_eq!(
+            HardwareCollector::extract_manufacturer_from_part_number("KF560C36BBK2-32"),
+            Some("Kingston".to_string())
+        );
+        assert_eq!(
+            HardwareCollector::extract_manufacturer_from_part_number("KVR32N22S8/8"),
+            Some("Kingston".to_string())
+        );
+
+        // Crucial
+        assert_eq!(
+            HardwareCollector::extract_manufacturer_from_part_number("CT16G56C46S5"),
+            Some("Crucial".to_string())
+        );
+        assert_eq!(
+            HardwareCollector::extract_manufacturer_from_part_number("BL16G32C16U4B"),
+            Some("Crucial".to_string())
+        );
+
+        // Samsung
+        assert_eq!(
+            HardwareCollector::extract_manufacturer_from_part_number("M378A2K43DB1-CTD"),
+            Some("Samsung".to_string())
+        );
+
+        // SK Hynix
+        assert_eq!(
+            HardwareCollector::extract_manufacturer_from_part_number("HMAA2GU6CJR8N-XN"),
+            Some("SK Hynix".to_string())
+        );
+
+        // Unknown
+        assert_eq!(
+            HardwareCollector::extract_manufacturer_from_part_number("RANDOMPART123"),
+            None
+        );
+        assert_eq!(
+            HardwareCollector::extract_manufacturer_from_part_number(""),
+            None
+        );
     }
 
     #[cfg(target_os = "windows")]
