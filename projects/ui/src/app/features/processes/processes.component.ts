@@ -6,7 +6,7 @@ import { Subject, takeUntil } from 'rxjs';
 import { ProcessService, StatusService, MetricsHistoryService } from '@core/services';
 import { ProcessInfo, ProcessSummary } from '@core/models';
 import { BytesPipe } from '@shared/pipes';
-import { LineGraphComponent } from '@shared/components';
+import { LineGraphComponent, ProcessDetailModalComponent } from '@shared/components';
 
 type SortColumn = 'name' | 'pid' | 'cpuUsage' | 'memoryBytes' | 'status';
 type SortDirection = 'asc' | 'desc';
@@ -14,7 +14,7 @@ type SortDirection = 'asc' | 'desc';
 @Component({
   selector: 'app-processes',
   standalone: true,
-  imports: [CommonModule, FormsModule, BytesPipe, LineGraphComponent],
+  imports: [CommonModule, FormsModule, BytesPipe, LineGraphComponent, ProcessDetailModalComponent],
   template: `
     <div class="p-6 space-y-6">
       <!-- Header -->
@@ -222,7 +222,8 @@ type SortDirection = 'asc' | 'desc';
             </thead>
             <tbody>
               @for (process of paginatedProcesses(); track process.pid) {
-                <tr class="border-b border-syslens-border-primary hover:bg-syslens-bg-hover transition-colors">
+                <tr class="border-b border-syslens-border-primary hover:bg-syslens-bg-hover transition-colors cursor-pointer"
+                    (click)="openProcessDetails(process)">
                   <td class="table-cell">
                     <div class="flex flex-col">
                       <span class="text-syslens-text-primary font-medium truncate max-w-[200px]" [title]="process.name">
@@ -313,6 +314,16 @@ type SortDirection = 'asc' | 'desc';
         }
       </div>
     </div>
+
+    <!-- Process Detail Modal -->
+    <app-process-detail-modal
+      [isOpen]="modalOpen()"
+      [process]="selectedProcess()"
+      [allProcesses]="processes()"
+      (closed)="closeModal()"
+      (refreshRequested)="handleRefresh()"
+      (processSelected)="selectProcess($event)"
+    />
   `,
   styles: [`
     .table-header {
@@ -339,6 +350,10 @@ export class ProcessesComponent implements OnInit, OnDestroy {
   sortDirection = signal<SortDirection>('desc');
   currentPage = signal(0);
   pageSize = 50;
+
+  // Modal state
+  modalOpen = signal(false);
+  selectedProcess = signal<ProcessInfo | null>(null);
 
   // Computed values from shared metrics service
   cpuUsage = computed(() => this.metricsService.cpuUsage());
@@ -423,6 +438,36 @@ export class ProcessesComponent implements OnInit, OnDestroy {
     if (this.currentPage() < this.totalPages() - 1) {
       this.currentPage.set(this.currentPage() + 1);
     }
+  }
+
+  openProcessDetails(process: ProcessInfo): void {
+    this.selectedProcess.set(process);
+    this.modalOpen.set(true);
+  }
+
+  closeModal(): void {
+    this.modalOpen.set(false);
+  }
+
+  selectProcess(process: ProcessInfo): void {
+    this.selectedProcess.set(process);
+  }
+
+  handleRefresh(): void {
+    // Refresh the process list to get updated data
+    this.processService.getProcesses()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(processes => {
+        this.processes.set(processes);
+        // Update selected process with fresh data
+        const selected = this.selectedProcess();
+        if (selected) {
+          const updated = processes.find(p => p.pid === selected.pid);
+          if (updated) {
+            this.selectedProcess.set(updated);
+          }
+        }
+      });
   }
 
   private loadInitialData(): void {

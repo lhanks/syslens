@@ -33,7 +33,7 @@ Tech Stack: Tauri 2.0 (Rust) + Angular 21 + Tailwind CSS
 - [x] 4.8 Add real-time data refresh with signals
 - [~] 4.27 Add deep device information with internet lookup (Phase 2 complete: internet fetching)
 - [x] 4.29 Fix line graphs to have fixed height (prevent container resize on update)
-- [ ] 4.31 Add process details dialog (comprehensive process information on click)
+- [x] 4.31 Add process details dialog (comprehensive process information on click)
 
 ## 5. Quality
 
@@ -77,10 +77,10 @@ Tech Stack: Tauri 2.0 (Rust) + Angular 21 + Tailwind CSS
 ## Progress
 
 - Total Tasks: 30
-- Completed: 17
-- Remaining: 13
+- Completed: 18
+- Remaining: 12
 
-Last Updated: 2025-12-28 (Session 5)
+Last Updated: 2025-12-29 (Session 6)
 
 ---
 
@@ -157,6 +157,7 @@ Last Updated: 2025-12-28 (Session 5)
 ### Frontend Implementation (Angular)
 - [x] 4.8 Add real-time data refresh with signals (MetricsHistoryService uses Angular signals)
 - [x] 4.29 Fix line graphs to have fixed height (consistent yAxisWidth=40 for alignment)
+- [x] 4.31 Add process details dialog (ProcessDetailModalComponent with 3 tabs: Overview, Resources, Hierarchy)
 
 ### Quality
 - [x] 5.3 Configure ESLint for frontend (ESLint 9 flat config with Angular plugins)
