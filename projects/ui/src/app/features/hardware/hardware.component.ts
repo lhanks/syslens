@@ -9,13 +9,14 @@ import {
   GpuInfo, GpuMetrics,
   MotherboardInfo, Monitor
 } from '@core/models';
-import { ProgressRingComponent } from '@shared/components';
+import { DeviceType } from '@core/models/device-info.model';
+import { ProgressRingComponent, DeviceDetailModalComponent } from '@shared/components';
 import { BytesPipe, DecimalPipe } from '@shared/pipes';
 
 @Component({
   selector: 'app-hardware',
   standalone: true,
-  imports: [CommonModule, ProgressRingComponent, BytesPipe, DecimalPipe],
+  imports: [CommonModule, ProgressRingComponent, DeviceDetailModalComponent, BytesPipe, DecimalPipe],
   template: `
     <div class="p-6 space-y-6">
       <!-- Header -->
@@ -26,7 +27,17 @@ import { BytesPipe, DecimalPipe } from '@shared/pipes';
 
       <!-- CPU Section -->
       <section class="card">
-        <h2 class="section-title">Processor (CPU)</h2>
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="section-title mb-0">Processor (CPU)</h2>
+          @if (cpuInfo) {
+            <button
+              (click)="openDeviceDetails(getCpuDeviceId(), 'Cpu')"
+              class="px-3 py-1 text-sm bg-syslens-bg-tertiary hover:bg-syslens-bg-primary text-syslens-text-secondary hover:text-syslens-text-primary rounded transition-colors"
+            >
+              Details
+            </button>
+          }
+        </div>
         @if (cpuInfo) {
           <div class="flex flex-col lg:flex-row gap-6">
             <!-- CPU Info -->
@@ -196,8 +207,18 @@ import { BytesPipe, DecimalPipe } from '@shared/pipes';
             <div class="p-4 bg-syslens-bg-tertiary rounded-lg">
               <div class="flex flex-col lg:flex-row gap-4">
                 <div class="flex-1">
-                  <h3 class="font-medium text-syslens-text-primary">{{ gpu.name }}</h3>
-                  <p class="text-sm text-syslens-text-muted">{{ gpu.manufacturer }}</p>
+                  <div class="flex items-start justify-between">
+                    <div>
+                      <h3 class="font-medium text-syslens-text-primary">{{ gpu.name }}</h3>
+                      <p class="text-sm text-syslens-text-muted">{{ gpu.manufacturer }}</p>
+                    </div>
+                    <button
+                      (click)="openDeviceDetails(getGpuDeviceId(gpu), 'Gpu')"
+                      class="px-3 py-1 text-sm bg-syslens-bg-secondary hover:bg-syslens-bg-primary text-syslens-text-secondary hover:text-syslens-text-primary rounded transition-colors"
+                    >
+                      Details
+                    </button>
+                  </div>
                   <div class="mt-3 grid grid-cols-2 gap-3 text-sm">
                     <div>
                       <p class="text-xs text-syslens-text-muted">VRAM</p>
@@ -303,7 +324,15 @@ import { BytesPipe, DecimalPipe } from '@shared/pipes';
       <!-- Motherboard Section -->
       @if (motherboardInfo) {
         <section class="card">
-          <h2 class="section-title">Motherboard</h2>
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="section-title mb-0">Motherboard</h2>
+            <button
+              (click)="openDeviceDetails(getMotherboardDeviceId(), 'Motherboard')"
+              class="px-3 py-1 text-sm bg-syslens-bg-tertiary hover:bg-syslens-bg-primary text-syslens-text-secondary hover:text-syslens-text-primary rounded transition-colors"
+            >
+              Details
+            </button>
+          </div>
           <div class="flex flex-col lg:flex-row gap-6">
             <div class="flex-1">
               <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -379,6 +408,14 @@ import { BytesPipe, DecimalPipe } from '@shared/pipes';
           </div>
         </section>
       }
+
+      <!-- Device Detail Modal -->
+      <app-device-detail-modal
+        [isOpen]="modalOpen"
+        [deviceId]="modalDeviceId"
+        [deviceType]="modalDeviceType"
+        (closed)="closeModal()"
+      />
     </div>
   `
 })
@@ -395,6 +432,11 @@ export class HardwareComponent implements OnInit, OnDestroy {
   gpuMetricsMap: Record<string, GpuMetrics> = {};
   motherboardInfo: MotherboardInfo | null = null;
   monitors: Monitor[] = [];
+
+  // Modal state
+  modalOpen = false;
+  modalDeviceId = '';
+  modalDeviceType: DeviceType = 'Cpu';
 
   ngOnInit(): void {
     this.loadHardwareInfo();
@@ -448,5 +490,36 @@ export class HardwareComponent implements OnInit, OnDestroy {
         this.gpuMetricsMap = {};
         metrics.forEach(m => this.gpuMetricsMap[m.gpuId] = m);
       });
+  }
+
+  // Modal methods
+  openDeviceDetails(deviceId: string, deviceType: DeviceType): void {
+    this.modalDeviceId = deviceId;
+    this.modalDeviceType = deviceType;
+    this.modalOpen = true;
+  }
+
+  closeModal(): void {
+    this.modalOpen = false;
+  }
+
+  getCpuDeviceId(): string {
+    if (!this.cpuInfo) return '';
+    const manufacturer = this.cpuInfo.manufacturer.toLowerCase().replace(/\s+/g, '-');
+    const model = this.cpuInfo.name.toLowerCase().replace(/\s+/g, '-');
+    return `cpu-${manufacturer}-${model}`;
+  }
+
+  getGpuDeviceId(gpu: GpuInfo): string {
+    const manufacturer = gpu.manufacturer.toLowerCase().replace(/\s+/g, '-');
+    const model = gpu.name.toLowerCase().replace(/\s+/g, '-');
+    return `gpu-${manufacturer}-${model}`;
+  }
+
+  getMotherboardDeviceId(): string {
+    if (!this.motherboardInfo) return '';
+    const manufacturer = this.motherboardInfo.manufacturer.toLowerCase().replace(/\s+/g, '-');
+    const model = this.motherboardInfo.product.toLowerCase().replace(/\s+/g, '-');
+    return `mb-${manufacturer}-${model}`;
   }
 }
