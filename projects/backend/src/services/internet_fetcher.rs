@@ -40,11 +40,11 @@ impl InternetFetcher {
         let lower = raw_manufacturer.to_lowercase();
         let model_lower = model.to_lowercase();
 
-        // Check for AMD variations
+        // Check for AMD variations (including CPU vendor ID "AuthenticAMD")
         if lower.contains("advanced") && lower.contains("micro") {
             return "amd".to_string();
         }
-        if lower == "amd" || lower.starts_with("amd ") {
+        if lower == "amd" || lower.starts_with("amd ") || lower == "authenticamd" {
             return "amd".to_string();
         }
 
@@ -53,8 +53,8 @@ impl InternetFetcher {
             return "nvidia".to_string();
         }
 
-        // Check for Intel variations
-        if lower.contains("intel") {
+        // Check for Intel variations (including CPU vendor ID "GenuineIntel")
+        if lower.contains("intel") || lower == "genuineintel" {
             return "intel".to_string();
         }
 
