@@ -59,7 +59,7 @@ type SortDirection = 'asc' | 'desc';
             </div>
             <div class="flex-1">
               <p class="text-xs text-syslens-text-muted">CPU</p>
-              <p class="text-lg font-bold text-syslens-text-primary">{{ cpuUsage().toFixed(1) }}%</p>
+              <p class="text-lg font-bold font-mono text-syslens-text-primary" style="min-width: 5ch;">{{ cpuUsage().toFixed(1) }}%</p>
             </div>
           </div>
           <app-line-graph
@@ -82,7 +82,7 @@ type SortDirection = 'asc' | 'desc';
             </div>
             <div class="flex-1">
               <p class="text-xs text-syslens-text-muted">Memory</p>
-              <p class="text-sm font-bold text-syslens-text-primary">{{ memoryUsedBytes() | bytes }} / {{ memoryTotalBytes() | bytes }}</p>
+              <p class="text-sm font-bold font-mono text-syslens-text-primary"><span style="min-width: 6ch; display: inline-block; text-align: right;">{{ memoryUsedBytes() | bytes }}</span> / {{ memoryTotalBytes() | bytes }}</p>
             </div>
           </div>
           <app-line-graph
@@ -105,7 +105,7 @@ type SortDirection = 'asc' | 'desc';
             </div>
             <div class="flex-1">
               <p class="text-xs text-syslens-text-muted">Disk</p>
-              <p class="text-lg font-bold text-syslens-text-primary">{{ diskActivity().toFixed(0) }}%</p>
+              <p class="text-lg font-bold font-mono text-syslens-text-primary" style="min-width: 4ch;">{{ diskActivity().toFixed(0) }}%</p>
             </div>
           </div>
           <app-line-graph
@@ -128,9 +128,9 @@ type SortDirection = 'asc' | 'desc';
             </div>
             <div class="flex-1">
               <p class="text-xs text-syslens-text-muted">Network</p>
-              <div class="flex gap-2 text-sm">
-                <span class="text-syslens-accent-green">↓{{ networkDown() | bytes }}/s</span>
-                <span class="text-syslens-accent-blue">↑{{ networkUp() | bytes }}/s</span>
+              <div class="flex gap-2 text-sm font-mono">
+                <span class="text-syslens-accent-green">↓<span style="min-width: 7ch; display: inline-block; text-align: right;">{{ networkDown() | bytes }}</span>/s</span>
+                <span class="text-syslens-accent-blue">↑<span style="min-width: 7ch; display: inline-block; text-align: right;">{{ networkUp() | bytes }}</span>/s</span>
               </div>
             </div>
           </div>

@@ -62,14 +62,14 @@ interface AdapterTrafficHistory {
                         <div class="flex items-center gap-2">
                           <span class="text-syslens-accent-green text-lg">↓</span>
                           <div>
-                            <p class="font-mono text-lg font-bold text-syslens-accent-green">{{ traffic.downloadSpeed | bytes }}/s</p>
+                            <p class="font-mono text-lg font-bold text-syslens-accent-green" style="min-width: 9ch;">{{ traffic.downloadSpeed | bytes }}/s</p>
                             <p class="text-xs text-syslens-text-muted">Download</p>
                           </div>
                         </div>
                         <div class="flex items-center gap-2">
                           <span class="text-syslens-accent-blue text-lg">↑</span>
                           <div>
-                            <p class="font-mono text-lg font-bold text-syslens-accent-blue">{{ traffic.uploadSpeed | bytes }}/s</p>
+                            <p class="font-mono text-lg font-bold text-syslens-accent-blue" style="min-width: 9ch;">{{ traffic.uploadSpeed | bytes }}/s</p>
                             <p class="text-xs text-syslens-text-muted">Upload</p>
                           </div>
                         </div>

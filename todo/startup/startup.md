@@ -9,9 +9,14 @@ Tech Stack: Tauri 2.0 (Rust) + Angular 21 + Tailwind CSS
 ** IMPORTANT ** Process the tasks below (in this section).  Expand them if needed and put them in the appropriate sections below.
 ** IMPORTANT ** Do not remove this section. Just clear out the tasks once processed.
 
-- There appears to be a problem with the CPU % in the processes list. It is not showing the correct value. (see "C:\Users\lesli\OneDrive\Pictures\Screenshots 1\Screenshot 2025-12-28 154204.png")
-- When displaying line graphs, smooth out the transition between data points. so that the lines are updated in a continuous/smooth manner
-- Add network connection traffic history to each connection on the network tab.
+- When displaying the CPU/Memory/Disk/Network usage, make all the labels fixed width so that the ui doesn't shift when the values change.
+- Add labels for y axis to the line graphs.
+- Record all the history for the charts that show historical data, not just the selected tab (60 seconds is fine)
+- Network traffic line graphs are still jittery. We need to smooth out the transitions.
+- Major change. Get the spec agent to design it out.
+    - Add add a database of hardware devices and all the information that we need to look up. If we can't find it on their website, we will create a local database of the information (in a json file)(image/specification/drivers/documentation)
+    - Create an AI agent that can be used to search for the device information not found in the database.
+    - Create a database of process history and use AI to analyze usage patterns.
 
 ## 1. Setup
 
@@ -31,7 +36,6 @@ Tech Stack: Tauri 2.0 (Rust) + Angular 21 + Tailwind CSS
 
 - [ ] 4.8 Add real-time data refresh with signals
 - [ ] 4.27 Add deep device information with internet lookup (specs, images, documentation links)
-- [ ] 4.28 Add network traffic graph to each connection on network tab
 - [ ] 4.29 Fix line graphs to have fixed height (prevent container resize on update)
 
 ## 5. Quality
@@ -67,11 +71,11 @@ Tech Stack: Tauri 2.0 (Rust) + Angular 21 + Tailwind CSS
 
 ## Progress
 
-- Total Tasks: 24
+- Total Tasks: 25
 - Completed: 7
-- Remaining: 17
+- Remaining: 18
 
-Last Updated: 2025-12-28
+Last Updated: 2025-12-28 (Session 2)
 
 ---
 
@@ -130,6 +134,11 @@ Last Updated: 2025-12-28
 - [x] 4.24 Add process list tab with real-time monitoring (sortable, searchable, paginated)
 - [x] 4.25 Add system summary stats (CPU/Memory/Disk/Network) to processes page header
 - [x] 4.26 Add graph history visualization for all metrics (CPU, memory, disk, network)
+- [x] 4.28 Add network traffic graph to each adapter on network tab (with 60s history)
+- [x] 4.30 Add smooth interpolated transitions to line graphs (Catmull-Rom splines + requestAnimationFrame)
+
+### Backend Implementation (Rust)
+- [x] 3.16 Fix CPU % normalization in process list (divide by core count)
 
 ### Documentation
 - [x] 6.1 Complete README with build instructions

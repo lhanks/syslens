@@ -72,8 +72,8 @@ import { BytesPipe, UptimePipe } from '@shared/pipes';
             [size]="100"
             colorClass="stroke-syslens-accent-purple"
           />
-          <p class="mt-2 text-sm text-syslens-text-secondary">
-            {{ memoryUsedBytes | bytes }} / {{ memoryTotalBytes | bytes }}
+          <p class="mt-2 text-sm font-mono text-syslens-text-secondary">
+            <span style="min-width: 6ch; display: inline-block; text-align: right;">{{ memoryUsedBytes | bytes }}</span> / {{ memoryTotalBytes | bytes }}
           </p>
         </a>
 
@@ -85,8 +85,8 @@ import { BytesPipe, UptimePipe } from '@shared/pipes';
             [size]="100"
             colorClass="stroke-syslens-accent-cyan"
           />
-          <p class="mt-2 text-sm text-syslens-text-secondary">
-            {{ diskUsedBytes | bytes }} / {{ diskTotalBytes | bytes }}
+          <p class="mt-2 text-sm font-mono text-syslens-text-secondary">
+            <span style="min-width: 6ch; display: inline-block; text-align: right;">{{ diskUsedBytes | bytes }}</span> / {{ diskTotalBytes | bytes }}
           </p>
         </a>
 
@@ -107,11 +107,11 @@ import { BytesPipe, UptimePipe } from '@shared/pipes';
           <div class="space-y-1">
             <div class="flex justify-between items-center">
               <span class="text-xs text-syslens-text-secondary">Download</span>
-              <span class="font-mono text-xs text-syslens-accent-green">{{ downloadSpeed | bytes }}/s</span>
+              <span class="font-mono text-xs text-syslens-accent-green" style="min-width: 8ch; text-align: right;">{{ downloadSpeed | bytes }}/s</span>
             </div>
             <div class="flex justify-between items-center">
               <span class="text-xs text-syslens-text-secondary">Upload</span>
-              <span class="font-mono text-xs text-syslens-accent-blue">{{ uploadSpeed | bytes }}/s</span>
+              <span class="font-mono text-xs text-syslens-accent-blue" style="min-width: 8ch; text-align: right;">{{ uploadSpeed | bytes }}/s</span>
             </div>
           </div>
           <p class="mt-2 text-xs text-syslens-text-muted">{{ networkAdapterCount }} adapter(s)</p>
