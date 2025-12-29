@@ -1,7 +1,7 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { SidebarComponent, StatusBarComponent } from './shared/components';
-import { PreloadService, StateService } from '@core/services';
+import { PreloadService, StateService, MetricsHistoryService } from '@core/services';
 
 @Component({
   selector: 'app-root',
@@ -30,10 +30,14 @@ export class AppComponent implements OnInit {
 
   private preloadService = inject(PreloadService);
   private stateService = inject(StateService);
+  private metricsHistoryService = inject(MetricsHistoryService);
 
   ngOnInit(): void {
     // Initialize state persistence and restore last route
     this.stateService.initialize();
     this.stateService.restoreLastRoute();
+
+    // Start continuous metrics collection
+    this.metricsHistoryService.start();
   }
 }

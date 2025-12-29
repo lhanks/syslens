@@ -1,11 +1,10 @@
-import { Component, OnInit, OnDestroy, inject, effect } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { Subject, takeUntil, interval, forkJoin, of } from 'rxjs';
-import { switchMap, startWith, catchError } from 'rxjs/operators';
+import { Subject, takeUntil, forkJoin } from 'rxjs';
 
-import { HardwareService, SystemService, NetworkService, StorageService, StatusService, NetworkHistoryService } from '@core/services';
-import { CpuMetrics, MemoryMetrics, CpuInfo, MemoryInfo, NetworkAdapter, AdapterStats } from '@core/models';
+import { HardwareService, SystemService, NetworkService, StorageService, StatusService, MetricsHistoryService } from '@core/services';
+import { CpuInfo, MemoryInfo } from '@core/models';
 import { ProgressRingComponent, LineGraphComponent } from '@shared/components';
 import { BytesPipe, UptimePipe } from '@shared/pipes';
 
@@ -95,23 +94,26 @@ import { BytesPipe, UptimePipe } from '@shared/pipes';
           <h3 class="text-sm text-syslens-text-muted mb-2">Network</h3>
           <div class="mb-2">
             <app-line-graph
-              [width]="180"
+              [width]="200"
               [height]="50"
-              [series1]="downloadHistory"
-              [series2]="uploadHistory"
-              [maxValue]="networkHistoryService.maxSpeed()"
+              [series1]="metricsService.networkDownHistory()"
+              [series2]="metricsService.networkUpHistory()"
+              [maxValue]="metricsService.networkMaxSpeed()"
               series1Color="syslens-accent-green"
               series2Color="syslens-accent-blue"
+              [showYAxis]="true"
+              yAxisFormat="bytes"
+              [yAxisWidth]="32"
             />
           </div>
           <div class="space-y-1">
             <div class="flex justify-between items-center">
               <span class="text-xs text-syslens-text-secondary">Download</span>
-              <span class="font-mono text-xs text-syslens-accent-green" style="min-width: 8ch; text-align: right;">{{ downloadSpeed | bytes }}/s</span>
+              <span class="font-mono text-xs text-syslens-accent-green" style="min-width: 8ch; text-align: right;">{{ metricsService.networkDownSpeed() | bytes }}/s</span>
             </div>
             <div class="flex justify-between items-center">
               <span class="text-xs text-syslens-text-secondary">Upload</span>
-              <span class="font-mono text-xs text-syslens-accent-blue" style="min-width: 8ch; text-align: right;">{{ uploadSpeed | bytes }}/s</span>
+              <span class="font-mono text-xs text-syslens-accent-blue" style="min-width: 8ch; text-align: right;">{{ metricsService.networkUpSpeed() | bytes }}/s</span>
             </div>
           </div>
           <p class="mt-2 text-xs text-syslens-text-muted">{{ networkAdapterCount }} adapter(s)</p>
@@ -189,7 +191,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private networkService = inject(NetworkService);
   private storageService = inject(StorageService);
   private statusService = inject(StatusService);
-  networkHistoryService = inject(NetworkHistoryService);
+  metricsService = inject(MetricsHistoryService);
   private destroy$ = new Subject<void>();
 
   // System info
@@ -213,25 +215,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   diskUsage = 0;
 
   // Network
-  downloadSpeed = 0;
-  uploadSpeed = 0;
   networkAdapterCount = 0;
-  private activeAdapters: NetworkAdapter[] = [];
-  private previousNetworkStats: Map<string, { bytesReceived: number; bytesSent: number; timestamp: number }> = new Map();
-
-  // Network history for graph - use stable arrays updated via effect
-  // (getters with .map() create new arrays on every access, breaking change detection)
-  downloadHistory: number[] = [];
-  uploadHistory: number[] = [];
-
-  constructor() {
-    // Update history arrays only when service data actually changes
-    effect(() => {
-      const points = this.networkHistoryService.dataPoints();
-      this.downloadHistory = points.map(p => p.downloadSpeed);
-      this.uploadHistory = points.map(p => p.uploadSpeed);
-    });
-  }
 
   ngOnInit(): void {
     this.loadInitialData();
@@ -274,9 +258,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
         this.diskUsage = systemVolume.percentUsed;
       }
 
-      // Network adapters
-      this.activeAdapters = adapters.filter(a => a.status === 'Up');
-      this.networkAdapterCount = this.activeAdapters.length;
+      // Network adapters count
+      this.networkAdapterCount = adapters.filter(a => a.status === 'Up').length;
 
       // Start polling AFTER initial data is loaded (deferred startup)
       this.startRealtimeUpdates();
@@ -306,63 +289,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
         this.uptimeSeconds = uptime.uptimeSeconds;
       });
 
-    // Network stats - poll every second
-    interval(1000).pipe(
-      startWith(0),
-      takeUntil(this.destroy$),
-      switchMap(() => {
-        if (this.activeAdapters.length === 0) {
-          return of([]);
-        }
-        // Get stats for all active adapters
-        const statsRequests = this.activeAdapters.map(adapter =>
-          this.networkService.getAdapterStats(adapter.id).pipe(
-            catchError(() => of(null))
-          )
-        );
-        return forkJoin(statsRequests);
-      })
-    ).subscribe(allStats => {
-      this.calculateNetworkSpeeds(allStats.filter((s): s is AdapterStats => s !== null));
-    });
-  }
-
-  private calculateNetworkSpeeds(currentStats: AdapterStats[]): void {
-    let totalDownloadSpeed = 0;
-    let totalUploadSpeed = 0;
-    const now = Date.now();
-
-    for (const stats of currentStats) {
-      const previous = this.previousNetworkStats.get(stats.adapterId);
-
-      if (previous) {
-        const timeDeltaSeconds = (now - previous.timestamp) / 1000;
-        if (timeDeltaSeconds > 0) {
-          const downloadDelta = stats.bytesReceived - previous.bytesReceived;
-          const uploadDelta = stats.bytesSent - previous.bytesSent;
-
-          // Only count positive deltas (counter resets can cause negative values)
-          if (downloadDelta >= 0) {
-            totalDownloadSpeed += downloadDelta / timeDeltaSeconds;
-          }
-          if (uploadDelta >= 0) {
-            totalUploadSpeed += uploadDelta / timeDeltaSeconds;
-          }
-        }
-      }
-
-      // Store current values for next calculation
-      this.previousNetworkStats.set(stats.adapterId, {
-        bytesReceived: stats.bytesReceived,
-        bytesSent: stats.bytesSent,
-        timestamp: now
-      });
-    }
-
-    this.downloadSpeed = Math.round(totalDownloadSpeed);
-    this.uploadSpeed = Math.round(totalUploadSpeed);
-
-    // Record history for graph
-    this.networkHistoryService.addDataPoint(this.downloadSpeed, this.uploadSpeed);
+    // Network stats are handled by MetricsHistoryService
   }
 }

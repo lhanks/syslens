@@ -1,15 +1,12 @@
-import { Component, OnInit, OnDestroy, inject, signal, computed, effect } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Subject, takeUntil, interval, forkJoin, of } from 'rxjs';
-import { startWith, switchMap, catchError } from 'rxjs/operators';
+import { Subject, takeUntil } from 'rxjs';
 
-import { ProcessService, StatusService, HardwareService, StorageService, NetworkHistoryService, NetworkService } from '@core/services';
-import { ProcessInfo, ProcessSummary, CpuMetrics, MemoryInfo, MemoryMetrics, DiskPerformance, NetworkAdapter, AdapterStats } from '@core/models';
+import { ProcessService, StatusService, MetricsHistoryService } from '@core/services';
+import { ProcessInfo, ProcessSummary } from '@core/models';
 import { BytesPipe } from '@shared/pipes';
 import { LineGraphComponent } from '@shared/components';
-
-const MAX_HISTORY_POINTS = 60;
 
 type SortColumn = 'name' | 'pid' | 'cpuUsage' | 'memoryBytes' | 'status';
 type SortDirection = 'asc' | 'desc';
@@ -65,9 +62,12 @@ type SortDirection = 'asc' | 'desc';
           <app-line-graph
             [series1]="cpuHistory()"
             [maxValue]="100"
-            [width]="200"
+            [width]="220"
             [height]="40"
             series1Color="syslens-accent-blue"
+            [showYAxis]="true"
+            yAxisFormat="percent"
+            [yAxisWidth]="28"
           />
         </div>
 
@@ -88,9 +88,12 @@ type SortDirection = 'asc' | 'desc';
           <app-line-graph
             [series1]="memoryHistory()"
             [maxValue]="100"
-            [width]="200"
+            [width]="220"
             [height]="40"
             series1Color="syslens-accent-purple"
+            [showYAxis]="true"
+            yAxisFormat="percent"
+            [yAxisWidth]="28"
           />
         </div>
 
@@ -111,9 +114,12 @@ type SortDirection = 'asc' | 'desc';
           <app-line-graph
             [series1]="diskHistory()"
             [maxValue]="100"
-            [width]="200"
+            [width]="220"
             [height]="40"
             series1Color="syslens-accent-cyan"
+            [showYAxis]="true"
+            yAxisFormat="percent"
+            [yAxisWidth]="28"
           />
         </div>
 
@@ -135,13 +141,16 @@ type SortDirection = 'asc' | 'desc';
             </div>
           </div>
           <app-line-graph
-            [series1]="networkDownloadHistory"
-            [series2]="networkUploadHistory"
+            [series1]="networkDownloadHistory()"
+            [series2]="networkUploadHistory()"
             [maxValue]="networkMaxSpeed()"
-            [width]="200"
+            [width]="220"
             [height]="40"
             series1Color="syslens-accent-green"
             series2Color="syslens-accent-blue"
+            [showYAxis]="true"
+            yAxisFormat="bytes"
+            [yAxisWidth]="28"
           />
         </div>
       </div>
@@ -321,15 +330,8 @@ type SortDirection = 'asc' | 'desc';
 export class ProcessesComponent implements OnInit, OnDestroy {
   private processService = inject(ProcessService);
   private statusService = inject(StatusService);
-  private hardwareService = inject(HardwareService);
-  private storageService = inject(StorageService);
-  private networkHistoryService = inject(NetworkHistoryService);
-  private networkService = inject(NetworkService);
+  metricsService = inject(MetricsHistoryService);
   private destroy$ = new Subject<void>();
-
-  // Network tracking
-  private activeAdapters: NetworkAdapter[] = [];
-  private previousNetworkStats = new Map<string, { bytesReceived: number; bytesSent: number; timestamp: number }>();
 
   Math = Math;
 
@@ -342,68 +344,20 @@ export class ProcessesComponent implements OnInit, OnDestroy {
   currentPage = signal(0);
   pageSize = 50;
 
-  // System metrics
-  private cpuMetrics = signal<CpuMetrics | null>(null);
-  private memoryInfo = signal<MemoryInfo | null>(null);
-  private memoryMetrics = signal<MemoryMetrics | null>(null);
-  private diskPerformance = signal<DiskPerformance[]>([]);
-
-  // History arrays for graphs - pre-fill with zeros for constant array length
-  cpuHistory = signal<number[]>(new Array(MAX_HISTORY_POINTS).fill(0));
-  memoryHistory = signal<number[]>(new Array(MAX_HISTORY_POINTS).fill(0));
-  diskHistory = signal<number[]>(new Array(MAX_HISTORY_POINTS).fill(0));
-
-  // Network history - stable arrays updated via effect (not computed with .map())
-  networkDownloadHistory: number[] = [];
-  networkUploadHistory: number[] = [];
-
-  constructor() {
-    // Update network history arrays only when service data actually changes
-    effect(() => {
-      const points = this.networkHistoryService.dataPoints();
-      this.networkDownloadHistory = points.map(p => p.downloadSpeed);
-      this.networkUploadHistory = points.map(p => p.uploadSpeed);
-    });
-  }
-
-  cpuUsage = computed(() => this.cpuMetrics()?.totalUsage ?? 0);
-
-  memoryUsage = computed(() => {
-    const info = this.memoryInfo();
-    const metrics = this.memoryMetrics();
-    if (!info || !metrics) return 0;
-    return (metrics.inUseBytes / info.totalBytes) * 100;
-  });
-
-  memoryUsedBytes = computed(() => this.memoryMetrics()?.inUseBytes ?? 0);
-  memoryTotalBytes = computed(() => this.memoryInfo()?.totalBytes ?? 0);
-
-  diskActivity = computed(() => {
-    const perf = this.diskPerformance();
-    if (perf.length === 0) return 0;
-    // Return the max active time across all disks
-    return Math.max(...perf.map(d => d.activeTimePercent));
-  });
-
-  networkDown = computed(() => {
-    const points = this.networkHistoryService.dataPoints();
-    if (points.length === 0) return 0;
-    return points[points.length - 1].downloadSpeed;
-  });
-
-  networkUp = computed(() => {
-    const points = this.networkHistoryService.dataPoints();
-    if (points.length === 0) return 0;
-    return points[points.length - 1].uploadSpeed;
-  });
-
-  networkMaxSpeed = computed(() => {
-    const points = this.networkHistoryService.dataPoints();
-    if (points.length === 0) return 1;
-    const maxDown = Math.max(...points.map(p => p.downloadSpeed));
-    const maxUp = Math.max(...points.map(p => p.uploadSpeed));
-    return Math.max(maxDown, maxUp, 1);
-  });
+  // Computed values from shared metrics service
+  cpuUsage = computed(() => this.metricsService.cpuUsage());
+  cpuHistory = computed(() => this.metricsService.cpuHistory());
+  memoryUsage = computed(() => this.metricsService.memoryUsage());
+  memoryHistory = computed(() => this.metricsService.memoryHistory());
+  memoryUsedBytes = computed(() => this.metricsService.memoryUsedBytes());
+  memoryTotalBytes = computed(() => this.metricsService.memoryTotalBytes());
+  diskActivity = computed(() => this.metricsService.diskActivity());
+  diskHistory = computed(() => this.metricsService.diskHistory());
+  networkDown = computed(() => this.metricsService.networkDownSpeed());
+  networkUp = computed(() => this.metricsService.networkUpSpeed());
+  networkDownloadHistory = computed(() => this.metricsService.networkDownHistory());
+  networkUploadHistory = computed(() => this.metricsService.networkUpHistory());
+  networkMaxSpeed = computed(() => this.metricsService.networkMaxSpeed());
 
   filteredProcesses = computed(() => {
     const term = this.searchTerm().toLowerCase();
@@ -488,22 +442,10 @@ export class ProcessesComponent implements OnInit, OnDestroy {
     this.processService.getProcessSummary()
       .pipe(takeUntil(this.destroy$))
       .subscribe(summary => this.summary.set(summary));
-
-    // Load system metrics
-    this.hardwareService.getMemoryInfo()
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(info => this.memoryInfo.set(info));
-
-    // Load network adapters for speed tracking
-    this.networkService.getNetworkAdapters()
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(adapters => {
-        this.activeAdapters = adapters.filter(a => a.status === 'Up');
-      });
   }
 
   private startPolling(): void {
-    // Process polling
+    // Process polling only - system metrics are handled by MetricsHistoryService
     this.processService.getProcessesPolling(3000)
       .pipe(takeUntil(this.destroy$))
       .subscribe(processes => this.processes.set(processes));
@@ -511,100 +453,5 @@ export class ProcessesComponent implements OnInit, OnDestroy {
     this.processService.getProcessSummaryPolling(3000)
       .pipe(takeUntil(this.destroy$))
       .subscribe(summary => this.summary.set(summary));
-
-    // System metrics polling with history tracking
-    this.hardwareService.getCpuMetricsPolling()
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(metrics => {
-        this.cpuMetrics.set(metrics);
-        if (metrics) {
-          this.pushToHistory(this.cpuHistory, metrics.totalUsage);
-        }
-      });
-
-    this.hardwareService.getMemoryMetricsPolling()
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(metrics => {
-        this.memoryMetrics.set(metrics);
-        if (metrics && this.memoryInfo()) {
-          const usage = (metrics.inUseBytes / this.memoryInfo()!.totalBytes) * 100;
-          this.pushToHistory(this.memoryHistory, usage);
-        }
-      });
-
-    this.storageService.getDiskPerformancePolling()
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(perf => {
-        this.diskPerformance.set(perf);
-        if (perf.length > 0) {
-          const maxActivity = Math.max(...perf.map(d => d.activeTimePercent));
-          this.pushToHistory(this.diskHistory, maxActivity);
-        }
-      });
-
-    // Network stats polling
-    interval(1000).pipe(
-      startWith(0),
-      takeUntil(this.destroy$),
-      switchMap(() => {
-        if (this.activeAdapters.length === 0) {
-          return of([]);
-        }
-        const statsRequests = this.activeAdapters.map(adapter =>
-          this.networkService.getAdapterStats(adapter.id).pipe(
-            catchError(() => of(null))
-          )
-        );
-        return forkJoin(statsRequests);
-      })
-    ).subscribe(allStats => {
-      this.calculateNetworkSpeeds(allStats.filter((s): s is AdapterStats => s !== null));
-    });
-  }
-
-  private calculateNetworkSpeeds(currentStats: AdapterStats[]): void {
-    let totalDownloadSpeed = 0;
-    let totalUploadSpeed = 0;
-    const now = Date.now();
-
-    for (const stats of currentStats) {
-      const previous = this.previousNetworkStats.get(stats.adapterId);
-
-      if (previous) {
-        const timeDeltaSeconds = (now - previous.timestamp) / 1000;
-        if (timeDeltaSeconds > 0) {
-          const downloadDelta = stats.bytesReceived - previous.bytesReceived;
-          const uploadDelta = stats.bytesSent - previous.bytesSent;
-
-          if (downloadDelta >= 0) {
-            totalDownloadSpeed += downloadDelta / timeDeltaSeconds;
-          }
-          if (uploadDelta >= 0) {
-            totalUploadSpeed += uploadDelta / timeDeltaSeconds;
-          }
-        }
-      }
-
-      this.previousNetworkStats.set(stats.adapterId, {
-        bytesReceived: stats.bytesReceived,
-        bytesSent: stats.bytesSent,
-        timestamp: now
-      });
-    }
-
-    // Update the shared network history service
-    this.networkHistoryService.addDataPoint(
-      Math.round(totalDownloadSpeed),
-      Math.round(totalUploadSpeed)
-    );
-  }
-
-  private pushToHistory(historySignal: ReturnType<typeof signal<number[]>>, value: number): void {
-    const current = historySignal();
-    const updated = [...current, value];
-    if (updated.length > MAX_HISTORY_POINTS) {
-      updated.shift();
-    }
-    historySignal.set(updated);
   }
 }

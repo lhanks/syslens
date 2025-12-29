@@ -80,10 +80,13 @@ interface AdapterTrafficHistory {
                           [series1]="traffic.downloadHistory"
                           [series2]="traffic.uploadHistory"
                           [maxValue]="traffic.maxSpeed"
-                          [width]="400"
+                          [width]="440"
                           [height]="64"
                           series1Color="syslens-accent-green"
                           series2Color="syslens-accent-blue"
+                          [showYAxis]="true"
+                          yAxisFormat="bytes"
+                          [yAxisWidth]="40"
                         />
                       </div>
                       <!-- Total stats below graph -->

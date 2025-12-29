@@ -9,4 +9,5 @@ export { PreloadService } from './preload.service';
 export { StateService } from './state.service';
 export { StatusService } from './status.service';
 export { NetworkHistoryService } from './network-history.service';
+export { MetricsHistoryService } from './metrics-history.service';
 export { ProcessService } from './process.service';

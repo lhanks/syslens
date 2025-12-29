@@ -24,63 +24,76 @@ const DEFAULT_INTERVAL_MS = 1000;
   standalone: true,
   imports: [CommonModule],
   template: `
-    <svg [attr.width]="width" [attr.height]="height" class="overflow-visible">
-      <!-- Background grid lines -->
-      <g class="grid-lines">
-        @for (y of gridLines(); track y) {
-          <line
-            [attr.x1]="0"
-            [attr.y1]="y"
-            [attr.x2]="width"
-            [attr.y2]="y"
-            stroke="#333333"
-            stroke-opacity="0.3"
+    <div class="flex items-stretch" [style.height.px]="height">
+      <!-- Y-axis labels -->
+      @if (showYAxis) {
+        <div class="flex flex-col justify-between text-right pr-1 text-[9px] font-mono text-syslens-text-muted"
+             [style.min-width.px]="yAxisWidth">
+          <span>{{ formatYValue(maxValue) }}</span>
+          <span>{{ formatYValue(maxValue / 2) }}</span>
+          <span>0</span>
+        </div>
+      }
+
+      <!-- Graph -->
+      <svg [attr.width]="graphWidth" [attr.height]="height" class="overflow-visible flex-1">
+        <!-- Background grid lines -->
+        <g class="grid-lines">
+          @for (y of gridLines(); track y) {
+            <line
+              [attr.x1]="0"
+              [attr.y1]="y"
+              [attr.x2]="graphWidth"
+              [attr.y2]="y"
+              stroke="#333333"
+              stroke-opacity="0.3"
+            />
+          }
+        </g>
+
+        <!-- Area fill for first series -->
+        @if (series1AreaPath()) {
+          <path
+            [attr.d]="series1AreaPath()"
+            [attr.fill]="getColor(series1Color)"
+            fill-opacity="0.1"
           />
         }
-      </g>
 
-      <!-- Area fill for first series -->
-      @if (series1AreaPath()) {
-        <path
-          [attr.d]="series1AreaPath()"
-          [attr.fill]="getColor(series1Color)"
-          fill-opacity="0.1"
-        />
-      }
+        <!-- Area fill for second series -->
+        @if (series2AreaPath()) {
+          <path
+            [attr.d]="series2AreaPath()"
+            [attr.fill]="getColor(series2Color)"
+            fill-opacity="0.1"
+          />
+        }
 
-      <!-- Area fill for second series -->
-      @if (series2AreaPath()) {
-        <path
-          [attr.d]="series2AreaPath()"
-          [attr.fill]="getColor(series2Color)"
-          fill-opacity="0.1"
-        />
-      }
+        <!-- Line for first series -->
+        @if (series1Path()) {
+          <path
+            [attr.d]="series1Path()"
+            fill="none"
+            [attr.stroke]="getColor(series1Color)"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+        }
 
-      <!-- Line for first series -->
-      @if (series1Path()) {
-        <path
-          [attr.d]="series1Path()"
-          fill="none"
-          [attr.stroke]="getColor(series1Color)"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-        />
-      }
-
-      <!-- Line for second series -->
-      @if (series2Path()) {
-        <path
-          [attr.d]="series2Path()"
-          fill="none"
-          [attr.stroke]="getColor(series2Color)"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-        />
-      }
-    </svg>
+        <!-- Line for second series -->
+        @if (series2Path()) {
+          <path
+            [attr.d]="series2Path()"
+            fill="none"
+            [attr.stroke]="getColor(series2Color)"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+        }
+      </svg>
+    </div>
   `,
   styles: [`
     :host {
@@ -96,6 +109,14 @@ export class LineGraphComponent implements OnInit, OnDestroy, OnChanges {
   @Input() series1: number[] = [];
   @Input() series2: number[] = [];
   @Input() maxValue = 1;
+  @Input() showYAxis = false;
+  @Input() yAxisFormat: 'percent' | 'bytes' | 'number' = 'number';
+  @Input() yAxisWidth = 32;
+
+  // Computed graph width (total width minus y-axis space)
+  get graphWidth(): number {
+    return this.showYAxis ? this.width - this.yAxisWidth : this.width;
+  }
 
   // Animation state
   private animationFrameId: number | null = null;
@@ -252,7 +273,7 @@ export class LineGraphComponent implements OnInit, OnDestroy, OnChanges {
     if (numPoints < 2) return [];
 
     // Point spacing
-    const pointSpacing = this.width / (numPoints - 1);
+    const pointSpacing = this.graphWidth / (numPoints - 1);
 
     // Scroll offset in pixels - points shift LEFT as time progresses
     const pixelOffset = scrollProgress * pointSpacing;
@@ -297,5 +318,32 @@ export class LineGraphComponent implements OnInit, OnDestroy, OnChanges {
 
   getColor(colorName: string): string {
     return COLOR_MAP[colorName] ?? '#22c55e';
+  }
+
+  formatYValue(value: number): string {
+    if (this.yAxisFormat === 'percent') {
+      return `${Math.round(value)}%`;
+    }
+    if (this.yAxisFormat === 'bytes') {
+      return this.formatBytes(value);
+    }
+    // Default: number format
+    if (value >= 1000000) {
+      return `${(value / 1000000).toFixed(1)}M`;
+    }
+    if (value >= 1000) {
+      return `${(value / 1000).toFixed(1)}K`;
+    }
+    return Math.round(value).toString();
+  }
+
+  private formatBytes(bytes: number): string {
+    if (bytes === 0) return '0';
+    const units = ['B', 'KB', 'MB', 'GB'];
+    const k = 1024;
+    const i = Math.min(Math.floor(Math.log(bytes) / Math.log(k)), units.length - 1);
+    const value = bytes / Math.pow(k, i);
+    // Use whole numbers for cleaner display
+    return `${Math.round(value)}${units[i]}`;
   }
 }
