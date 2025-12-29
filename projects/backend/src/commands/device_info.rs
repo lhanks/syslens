@@ -1,7 +1,7 @@
 //! Tauri commands for deep device information.
 
 use crate::models::{DataSource, DeviceDeepInfo, DeviceIdentifier, DeviceType};
-use crate::services::{CacheManager, InternetFetcher, LocalDatabaseManager};
+use crate::services::{AiAgent, CacheManager, InternetFetcher, LocalDatabaseManager};
 use chrono::{Duration, Utc};
 use std::sync::OnceLock;
 
@@ -13,6 +13,9 @@ static LOCAL_DB_MANAGER: OnceLock<LocalDatabaseManager> = OnceLock::new();
 
 /// Global internet fetcher instance
 static INTERNET_FETCHER: OnceLock<InternetFetcher> = OnceLock::new();
+
+/// Global AI agent instance
+static AI_AGENT: OnceLock<AiAgent> = OnceLock::new();
 
 /// Get or initialize the cache manager.
 fn get_cache_manager() -> &'static CacheManager {
@@ -35,13 +38,20 @@ fn get_internet_fetcher() -> &'static InternetFetcher {
     })
 }
 
+/// Get or initialize the AI agent.
+fn get_ai_agent() -> &'static AiAgent {
+    AI_AGENT.get_or_init(|| {
+        AiAgent::new().expect("Failed to initialize AiAgent")
+    })
+}
+
 /// Get deep device information by device ID and type.
 ///
 /// Data retrieval order:
 /// 1. Check cache (unless force_refresh)
 /// 2. Check local database
 /// 3. Fetch from internet (manufacturer websites)
-/// 4. (Future: AI agent lookup)
+/// 4. AI agent lookup (intelligent web search)
 #[tauri::command]
 pub async fn get_device_deep_info(
     device_id: String,
@@ -51,6 +61,7 @@ pub async fn get_device_deep_info(
     let cache = get_cache_manager();
     let local_db = get_local_db_manager();
     let fetcher = get_internet_fetcher();
+    let ai_agent = get_ai_agent();
 
     // 1. Check cache first (unless force_refresh)
     if !force_refresh {
@@ -100,7 +111,31 @@ pub async fn get_device_deep_info(
         }
     }
 
-    // 4. (Future: AI agent lookup)
+    // 4. AI agent lookup (intelligent web search)
+    log::info!("Internet fetch failed, attempting AI agent lookup for: {}", device_id);
+    match ai_agent.search_device(&identifier, &device_type).await {
+        Ok(mut ai_info) => {
+            log::info!(
+                "AI Agent found device info for: {} (confidence: {:.2})",
+                device_id,
+                ai_info.metadata.ai_confidence.unwrap_or(0.0)
+            );
+
+            // Ensure device_id is set correctly
+            ai_info.device_id = device_id.clone();
+
+            // Cache with shorter TTL for AI results
+            let cache_ttl = 3; // 3 days for AI-generated results
+            if let Err(e) = cache.set(device_id.clone(), device_type.clone(), ai_info.clone(), cache_ttl) {
+                log::warn!("Failed to cache AI-generated device info: {}", e);
+            }
+
+            return Ok(ai_info);
+        }
+        Err(e) => {
+            log::warn!("AI agent lookup failed for {}: {}", device_id, e);
+        }
+    }
 
     // Return not found error
     Err(format!(

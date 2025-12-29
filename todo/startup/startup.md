@@ -14,6 +14,7 @@ Tech Stack: Tauri 2.0 (Rust) + Angular 21 + Tailwind CSS
     - Add add a database of hardware devices and all the information that we need to look up. If we can't find it on their website, we will create a local database of the information (in a json file)(image/specification/drivers/documentation)
     - Create an AI agent that can be used to search for the device information not found in the database.
     - Create a database of process history and use AI to analyze usage patterns.
+    - Add a settings dialog that allows the user to configure the app. Include settings for the API keys for the AI agent and the internet fetcher.
 
 ## 1. Setup
 
