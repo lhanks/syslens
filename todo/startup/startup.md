@@ -9,6 +9,7 @@ Tech Stack: Tauri 2.0 (Rust) + Angular 21 + Tailwind CSS
 ** IMPORTANT ** Process the tasks below (in this section).  Expand them if needed and put them in the appropriate sections below.
 ** IMPORTANT ** Do not remove this section. Just clear out the tasks once processed.
 
+- On the hardware -> processor component, the cache size is wrong.
 - Save latest state that can be loaded at startup prior to updating to get the current state.
 - Add process details dialog that opens when you click a process in the processes list. It should provide as much information as possible about the process.
 - Major change. Get the spec agent to design it out.

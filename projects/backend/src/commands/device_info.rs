@@ -1,7 +1,8 @@
 //! Tauri commands for deep device information.
 
 use crate::models::{DataSource, DeviceDeepInfo, DeviceIdentifier, DeviceType};
-use crate::services::{AiAgent, CacheManager, InternetFetcher, LocalDatabaseManager};
+use crate::services::device_sources::{fetch_from_all_sources, merge_results, DeviceSource, WikipediaSource};
+use crate::services::{AiAgent, CacheManager, InternetFetcher, KnowledgeStore, LocalDatabaseManager};
 use chrono::{Duration, Utc};
 use std::sync::OnceLock;
 
@@ -16,6 +17,9 @@ static INTERNET_FETCHER: OnceLock<InternetFetcher> = OnceLock::new();
 
 /// Global AI agent instance
 static AI_AGENT: OnceLock<AiAgent> = OnceLock::new();
+
+/// Global knowledge store instance
+static KNOWLEDGE_STORE: OnceLock<KnowledgeStore> = OnceLock::new();
 
 /// Get or initialize the cache manager.
 fn get_cache_manager() -> &'static CacheManager {
@@ -45,37 +49,79 @@ fn get_ai_agent() -> &'static AiAgent {
     })
 }
 
+/// Get or initialize the knowledge store.
+fn get_knowledge_store() -> &'static KnowledgeStore {
+    KNOWLEDGE_STORE.get_or_init(|| {
+        KnowledgeStore::new().expect("Failed to initialize KnowledgeStore")
+    })
+}
+
+/// Build the list of device sources.
+fn build_device_sources() -> Vec<Box<dyn DeviceSource>> {
+    let mut sources: Vec<Box<dyn DeviceSource>> = Vec::new();
+
+    // Add Wikipedia source
+    if let Ok(wiki) = WikipediaSource::new() {
+        sources.push(Box::new(wiki));
+    }
+
+    sources
+}
+
 /// Get deep device information by device ID and type.
 ///
 /// Data retrieval order:
 /// 1. Check cache (unless force_refresh)
-/// 2. Check local database
-/// 3. Fetch from internet (manufacturer websites)
-/// 4. AI agent lookup (intelligent web search)
+/// 2. Check knowledge store (learned devices)
+/// 3. Check local database (bundled)
+/// 4. Multi-source fetch (Wikipedia, etc.)
+/// 5. Manufacturer websites fallback
+/// 6. AI agent lookup (intelligent web search)
 #[tauri::command]
 pub async fn get_device_deep_info(
     device_id: String,
     device_type: DeviceType,
     force_refresh: bool,
 ) -> Result<DeviceDeepInfo, String> {
+    log::info!(
+        "get_device_deep_info called: device_id={}, device_type={:?}, force_refresh={}",
+        device_id, device_type, force_refresh
+    );
+
     let cache = get_cache_manager();
+    let knowledge_store = get_knowledge_store();
     let local_db = get_local_db_manager();
     let fetcher = get_internet_fetcher();
     let ai_agent = get_ai_agent();
 
+    // Parse device identifier from ID
+    let identifier = parse_device_identifier(&device_id, &device_type);
+    log::debug!("Parsed identifier: manufacturer={}, model={}", identifier.manufacturer, identifier.model);
+
     // 1. Check cache first (unless force_refresh)
     if !force_refresh {
         if let Some(cached) = cache.get(&device_id, &device_type) {
-            log::debug!("Cache hit for device: {}", device_id);
+            log::info!("Cache hit for device: {}", device_id);
             return Ok(cached);
         }
     }
 
-    // 2. Search local database
-    // Create identifier from device_id for lookup
-    let identifier = parse_device_identifier(&device_id, &device_type);
+    // 2. Check knowledge store (learned devices)
+    if !force_refresh {
+        if let Some(learned) = knowledge_store.get(&device_id, &device_type) {
+            log::info!("Knowledge store hit for device: {}", device_id);
+            // Cache the result
+            let cache_ttl = get_cache_ttl(&device_type);
+            if let Err(e) = cache.set(device_id.clone(), device_type.clone(), learned.clone(), cache_ttl) {
+                log::warn!("Failed to cache learned device info: {}", e);
+            }
+            return Ok(learned);
+        }
+    }
+
+    // 3. Search local database (bundled)
     if let Some(mut db_info) = local_db.find_device(&identifier, &device_type) {
-        // Update metadata
+        log::info!("Local DB hit for device: {}", device_id);
         db_info.metadata.source = DataSource::LocalDatabase;
         db_info.metadata.last_updated = Utc::now();
         db_info.metadata.expires_at = Utc::now() + Duration::days(7);
@@ -89,16 +135,45 @@ pub async fn get_device_deep_info(
         return Ok(db_info);
     }
 
-    // 3. Fetch from internet (manufacturer websites)
-    log::info!("Local DB miss, attempting internet fetch for: {}", device_id);
+    // 4. Multi-source fetch (Wikipedia, etc.)
+    log::info!("Trying multi-source fetch for: {}", device_id);
+    let sources = build_device_sources();
+    if !sources.is_empty() {
+        let results = fetch_from_all_sources(&sources, &device_type, &identifier).await;
+        let successful_count = results.iter().filter(|r| r.partial_info.is_some()).count();
+        log::info!("Multi-source fetch: {} sources returned data", successful_count);
+
+        if let Some(merged) = merge_results(results) {
+            log::info!("Successfully merged data from sources: {}", merged.source_name);
+
+            // Store in knowledge store for future lookups
+            if let Err(e) = knowledge_store.store_or_merge(
+                device_id.clone(),
+                device_type.clone(),
+                identifier.clone(),
+                merged,
+            ) {
+                log::warn!("Failed to store in knowledge store: {}", e);
+            }
+
+            // Retrieve the stored info (now with proper formatting)
+            if let Some(learned_info) = knowledge_store.get(&device_id, &device_type) {
+                let cache_ttl = get_cache_ttl(&device_type);
+                if let Err(e) = cache.set(device_id.clone(), device_type.clone(), learned_info.clone(), cache_ttl) {
+                    log::warn!("Failed to cache multi-source device info: {}", e);
+                }
+                return Ok(learned_info);
+            }
+        }
+    }
+
+    // 5. Fetch from manufacturer websites
+    log::info!("Trying manufacturer websites for: {}", device_id);
     match fetcher.fetch_device_info(&identifier, &device_type).await {
         Ok(mut web_info) => {
             log::info!("Successfully fetched device info from web for: {}", device_id);
-
-            // Ensure device_id is set correctly
             web_info.device_id = device_id.clone();
 
-            // Cache the result
             let cache_ttl = get_cache_ttl(&device_type);
             if let Err(e) = cache.set(device_id.clone(), device_type.clone(), web_info.clone(), cache_ttl) {
                 log::warn!("Failed to cache web-fetched device info: {}", e);
@@ -107,12 +182,12 @@ pub async fn get_device_deep_info(
             return Ok(web_info);
         }
         Err(e) => {
-            log::warn!("Internet fetch failed for {}: {}", device_id, e);
+            log::warn!("Manufacturer website fetch failed for {}: {}", device_id, e);
         }
     }
 
-    // 4. AI agent lookup (intelligent web search)
-    log::info!("Internet fetch failed, attempting AI agent lookup for: {}", device_id);
+    // 6. AI agent lookup (intelligent web search)
+    log::info!("Trying AI agent lookup for: {}", device_id);
     match ai_agent.search_device(&identifier, &device_type).await {
         Ok(mut ai_info) => {
             log::info!(
@@ -121,10 +196,8 @@ pub async fn get_device_deep_info(
                 ai_info.metadata.ai_confidence.unwrap_or(0.0)
             );
 
-            // Ensure device_id is set correctly
             ai_info.device_id = device_id.clone();
 
-            // Cache with shorter TTL for AI results
             let cache_ttl = 3; // 3 days for AI-generated results
             if let Err(e) = cache.set(device_id.clone(), device_type.clone(), ai_info.clone(), cache_ttl) {
                 log::warn!("Failed to cache AI-generated device info: {}", e);

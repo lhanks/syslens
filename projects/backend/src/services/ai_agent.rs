@@ -111,14 +111,89 @@ impl AiAgent {
             .ok_or_else(|| anyhow::anyhow!("AI Agent could not find reliable information"))
     }
 
+    /// Normalize manufacturer name for search queries.
+    fn normalize_manufacturer(raw: &str) -> String {
+        let lower = raw.to_lowercase();
+
+        // Map common vendor IDs and variations to clean names
+        if lower.contains("authenticamd") || lower.contains("advanced micro") {
+            return "AMD".to_string();
+        }
+        if lower.contains("genuineintel") || lower.contains("intel") {
+            return "Intel".to_string();
+        }
+        if lower.contains("nvidia") {
+            return "NVIDIA".to_string();
+        }
+
+        // Return original if no match, but capitalize first letter
+        let mut result = raw.to_string();
+        if let Some(first) = result.get_mut(0..1) {
+            first.make_ascii_uppercase();
+        }
+        result
+    }
+
+    /// Clean model name for better search results.
+    fn clean_model_name(raw: &str) -> String {
+        let mut cleaned = raw.to_string();
+
+        // Remove common suffixes
+        let suffixes_to_remove = [
+            "-12-core-processor-",
+            "-8-core-processor-",
+            "-6-core-processor-",
+            "-4-core-processor-",
+            "-core-processor-",
+            "-processor-",
+            " 12-Core Processor",
+            " 8-Core Processor",
+            " with Radeon Graphics",
+        ];
+
+        for suffix in suffixes_to_remove {
+            if cleaned.to_lowercase().contains(&suffix.to_lowercase()) {
+                cleaned = cleaned.to_lowercase().replace(&suffix.to_lowercase(), "");
+            }
+        }
+
+        // Remove manufacturer prefix from model if present
+        let prefixes = ["amd-", "intel-", "nvidia-", "amd ", "intel ", "nvidia "];
+        for prefix in prefixes {
+            if cleaned.to_lowercase().starts_with(prefix) {
+                cleaned = cleaned[prefix.len()..].to_string();
+            }
+        }
+
+        // Replace hyphens with spaces and clean up
+        cleaned = cleaned.replace('-', " ");
+        cleaned = cleaned.split_whitespace().collect::<Vec<_>>().join(" ");
+
+        // Capitalize properly (e.g., "ryzen 9 9900x" -> "Ryzen 9 9900X")
+        cleaned
+            .split_whitespace()
+            .map(|word| {
+                let mut c = word.chars();
+                match c.next() {
+                    None => String::new(),
+                    Some(f) => f.to_uppercase().collect::<String>() + c.as_str(),
+                }
+            })
+            .collect::<Vec<_>>()
+            .join(" ")
+    }
+
     /// Generate search queries based on device type and identifier.
     fn generate_search_queries(
         &self,
         identifier: &DeviceIdentifier,
         device_type: &DeviceType,
     ) -> Vec<String> {
-        let manufacturer = &identifier.manufacturer;
-        let model = &identifier.model;
+        // Clean up manufacturer and model for better search results
+        let manufacturer = Self::normalize_manufacturer(&identifier.manufacturer);
+        let model = Self::clean_model_name(&identifier.model);
+
+        log::debug!("Cleaned search terms - manufacturer: {}, model: {}", manufacturer, model);
 
         let type_keyword = match device_type {
             DeviceType::Cpu => "CPU processor",

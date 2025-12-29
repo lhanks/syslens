@@ -48,6 +48,8 @@ wmi = "0.14"
 
 # Async runtime
 tokio = { version = "1", features = ["full"] }
+async-trait = "0.1"
+futures = "0.3"
 
 # Error handling
 thiserror = "1"

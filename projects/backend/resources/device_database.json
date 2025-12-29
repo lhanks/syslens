@@ -277,6 +277,336 @@
     ],
     "gpu": [
       {
+        "deviceId": "gpu-nvidia-rtx5090",
+        "deviceType": "Gpu",
+        "identifier": {
+          "manufacturer": "NVIDIA",
+          "model": "GeForce RTX 5090",
+          "partNumber": null,
+          "serialNumber": null,
+          "hardwareIds": []
+        },
+        "specifications": {
+          "specs": {
+            "architecture": "Blackwell",
+            "cudaCores": "21760",
+            "baseClock": "2010 MHz",
+            "boostClock": "2410 MHz",
+            "memory": "32 GB GDDR7",
+            "memoryBus": "512-bit",
+            "memoryBandwidth": "1792 GB/s",
+            "tdp": "575 W"
+          },
+          "categories": [
+            {
+              "name": "GPU Engine",
+              "specs": [
+                {"label": "Architecture", "value": "Blackwell", "unit": null},
+                {"label": "CUDA Cores", "value": "21760", "unit": null},
+                {"label": "Tensor Cores", "value": "680", "unit": null},
+                {"label": "RT Cores", "value": "170", "unit": null},
+                {"label": "Base Clock", "value": "2010", "unit": "MHz"},
+                {"label": "Boost Clock", "value": "2410", "unit": "MHz"}
+              ]
+            },
+            {
+              "name": "Memory",
+              "specs": [
+                {"label": "Memory Size", "value": "32", "unit": "GB"},
+                {"label": "Memory Type", "value": "GDDR7", "unit": null},
+                {"label": "Memory Bus", "value": "512", "unit": "bit"},
+                {"label": "Memory Bandwidth", "value": "1792", "unit": "GB/s"}
+              ]
+            },
+            {
+              "name": "Power",
+              "specs": [
+                {"label": "TDP", "value": "575", "unit": "W"},
+                {"label": "Power Connector", "value": "16-pin (12V-2x6)", "unit": null}
+              ]
+            }
+          ],
+          "description": "NVIDIA GeForce RTX 5090 - Flagship Blackwell gaming GPU with GDDR7 memory",
+          "releaseDate": "2025-01-30",
+          "eolDate": null
+        },
+        "drivers": {
+          "installedVersion": null,
+          "latestVersion": null,
+          "downloadUrl": null,
+          "releaseDate": null,
+          "releaseNotesUrl": null,
+          "driverPageUrl": "https://www.nvidia.com/Download/index.aspx",
+          "updateAvailable": false
+        },
+        "documentation": {
+          "productPage": "https://www.nvidia.com/en-us/geforce/graphics-cards/50-series/rtx-5090/",
+          "supportPage": "https://www.nvidia.com/en-us/geforce/drivers/",
+          "manuals": [],
+          "datasheets": [],
+          "firmwareUpdates": []
+        },
+        "images": {
+          "primaryImage": null,
+          "gallery": [],
+          "thumbnail": null
+        },
+        "metadata": {
+          "source": "LocalDatabase",
+          "lastUpdated": "2025-01-07T00:00:00Z",
+          "expiresAt": "2026-01-07T00:00:00Z",
+          "sourceUrl": "https://www.nvidia.com/en-us/geforce/graphics-cards/50-series/",
+          "aiConfidence": null
+        }
+      },
+      {
+        "deviceId": "gpu-nvidia-rtx5080",
+        "deviceType": "Gpu",
+        "identifier": {
+          "manufacturer": "NVIDIA",
+          "model": "GeForce RTX 5080",
+          "partNumber": null,
+          "serialNumber": null,
+          "hardwareIds": []
+        },
+        "specifications": {
+          "specs": {
+            "architecture": "Blackwell",
+            "cudaCores": "10752",
+            "baseClock": "2300 MHz",
+            "boostClock": "2620 MHz",
+            "memory": "16 GB GDDR7",
+            "memoryBus": "256-bit",
+            "memoryBandwidth": "960 GB/s",
+            "tdp": "360 W"
+          },
+          "categories": [
+            {
+              "name": "GPU Engine",
+              "specs": [
+                {"label": "Architecture", "value": "Blackwell", "unit": null},
+                {"label": "CUDA Cores", "value": "10752", "unit": null},
+                {"label": "Tensor Cores", "value": "336", "unit": null},
+                {"label": "RT Cores", "value": "84", "unit": null},
+                {"label": "Base Clock", "value": "2300", "unit": "MHz"},
+                {"label": "Boost Clock", "value": "2620", "unit": "MHz"}
+              ]
+            },
+            {
+              "name": "Memory",
+              "specs": [
+                {"label": "Memory Size", "value": "16", "unit": "GB"},
+                {"label": "Memory Type", "value": "GDDR7", "unit": null},
+                {"label": "Memory Bus", "value": "256", "unit": "bit"},
+                {"label": "Memory Bandwidth", "value": "960", "unit": "GB/s"}
+              ]
+            },
+            {
+              "name": "Power",
+              "specs": [
+                {"label": "TDP", "value": "360", "unit": "W"},
+                {"label": "Power Connector", "value": "16-pin (12V-2x6)", "unit": null}
+              ]
+            }
+          ],
+          "description": "NVIDIA GeForce RTX 5080 - High-performance Blackwell GPU with GDDR7 memory",
+          "releaseDate": "2025-01-30",
+          "eolDate": null
+        },
+        "drivers": {
+          "installedVersion": null,
+          "latestVersion": null,
+          "downloadUrl": null,
+          "releaseDate": null,
+          "releaseNotesUrl": null,
+          "driverPageUrl": "https://www.nvidia.com/Download/index.aspx",
+          "updateAvailable": false
+        },
+        "documentation": {
+          "productPage": "https://www.nvidia.com/en-us/geforce/graphics-cards/50-series/rtx-5080/",
+          "supportPage": "https://www.nvidia.com/en-us/geforce/drivers/",
+          "manuals": [],
+          "datasheets": [],
+          "firmwareUpdates": []
+        },
+        "images": {
+          "primaryImage": null,
+          "gallery": [],
+          "thumbnail": null
+        },
+        "metadata": {
+          "source": "LocalDatabase",
+          "lastUpdated": "2025-01-07T00:00:00Z",
+          "expiresAt": "2026-01-07T00:00:00Z",
+          "sourceUrl": "https://www.nvidia.com/en-us/geforce/graphics-cards/50-series/",
+          "aiConfidence": null
+        }
+      },
+      {
+        "deviceId": "gpu-nvidia-rtx5070ti",
+        "deviceType": "Gpu",
+        "identifier": {
+          "manufacturer": "NVIDIA",
+          "model": "GeForce RTX 5070 Ti",
+          "partNumber": null,
+          "serialNumber": null,
+          "hardwareIds": []
+        },
+        "specifications": {
+          "specs": {
+            "architecture": "Blackwell",
+            "cudaCores": "8960",
+            "baseClock": "2300 MHz",
+            "boostClock": "2450 MHz",
+            "memory": "16 GB GDDR7",
+            "memoryBus": "256-bit",
+            "memoryBandwidth": "896 GB/s",
+            "tdp": "300 W"
+          },
+          "categories": [
+            {
+              "name": "GPU Engine",
+              "specs": [
+                {"label": "Architecture", "value": "Blackwell", "unit": null},
+                {"label": "CUDA Cores", "value": "8960", "unit": null},
+                {"label": "Tensor Cores", "value": "280", "unit": null},
+                {"label": "RT Cores", "value": "70", "unit": null},
+                {"label": "Base Clock", "value": "2300", "unit": "MHz"},
+                {"label": "Boost Clock", "value": "2450", "unit": "MHz"}
+              ]
+            },
+            {
+              "name": "Memory",
+              "specs": [
+                {"label": "Memory Size", "value": "16", "unit": "GB"},
+                {"label": "Memory Type", "value": "GDDR7", "unit": null},
+                {"label": "Memory Bus", "value": "256", "unit": "bit"},
+                {"label": "Memory Bandwidth", "value": "896", "unit": "GB/s"}
+              ]
+            },
+            {
+              "name": "Power",
+              "specs": [
+                {"label": "TDP", "value": "300", "unit": "W"}
+              ]
+            }
+          ],
+          "description": "NVIDIA GeForce RTX 5070 Ti - Performance Blackwell GPU with GDDR7 memory",
+          "releaseDate": "2025-02-01",
+          "eolDate": null
+        },
+        "drivers": {
+          "installedVersion": null,
+          "latestVersion": null,
+          "downloadUrl": null,
+          "releaseDate": null,
+          "releaseNotesUrl": null,
+          "driverPageUrl": "https://www.nvidia.com/Download/index.aspx",
+          "updateAvailable": false
+        },
+        "documentation": {
+          "productPage": "https://www.nvidia.com/en-us/geforce/graphics-cards/50-series/rtx-5070-ti/",
+          "supportPage": "https://www.nvidia.com/en-us/geforce/drivers/",
+          "manuals": [],
+          "datasheets": [],
+          "firmwareUpdates": []
+        },
+        "images": {
+          "primaryImage": null,
+          "gallery": [],
+          "thumbnail": null
+        },
+        "metadata": {
+          "source": "LocalDatabase",
+          "lastUpdated": "2025-01-07T00:00:00Z",
+          "expiresAt": "2026-01-07T00:00:00Z",
+          "sourceUrl": "https://www.nvidia.com/en-us/geforce/graphics-cards/50-series/",
+          "aiConfidence": null
+        }
+      },
+      {
+        "deviceId": "gpu-nvidia-rtx5070",
+        "deviceType": "Gpu",
+        "identifier": {
+          "manufacturer": "NVIDIA",
+          "model": "GeForce RTX 5070",
+          "partNumber": null,
+          "serialNumber": null,
+          "hardwareIds": []
+        },
+        "specifications": {
+          "specs": {
+            "architecture": "Blackwell",
+            "cudaCores": "6144",
+            "baseClock": "2160 MHz",
+            "boostClock": "2510 MHz",
+            "memory": "12 GB GDDR7",
+            "memoryBus": "192-bit",
+            "memoryBandwidth": "672 GB/s",
+            "tdp": "250 W"
+          },
+          "categories": [
+            {
+              "name": "GPU Engine",
+              "specs": [
+                {"label": "Architecture", "value": "Blackwell", "unit": null},
+                {"label": "CUDA Cores", "value": "6144", "unit": null},
+                {"label": "Tensor Cores", "value": "192", "unit": null},
+                {"label": "RT Cores", "value": "48", "unit": null},
+                {"label": "Base Clock", "value": "2160", "unit": "MHz"},
+                {"label": "Boost Clock", "value": "2510", "unit": "MHz"}
+              ]
+            },
+            {
+              "name": "Memory",
+              "specs": [
+                {"label": "Memory Size", "value": "12", "unit": "GB"},
+                {"label": "Memory Type", "value": "GDDR7", "unit": null},
+                {"label": "Memory Bus", "value": "192", "unit": "bit"},
+                {"label": "Memory Bandwidth", "value": "672", "unit": "GB/s"}
+              ]
+            },
+            {
+              "name": "Power",
+              "specs": [
+                {"label": "TDP", "value": "250", "unit": "W"}
+              ]
+            }
+          ],
+          "description": "NVIDIA GeForce RTX 5070 - Mainstream Blackwell GPU with RTX 4090 class performance",
+          "releaseDate": "2025-02-01",
+          "eolDate": null
+        },
+        "drivers": {
+          "installedVersion": null,
+          "latestVersion": null,
+          "downloadUrl": null,
+          "releaseDate": null,
+          "releaseNotesUrl": null,
+          "driverPageUrl": "https://www.nvidia.com/Download/index.aspx",
+          "updateAvailable": false
+        },
+        "documentation": {
+          "productPage": "https://www.nvidia.com/en-us/geforce/graphics-cards/50-series/rtx-5070/",
+          "supportPage": "https://www.nvidia.com/en-us/geforce/drivers/",
+          "manuals": [],
+          "datasheets": [],
+          "firmwareUpdates": []
+        },
+        "images": {
+          "primaryImage": null,
+          "gallery": [],
+          "thumbnail": null
+        },
+        "metadata": {
+          "source": "LocalDatabase",
+          "lastUpdated": "2025-01-07T00:00:00Z",
+          "expiresAt": "2026-01-07T00:00:00Z",
+          "sourceUrl": "https://www.nvidia.com/en-us/geforce/graphics-cards/50-series/",
+          "aiConfidence": null
+        }
+      },
+      {
         "deviceId": "gpu-nvidia-rtx4090",
         "deviceType": "Gpu",
         "identifier": {

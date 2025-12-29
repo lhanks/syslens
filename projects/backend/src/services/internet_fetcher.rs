@@ -25,9 +25,22 @@ pub struct InternetFetcher {
 impl InternetFetcher {
     /// Create a new InternetFetcher with configured HTTP client.
     pub fn new() -> Result<Self> {
+        use reqwest::header::{HeaderMap, HeaderValue, ACCEPT, ACCEPT_LANGUAGE, CACHE_CONTROL};
+
+        let mut headers = HeaderMap::new();
+        headers.insert(ACCEPT, HeaderValue::from_static("text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8"));
+        headers.insert(ACCEPT_LANGUAGE, HeaderValue::from_static("en-US,en;q=0.9"));
+        headers.insert(CACHE_CONTROL, HeaderValue::from_static("no-cache"));
+        headers.insert("Sec-Fetch-Dest", HeaderValue::from_static("document"));
+        headers.insert("Sec-Fetch-Mode", HeaderValue::from_static("navigate"));
+        headers.insert("Sec-Fetch-Site", HeaderValue::from_static("none"));
+        headers.insert("Sec-Fetch-User", HeaderValue::from_static("?1"));
+        headers.insert("Upgrade-Insecure-Requests", HeaderValue::from_static("1"));
+
         let client = Client::builder()
             .timeout(std::time::Duration::from_secs(REQUEST_TIMEOUT))
             .user_agent(USER_AGENT)
+            .default_headers(headers)
             .build()
             .context("Failed to create HTTP client")?;
 
@@ -270,37 +283,115 @@ impl InternetFetcher {
         })
     }
 
+    /// Clean up CPU model name by removing common suffixes and prefixes.
+    /// "amd-ryzen-9-9900x-12-core-processor-" -> "ryzen-9-9900x"
+    fn clean_cpu_model(model: &str) -> String {
+        let mut cleaned = model.to_lowercase();
+
+        // Remove manufacturer prefixes
+        cleaned = cleaned.trim_start_matches("amd-").to_string();
+        cleaned = cleaned.trim_start_matches("intel-").to_string();
+
+        // Remove common suffixes like "-12-core-processor", "-with-radeon-graphics", etc.
+        if let Some(idx) = cleaned.find("-core-processor") {
+            // Find where the core count starts (e.g., "-12-core-processor")
+            if let Some(count_idx) = cleaned[..idx].rfind('-') {
+                // Check if it's a number before -core-processor
+                let potential_count = &cleaned[count_idx + 1..idx];
+                if potential_count.parse::<u32>().is_ok() {
+                    cleaned = cleaned[..count_idx].to_string();
+                }
+            }
+        }
+
+        // Remove other common suffixes
+        for suffix in &["-with-radeon-graphics", "-processor", "-cpu"] {
+            if cleaned.ends_with(suffix) {
+                cleaned = cleaned[..cleaned.len() - suffix.len()].to_string();
+            }
+        }
+
+        // Remove trailing hyphens
+        cleaned = cleaned.trim_end_matches('-').to_string();
+
+        log::debug!("Cleaned CPU model: {} -> {}", model, cleaned);
+        cleaned
+    }
+
+    /// Detect AMD Ryzen series from model name (e.g., "ryzen-9-9900x" -> "9000")
+    fn detect_amd_series(model: &str) -> &'static str {
+        let model_lower = model.to_lowercase();
+
+        // Extract the first digit after "ryzen-X-" to determine series
+        // e.g., "ryzen-9-9900x" -> 9900 -> 9000 series
+        // "ryzen-7-7800x3d" -> 7800 -> 7000 series
+        if let Some(idx) = model_lower.find("ryzen-") {
+            let after_ryzen = &model_lower[idx + 6..]; // Skip "ryzen-"
+            // Skip the tier (5, 7, 9) and the dash
+            if let Some(dash_idx) = after_ryzen.find('-') {
+                let model_number = &after_ryzen[dash_idx + 1..];
+                // Get first digit of model number
+                if let Some(first_char) = model_number.chars().next() {
+                    match first_char {
+                        '9' => return "9000",
+                        '8' => return "8000",
+                        '7' => return "7000",
+                        '5' => return "5000",
+                        '3' => return "3000",
+                        _ => {}
+                    }
+                }
+            }
+        }
+        "7000" // Default fallback
+    }
+
     /// Fetch AMD CPU information.
     async fn fetch_amd_cpu(&self, model: &str) -> Result<DeviceDeepInfo> {
         log::info!("Fetching AMD CPU info for: {}", model);
-        let model = model.to_string();
+
+        // Clean the model name
+        let cleaned_model = Self::clean_cpu_model(model);
+        log::info!("Cleaned AMD CPU model: {}", cleaned_model);
+
+        // Detect the series from the model name
+        let series = Self::detect_amd_series(&cleaned_model);
+        log::info!("Detected AMD series: {}", series);
 
         // AMD product page URL pattern
-        let model_slug = model.to_lowercase()
-            .replace(" ", "-");
+        let model_slug = cleaned_model.replace(" ", "-");
 
         let product_url = format!(
-            "https://www.amd.com/en/products/processors/desktops/ryzen/7000-series/amd-{}.html",
-            model_slug
+            "https://www.amd.com/en/products/processors/desktops/ryzen/{}-series/amd-{}.html",
+            series, model_slug
         );
+        log::info!("Trying AMD product URL: {}", product_url);
 
         let response = self.client.get(&product_url).send().await;
 
         match response {
-            Ok(resp) if resp.status().is_success() => {
-                let html = resp.text().await?;
-                let model_final = model.clone();
-                let url_final = product_url.clone();
-                tokio::task::spawn_blocking(move || {
-                    let document = Html::parse_document(&html);
-                    Self::parse_amd_product_page_static(&document, &model_final, &url_final)
-                })
-                .await
-                .context("Spawn blocking failed")?
+            Ok(resp) => {
+                let status = resp.status();
+                if status.is_success() {
+                    log::info!("AMD product page returned success");
+                    let html = resp.text().await?;
+                    let model_final = cleaned_model.clone();
+                    let url_final = product_url.clone();
+                    tokio::task::spawn_blocking(move || {
+                        let document = Html::parse_document(&html);
+                        Self::parse_amd_product_page_static(&document, &model_final, &url_final)
+                    })
+                    .await
+                    .context("Spawn blocking failed")?
+                } else {
+                    log::warn!("AMD product page returned status {}, falling back to TechPowerUp", status);
+                    self.fetch_from_techpowerup(&cleaned_model, &DeviceType::Cpu).await
+                }
             }
-            _ => {
-                // Fallback to TechPowerUp
-                self.fetch_from_techpowerup(&model, &DeviceType::Cpu).await
+            Err(e) => {
+                log::warn!("AMD request failed: {}, falling back to TechPowerUp", e);
+                // Fallback to TechPowerUp with cleaned model name
+                self.fetch_from_techpowerup(&cleaned_model, &DeviceType::Cpu).await
             }
         }
     }
@@ -393,38 +484,112 @@ impl InternetFetcher {
         })
     }
 
+    /// Clean up GPU model name by removing common prefixes.
+    /// "nvidia-geforce-rtx-5070" -> "rtx-5070"
+    fn clean_gpu_model(model: &str) -> String {
+        let mut cleaned = model.to_lowercase();
+
+        // Remove manufacturer prefixes
+        cleaned = cleaned.trim_start_matches("nvidia-").to_string();
+        cleaned = cleaned.trim_start_matches("amd-").to_string();
+
+        // Remove "geforce-" prefix
+        cleaned = cleaned.trim_start_matches("geforce-").to_string();
+
+        // Also handle space-separated versions
+        cleaned = cleaned.replace("nvidia ", "");
+        cleaned = cleaned.replace("geforce ", "");
+
+        // Remove trailing hyphens
+        cleaned = cleaned.trim_end_matches('-').to_string();
+
+        log::debug!("Cleaned GPU model: {} -> {}", model, cleaned);
+        cleaned
+    }
+
+    /// Detect NVIDIA GPU series from model name (e.g., "rtx-5070" -> "50")
+    fn detect_nvidia_series(model: &str) -> &'static str {
+        let model_lower = model.to_lowercase();
+
+        // Check for RTX series - the first digit after "rtx-" indicates the series
+        if model_lower.contains("rtx") {
+            // Extract the model number (e.g., "5070", "4090", "3080")
+            if let Some(idx) = model_lower.find("rtx") {
+                let after_rtx = &model_lower[idx + 3..];
+                // Skip any separator (space or dash)
+                let trimmed = after_rtx.trim_start_matches(|c| c == '-' || c == ' ');
+                if let Some(first_char) = trimmed.chars().next() {
+                    match first_char {
+                        '5' => return "50-series",
+                        '4' => return "40-series",
+                        '3' => return "30-series",
+                        '2' => return "20-series",
+                        _ => {}
+                    }
+                }
+            }
+        }
+
+        // Check for GTX series
+        if model_lower.contains("gtx") {
+            if model_lower.contains("1660") || model_lower.contains("1650") || model_lower.contains("1630") {
+                return "16-series";
+            }
+            if model_lower.contains("1080") || model_lower.contains("1070") || model_lower.contains("1060") || model_lower.contains("1050") {
+                return "10-series";
+            }
+        }
+
+        "40-series" // Default fallback
+    }
+
     /// Fetch NVIDIA GPU information.
     async fn fetch_nvidia_gpu(&self, model: &str) -> Result<DeviceDeepInfo> {
         log::info!("Fetching NVIDIA GPU info for: {}", model);
-        let model = model.to_string();
+
+        // Clean the model name
+        let cleaned_model = Self::clean_gpu_model(model);
+        log::info!("Cleaned NVIDIA GPU model: {}", cleaned_model);
+
+        // Detect the series from the model name
+        let series = Self::detect_nvidia_series(&cleaned_model);
+        log::info!("Detected NVIDIA series: {}", series);
 
         // NVIDIA product page URL pattern
-        let model_slug = model.to_lowercase()
-            .replace("geforce ", "")
-            .replace(" ", "-");
+        let model_slug = cleaned_model.replace(" ", "-");
 
         let product_url = format!(
-            "https://www.nvidia.com/en-us/geforce/graphics-cards/40-series/{}/",
-            model_slug
+            "https://www.nvidia.com/en-us/geforce/graphics-cards/{}/{}/",
+            series, model_slug
         );
+        log::info!("Trying NVIDIA product URL: {}", product_url);
 
         let response = self.client.get(&product_url).send().await;
 
         match response {
-            Ok(resp) if resp.status().is_success() => {
-                let html = resp.text().await?;
-                let model_final = model.clone();
-                let url_final = product_url.clone();
-                tokio::task::spawn_blocking(move || {
-                    let document = Html::parse_document(&html);
-                    Self::parse_nvidia_product_page_static(&document, &model_final, &url_final)
-                })
-                .await
-                .context("Spawn blocking failed")?
+            Ok(resp) => {
+                let status = resp.status();
+                if status.is_success() {
+                    log::info!("NVIDIA product page returned success");
+                    let html = resp.text().await?;
+                    let model_final = cleaned_model.clone();
+                    let url_final = product_url.clone();
+                    tokio::task::spawn_blocking(move || {
+                        let document = Html::parse_document(&html);
+                        Self::parse_nvidia_product_page_static(&document, &model_final, &url_final)
+                    })
+                    .await
+                    .context("Spawn blocking failed")?
+                } else {
+                    log::warn!("NVIDIA product page returned status {}, falling back to TechPowerUp", status);
+                    // Fallback to TechPowerUp with cleaned model name
+                    self.fetch_from_techpowerup(&cleaned_model, &DeviceType::Gpu).await
+                }
             }
-            _ => {
-                // Fallback to TechPowerUp
-                self.fetch_from_techpowerup(&model, &DeviceType::Gpu).await
+            Err(e) => {
+                log::warn!("NVIDIA request failed: {}, falling back to TechPowerUp", e);
+                // Fallback to TechPowerUp with cleaned model name
+                self.fetch_from_techpowerup(&cleaned_model, &DeviceType::Gpu).await
             }
         }
     }
@@ -716,6 +881,62 @@ impl InternetFetcher {
         })
     }
 
+    /// Generate TechPowerUp URL slugs to try for a given model.
+    /// TechPowerUp uses slugs like "geforce-rtx-5070" for GPUs.
+    fn generate_techpowerup_slugs(model: &str, device_type: &DeviceType) -> Vec<String> {
+        let mut slugs = Vec::new();
+        let model_lower = model.to_lowercase().replace(' ', "-");
+
+        match device_type {
+            DeviceType::Gpu => {
+                // For NVIDIA GPUs, add "geforce-" prefix if not present
+                if model_lower.contains("rtx") || model_lower.contains("gtx") {
+                    // Try with geforce prefix
+                    if !model_lower.starts_with("geforce-") {
+                        slugs.push(format!("geforce-{}", model_lower));
+                    }
+                    slugs.push(model_lower.clone());
+                    // Try with nvidia-geforce prefix
+                    if !model_lower.starts_with("nvidia-") {
+                        slugs.push(format!("nvidia-geforce-{}", model_lower.trim_start_matches("geforce-")));
+                    }
+                } else if model_lower.contains("radeon") || model_lower.contains("rx-") {
+                    // For AMD GPUs
+                    if !model_lower.starts_with("radeon-") {
+                        slugs.push(format!("radeon-{}", model_lower));
+                    }
+                    slugs.push(model_lower.clone());
+                } else {
+                    slugs.push(model_lower.clone());
+                }
+            }
+            DeviceType::Cpu => {
+                // For CPUs, try variations
+                if model_lower.contains("ryzen") {
+                    // AMD Ryzen - add "amd-" prefix if not present
+                    if !model_lower.starts_with("amd-") {
+                        slugs.push(format!("amd-{}", model_lower));
+                    }
+                    slugs.push(model_lower.clone());
+                } else if model_lower.contains("core") || model_lower.contains("xeon") {
+                    // Intel - add "intel-" prefix if not present
+                    if !model_lower.starts_with("intel-") {
+                        slugs.push(format!("intel-{}", model_lower));
+                    }
+                    slugs.push(model_lower.clone());
+                } else {
+                    slugs.push(model_lower.clone());
+                }
+            }
+            _ => {
+                slugs.push(model_lower);
+            }
+        }
+
+        log::debug!("Generated TechPowerUp slugs: {:?}", slugs);
+        slugs
+    }
+
     /// Fallback: Fetch from TechPowerUp database.
     pub async fn fetch_from_techpowerup(&self, model: &str, device_type: &DeviceType) -> Result<DeviceDeepInfo> {
         log::info!("Fetching from TechPowerUp for: {} ({:?})", model, device_type);
@@ -728,23 +949,62 @@ impl InternetFetcher {
             _ => return Err(anyhow::anyhow!("TechPowerUp only supports CPU and GPU lookups")),
         };
 
-        // Search TechPowerUp
-        let search_url = format!(
-            "https://www.techpowerup.com/{}/specs/{}.html",
-            db_type,
-            urlencoding::encode(&model)
-        );
+        // Try direct URL patterns first (TechPowerUp uses predictable slugs)
+        let direct_slugs = Self::generate_techpowerup_slugs(&model, &device_type);
+        for slug in &direct_slugs {
+            let direct_url = format!("https://www.techpowerup.com/{}/{}", db_type, slug);
+            log::debug!("Trying TechPowerUp direct URL: {}", direct_url);
 
-        let response = self.client.get(&search_url).send().await;
+            if let Ok(resp) = self.client.get(&direct_url).send().await {
+                if resp.status().is_success() {
+                    let product_html = resp.text().await?;
+                    let model_final = model.clone();
+                    let device_type_final = device_type.clone();
+                    let url_final = direct_url.clone();
+                    return tokio::task::spawn_blocking(move || {
+                        let document = Html::parse_document(&product_html);
+                        Self::parse_techpowerup_page_static(&document, &model_final, &device_type_final, &url_final)
+                    })
+                    .await
+                    .context("Spawn blocking failed")?;
+                }
+            }
+        }
+
+        // Fallback: Fetch TechPowerUp main database page and search
+        let database_url = format!("https://www.techpowerup.com/{}/", db_type);
+        log::debug!("TechPowerUp database URL: {}", database_url);
+
+        let response = self.client.get(&database_url).send().await;
 
         match response {
             Ok(resp) if resp.status().is_success() => {
                 let html = resp.text().await?;
+                let model_clone = model.clone();
+                let db_type_str = db_type.to_string();
+
+                // First, extract the product page URL from search results
+                let product_url = tokio::task::spawn_blocking(move || {
+                    let document = Html::parse_document(&html);
+                    Self::extract_techpowerup_product_url(&document, &model_clone, &db_type_str)
+                })
+                .await
+                .context("Spawn blocking failed")??;
+
+                log::debug!("TechPowerUp product URL: {}", product_url);
+
+                // Fetch the actual product page
+                let product_response = self.client.get(&product_url).send().await?;
+                if !product_response.status().is_success() {
+                    return Err(anyhow::anyhow!("TechPowerUp product page returned {}", product_response.status()));
+                }
+
+                let product_html = product_response.text().await?;
                 let model_final = model.clone();
                 let device_type_final = device_type.clone();
-                let url_final = search_url.clone();
+                let url_final = product_url.clone();
                 tokio::task::spawn_blocking(move || {
-                    let document = Html::parse_document(&html);
+                    let document = Html::parse_document(&product_html);
                     Self::parse_techpowerup_page_static(&document, &model_final, &device_type_final, &url_final)
                 })
                 .await
@@ -754,6 +1014,47 @@ impl InternetFetcher {
         }
     }
 
+    /// Extract the product URL from TechPowerUp search results.
+    fn extract_techpowerup_product_url(document: &Html, model: &str, db_type: &str) -> Result<String> {
+        // TechPowerUp search results have links in a table
+        // Look for links that match the model name
+        let link_selector = Selector::parse("table.processors a, table a[href*='specs/'], a[href*='-specs/']").unwrap();
+        let model_lower = model.to_lowercase();
+        let model_parts: Vec<&str> = model_lower.split('-').collect();
+
+        log::debug!("Looking for TechPowerUp product link matching: {} (parts: {:?})", model, model_parts);
+
+        for element in document.select(&link_selector) {
+            if let Some(href) = element.value().attr("href") {
+                let text = element.text().collect::<String>().to_lowercase();
+                let href_lower = href.to_lowercase();
+
+                // Check if the link text or href contains the key model parts
+                // For "ryzen-9-9900x", check for "ryzen", "9900x"
+                let key_parts: Vec<&str> = model_parts.iter()
+                    .filter(|p| p.len() > 1 && !["amd", "intel", "nvidia", "9", "7", "5", "3"].contains(&p.as_ref()))
+                    .cloned()
+                    .collect();
+
+                let matches = key_parts.iter().all(|part| text.contains(part) || href_lower.contains(part));
+
+                if matches && !key_parts.is_empty() {
+                    let full_url = if href.starts_with("http") {
+                        href.to_string()
+                    } else if href.starts_with("/") {
+                        format!("https://www.techpowerup.com{}", href)
+                    } else {
+                        format!("https://www.techpowerup.com/{}/{}", db_type, href)
+                    };
+                    log::debug!("Found TechPowerUp product URL: {} (matched text: {})", full_url, text.trim());
+                    return Ok(full_url);
+                }
+            }
+        }
+
+        Err(anyhow::anyhow!("Could not find product link for {} on TechPowerUp search results", model))
+    }
+
     /// Parse TechPowerUp specification page (static version for spawn_blocking).
     fn parse_techpowerup_page_static(
         document: &Html,
@@ -761,6 +1062,20 @@ impl InternetFetcher {
         device_type: &DeviceType,
         source_url: &str,
     ) -> Result<DeviceDeepInfo> {
+        // Check for bot verification page indicators
+        let body_text = document.root_element()
+            .text()
+            .collect::<String>()
+            .to_lowercase();
+
+        if body_text.contains("checking your browser")
+            || body_text.contains("verify you are human")
+            || body_text.contains("please wait")
+            || body_text.contains("ddos protection")
+            || body_text.contains("cloudflare") {
+            return Err(anyhow::anyhow!("TechPowerUp returned bot verification page"));
+        }
+
         let mut specs = HashMap::new();
 
         // TechPowerUp uses definition lists for specs
@@ -780,6 +1095,13 @@ impl InternetFetcher {
                     specs.insert(label, value);
                 }
             }
+        }
+
+        // Reject empty results - means page didn't have expected content
+        if specs.is_empty() {
+            return Err(anyhow::anyhow!(
+                "TechPowerUp page had no specifications (possible bot check or invalid page)"
+            ));
         }
 
         // Extract manufacturer from specs or model name
