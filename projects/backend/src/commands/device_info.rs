@@ -2,7 +2,7 @@
 
 use crate::models::{DataSource, DeviceDeepInfo, DeviceIdentifier, DeviceType};
 use crate::services::device_sources::{fetch_from_all_sources, merge_results, DeviceSource, WikipediaSource};
-use crate::services::{AiAgent, CacheManager, InternetFetcher, KnowledgeStore, LocalDatabaseManager};
+use crate::services::{AiAgent, CacheManager, ClaudeClient, InternetFetcher, KnowledgeStore, LocalDatabaseManager};
 use chrono::{Duration, Utc};
 use std::sync::OnceLock;
 
@@ -17,6 +17,9 @@ static INTERNET_FETCHER: OnceLock<InternetFetcher> = OnceLock::new();
 
 /// Global AI agent instance
 static AI_AGENT: OnceLock<AiAgent> = OnceLock::new();
+
+/// Global Claude client instance
+static CLAUDE_CLIENT: OnceLock<ClaudeClient> = OnceLock::new();
 
 /// Global knowledge store instance
 static KNOWLEDGE_STORE: OnceLock<KnowledgeStore> = OnceLock::new();
@@ -49,6 +52,13 @@ fn get_ai_agent() -> &'static AiAgent {
     })
 }
 
+/// Get or initialize the Claude client.
+fn get_claude_client() -> &'static ClaudeClient {
+    CLAUDE_CLIENT.get_or_init(|| {
+        ClaudeClient::new().expect("Failed to initialize ClaudeClient")
+    })
+}
+
 /// Get or initialize the knowledge store.
 fn get_knowledge_store() -> &'static KnowledgeStore {
     KNOWLEDGE_STORE.get_or_init(|| {
@@ -76,7 +86,8 @@ fn build_device_sources() -> Vec<Box<dyn DeviceSource>> {
 /// 3. Check local database (bundled)
 /// 4. Multi-source fetch (Wikipedia, etc.)
 /// 5. Manufacturer websites fallback
-/// 6. AI agent lookup (intelligent web search)
+/// 6. Claude AI lookup (if ANTHROPIC_API_KEY is set)
+/// 7. Web scraping AI agent lookup (fallback)
 #[tauri::command]
 pub async fn get_device_deep_info(
     device_id: String,
@@ -186,8 +197,37 @@ pub async fn get_device_deep_info(
         }
     }
 
-    // 6. AI agent lookup (intelligent web search)
-    log::info!("Trying AI agent lookup for: {}", device_id);
+    // 6. Claude AI lookup (if API key is configured)
+    let claude_client = get_claude_client();
+    if claude_client.is_available() {
+        log::info!("Trying Claude AI lookup for: {}", device_id);
+        match claude_client.lookup_device(&identifier, &device_type).await {
+            Ok(mut claude_info) => {
+                log::info!(
+                    "Claude AI found device info for: {} (confidence: {:.2})",
+                    device_id,
+                    claude_info.metadata.ai_confidence.unwrap_or(0.0)
+                );
+
+                claude_info.device_id = device_id.clone();
+
+                let cache_ttl = 3; // 3 days for AI-generated results
+                if let Err(e) = cache.set(device_id.clone(), device_type.clone(), claude_info.clone(), cache_ttl) {
+                    log::warn!("Failed to cache Claude AI device info: {}", e);
+                }
+
+                return Ok(claude_info);
+            }
+            Err(e) => {
+                log::warn!("Claude AI lookup failed for {}: {}", device_id, e);
+            }
+        }
+    } else {
+        log::debug!("Claude AI not available (API key not configured)");
+    }
+
+    // 7. Web scraping AI agent lookup (fallback)
+    log::info!("Trying web scraping AI agent lookup for: {}", device_id);
     match ai_agent.search_device(&identifier, &device_type).await {
         Ok(mut ai_info) => {
             log::info!(

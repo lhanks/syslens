@@ -83,7 +83,7 @@ impl InternetFetcher {
         }
 
         // Return cleaned lowercase version
-        lower.replace(',', "").replace('.', "").trim().to_string()
+        lower.replace([',', '.'], "").trim().to_string()
     }
 
     /// Fetch device info from the appropriate manufacturer website.
@@ -517,7 +517,7 @@ impl InternetFetcher {
             if let Some(idx) = model_lower.find("rtx") {
                 let after_rtx = &model_lower[idx + 3..];
                 // Skip any separator (space or dash)
-                let trimmed = after_rtx.trim_start_matches(|c| c == '-' || c == ' ');
+                let trimmed = after_rtx.trim_start_matches(['-', ' ']);
                 if let Some(first_char) = trimmed.chars().next() {
                     match first_char {
                         '5' => return "50-series",
@@ -1032,7 +1032,7 @@ impl InternetFetcher {
                 // Check if the link text or href contains the key model parts
                 // For "ryzen-9-9900x", check for "ryzen", "9900x"
                 let key_parts: Vec<&str> = model_parts.iter()
-                    .filter(|p| p.len() > 1 && !["amd", "intel", "nvidia", "9", "7", "5", "3"].contains(&p.as_ref()))
+                    .filter(|p| p.len() > 1 && !["amd", "intel", "nvidia", "9", "7", "5", "3"].contains(p))
                     .cloned()
                     .collect();
 

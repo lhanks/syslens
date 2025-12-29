@@ -306,8 +306,7 @@ impl WikipediaSource {
         // Parse key-value pairs (| key = value)
         for line in infobox_content.lines() {
             let trimmed = line.trim();
-            if trimmed.starts_with('|') {
-                let without_pipe = &trimmed[1..];
+            if let Some(without_pipe) = trimmed.strip_prefix('|') {
                 if let Some(eq_pos) = without_pipe.find('=') {
                     let key = without_pipe[..eq_pos].trim().to_lowercase();
                     let value = Self::clean_wiki_value(without_pipe[eq_pos + 1..].trim());
@@ -351,8 +350,7 @@ impl WikipediaSource {
             if let Some(end) = cleaned[start..].find("}}") {
                 // Check if it's a unit template like {{nowrap|123 MHz}}
                 let template_content = &cleaned[start + 2..start + end];
-                if template_content.starts_with("nowrap|") {
-                    let inner = &template_content[7..];
+                if let Some(inner) = template_content.strip_prefix("nowrap|") {
                     cleaned = format!("{}{}{}", &cleaned[..start], inner, &cleaned[start + end + 2..]);
                 } else {
                     cleaned = format!("{}{}", &cleaned[..start], &cleaned[start + end + 2..]);

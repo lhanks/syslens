@@ -31,7 +31,7 @@ Tech Stack: Tauri 2.0 (Rust) + Angular 21 + Tailwind CSS
 ## 4. Frontend Implementation (Angular)
 
 - [x] 4.8 Add real-time data refresh with signals
-- [~] 4.27 Add deep device information with internet lookup (Phase 2 complete: internet fetching)
+- [x] 4.27 Add deep device information with internet lookup
 - [x] 4.29 Fix line graphs to have fixed height (prevent container resize on update)
 - [x] 4.31 Add process details dialog (comprehensive process information on click)
 

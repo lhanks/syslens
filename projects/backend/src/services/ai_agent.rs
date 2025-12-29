@@ -33,8 +33,10 @@ pub struct AiAgent {
 /// Search result from web search.
 #[derive(Debug, Clone)]
 struct SearchResult {
+    #[allow(dead_code)]
     title: String,
     url: String,
+    #[allow(dead_code)]
     snippet: String,
 }
 
@@ -85,7 +87,7 @@ impl AiAgent {
         let mut best_confidence: f32 = 0.0;
 
         for query in queries.iter().take(3) {
-            match self.search_and_extract(&query, identifier, device_type).await {
+            match self.search_and_extract(query, identifier, device_type).await {
                 Ok(result) => {
                     let confidence = result.metadata.ai_confidence.unwrap_or(0.0);
                     log::debug!("Query '{}' returned confidence: {:.2}", query, confidence);
