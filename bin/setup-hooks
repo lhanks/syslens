@@ -1,0 +1,19 @@
+#!/bin/bash
+# Setup git hooks for development
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+
+echo "Setting up git hooks for Syslens..."
+
+# Configure git to use our hooks directory
+git config core.hooksPath .husky
+
+echo "Git hooks configured!"
+echo ""
+echo "Pre-commit hook will now run:"
+echo "  - ESLint for frontend (TypeScript/HTML)"
+echo "  - Clippy for backend (Rust)"
+echo "  - rustfmt check for Rust formatting"
+echo ""
+echo "To bypass hooks in an emergency: git commit --no-verify"

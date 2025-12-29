@@ -9,10 +9,8 @@ Tech Stack: Tauri 2.0 (Rust) + Angular 21 + Tailwind CSS
 ** IMPORTANT ** Process the tasks below (in this section).  Expand them if needed and put them in the appropriate sections below.
 ** IMPORTANT ** Do not remove this section. Just clear out the tasks once processed.
 
-- When displaying the CPU/Memory/Disk/Network usage, make all the labels fixed width so that the ui doesn't shift when the values change.
-- Add labels for y axis to the line graphs.
-- Record all the history for the charts that show historical data, not just the selected tab (60 seconds is fine)
-- Network traffic line graphs are still jittery. We need to smooth out the transitions.
+- All the line graphs across all the components should be the same size so that the bottom of the graphs are aligned.
+- Add process details dialog that opens when you click a process in the processes list. It should provide as much information as possible about the process.
 - Major change. Get the spec agent to design it out.
     - Add add a database of hardware devices and all the information that we need to look up. If we can't find it on their website, we will create a local database of the information (in a json file)(image/specification/drivers/documentation)
     - Create an AI agent that can be used to search for the device information not found in the database.

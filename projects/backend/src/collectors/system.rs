@@ -40,6 +40,7 @@ struct Win32BIOS {
 #[cfg(target_os = "windows")]
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "PascalCase")]
+#[allow(dead_code)]
 struct Win32BaseBoard {
     manufacturer: Option<String>,
     product: Option<String>,
@@ -50,6 +51,7 @@ struct Win32BaseBoard {
 #[cfg(target_os = "windows")]
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "PascalCase")]
+#[allow(dead_code)]
 struct Win32OperatingSystem {
     caption: Option<String>,
     version: Option<String>,
@@ -70,10 +72,10 @@ struct Win32TPM {
 /// Collector for system configuration information
 pub struct SystemCollector;
 
-/// Thread-local WMI connection for Windows
+// Thread-local WMI connection for Windows
 #[cfg(target_os = "windows")]
 thread_local! {
-    static WMI_CON: std::cell::RefCell<Option<WMIConnection>> = std::cell::RefCell::new(None);
+    static WMI_CON: std::cell::RefCell<Option<WMIConnection>> = const { std::cell::RefCell::new(None) };
 }
 
 #[cfg(target_os = "windows")]

@@ -1,8 +1,8 @@
 //! Storage information collector
 
 use crate::models::{
-    DiskHealth, DiskPerformance, HealthStatus, InterfaceType, MediaType, NetworkDrive,
-    NetworkDriveStatus, Partition, PartitionStyle, PhysicalDisk, SmartAttribute, Volume,
+    DiskHealth, DiskPerformance, HealthStatus, MediaType, NetworkDrive,
+    NetworkDriveStatus, Partition, PhysicalDisk, Volume,
 };
 use sysinfo::{Disk, DiskKind, Disks};
 
@@ -120,6 +120,7 @@ impl StorageCollector {
     }
 
     /// Detect media type from disk kind
+    #[allow(dead_code)]
     fn detect_media_type(kind: DiskKind) -> MediaType {
         match kind {
             DiskKind::SSD => MediaType::SSD,

@@ -5,7 +5,7 @@ import { Subject, takeUntil } from 'rxjs';
 import { HardwareService, StatusService } from '@core/services';
 import {
   CpuInfo, CpuMetrics,
-  MemoryInfo, MemoryMetrics, MemoryModule,
+  MemoryInfo, MemoryMetrics,
   GpuInfo, GpuMetrics,
   MotherboardInfo, Monitor
 } from '@core/models';

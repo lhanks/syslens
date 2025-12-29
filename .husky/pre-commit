@@ -1,0 +1,43 @@
+#!/bin/sh
+# Pre-commit hook for Syslens
+# Runs linting on staged files before allowing commit
+
+echo "Running pre-commit checks..."
+
+# Frontend ESLint
+echo "Checking frontend (ESLint)..."
+cd projects/ui
+npm run lint --silent
+ESLINT_EXIT=$?
+cd ../..
+
+if [ $ESLINT_EXIT -ne 0 ]; then
+  echo "ESLint check failed. Please fix the errors above."
+  exit 1
+fi
+
+# Backend Clippy (only check, not deny warnings in pre-commit)
+echo "Checking backend (Clippy)..."
+cd projects/backend
+cargo clippy --all-targets --all-features 2>&1 | head -50
+CLIPPY_EXIT=${PIPESTATUS[0]}
+cd ../..
+
+if [ $CLIPPY_EXIT -ne 0 ]; then
+  echo "Clippy check failed. Please fix the warnings above."
+  exit 1
+fi
+
+# Rust formatting check
+echo "Checking Rust formatting..."
+cd projects/backend
+cargo fmt --all -- --check
+FMT_EXIT=$?
+cd ../..
+
+if [ $FMT_EXIT -ne 0 ]; then
+  echo "Rust formatting check failed. Run 'cargo fmt' to fix."
+  exit 1
+fi
+
+echo "All pre-commit checks passed!"

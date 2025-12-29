@@ -1,0 +1,8 @@
+# Clippy configuration for Syslens backend
+# See: https://doc.rust-lang.org/clippy/configuration.html
+
+# Maximum cognitive complexity before triggering the lint
+cognitive-complexity-threshold = 25
+
+# Allow some common patterns
+allowed-duplicate-crates = []

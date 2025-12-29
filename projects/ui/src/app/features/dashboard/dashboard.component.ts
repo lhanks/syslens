@@ -4,7 +4,6 @@ import { RouterLink } from '@angular/router';
 import { Subject, takeUntil, forkJoin } from 'rxjs';
 
 import { HardwareService, SystemService, NetworkService, StorageService, StatusService, MetricsHistoryService } from '@core/services';
-import { CpuInfo, MemoryInfo } from '@core/models';
 import { ProgressRingComponent, LineGraphComponent } from '@shared/components';
 import { BytesPipe, UptimePipe } from '@shared/pipes';
 

@@ -1,11 +1,11 @@
 //! Hardware information collector
 
 use crate::models::{
-    AudioDevice, AudioDeviceStatus, AudioDeviceType, CacheInfo, CpuInfo, CpuMetrics,
+    AudioDevice, CacheInfo, CpuInfo, CpuMetrics,
     GpuAdapterType, GpuInfo, GpuMetrics, MemoryInfo, MemoryMetrics, MemoryModule,
-    Monitor, MotherboardInfo, UsbDevice, UsbSpeed,
+    Monitor, MotherboardInfo, UsbDevice,
 };
-use sysinfo::{Components, Cpu, CpuRefreshKind, MemoryRefreshKind, RefreshKind, System};
+use sysinfo::{Components, CpuRefreshKind, MemoryRefreshKind, System};
 
 /// Collector for hardware information
 pub struct HardwareCollector;
@@ -155,7 +155,7 @@ impl HardwareCollector {
 
                     if memory_type == "Unknown" {
                         memory_type = module.memory_type
-                            .map(|t| Self::decode_memory_type(t))
+                            .map(Self::decode_memory_type)
                             .unwrap_or_else(|| "Unknown".to_string());
                     }
 
@@ -477,11 +477,11 @@ impl HardwareCollector {
                         .trim()
                         .to_string();
                     version = board.version
-                        .unwrap_or_else(|| String::new())
+                        .unwrap_or_else(String::new)
                         .trim()
                         .to_string();
                     serial_number = board.serial_number
-                        .unwrap_or_else(|| String::new())
+                        .unwrap_or_else(String::new)
                         .trim()
                         .to_string();
                 }
@@ -603,7 +603,7 @@ impl HardwareCollector {
 
         let mut monitors = Vec::new();
 
-        if let Some(com) = COMLibrary::new().ok() {
+        if let Ok(com) = COMLibrary::new() {
             if let Ok(wmi_con) = WMIConnection::new(com) {
                 // Get video controller info for refresh rate
                 let video_info: Result<Vec<Win32VideoController>, _> = wmi_con.query();
@@ -770,12 +770,14 @@ impl HardwareCollector {
     // Platform-specific helpers
 
     #[cfg(target_os = "windows")]
+    #[allow(dead_code)]
     fn get_board_manufacturer() -> String {
         // Would use WMI: Win32_BaseBoard.Manufacturer
         "Unknown".to_string()
     }
 
     #[cfg(not(target_os = "windows"))]
+    #[allow(dead_code)]
     fn get_board_manufacturer() -> String {
         std::fs::read_to_string("/sys/class/dmi/id/board_vendor")
             .unwrap_or_else(|_| "Unknown".to_string())
@@ -784,12 +786,14 @@ impl HardwareCollector {
     }
 
     #[cfg(target_os = "windows")]
+    #[allow(dead_code)]
     fn get_board_product() -> String {
         // Would use WMI: Win32_BaseBoard.Product
         "Unknown".to_string()
     }
 
     #[cfg(not(target_os = "windows"))]
+    #[allow(dead_code)]
     fn get_board_product() -> String {
         std::fs::read_to_string("/sys/class/dmi/id/board_name")
             .unwrap_or_else(|_| "Unknown".to_string())

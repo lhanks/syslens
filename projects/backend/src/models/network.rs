@@ -62,22 +62,12 @@ pub struct Ipv6Config {
 }
 
 /// DNS configuration
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DnsConfig {
     pub servers: Vec<String>,
     pub suffix: Option<String>,
     pub search_list: Vec<String>,
-}
-
-impl Default for DnsConfig {
-    fn default() -> Self {
-        Self {
-            servers: Vec::new(),
-            suffix: None,
-            search_list: Vec::new(),
-        }
-    }
 }
 
 /// Network adapter statistics

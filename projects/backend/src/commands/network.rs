@@ -39,6 +39,6 @@ mod tests {
     fn test_get_network_adapters() {
         let adapters = get_network_adapters();
         // May be empty in test environment, but shouldn't panic
-        assert!(adapters.len() >= 0);
+        let _ = adapters;
     }
 }

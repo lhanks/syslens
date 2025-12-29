@@ -1,7 +1,7 @@
 //! Network information collector
 
 use crate::models::{
-    AdapterStats, AdapterStatus, AdapterType, ConnectionProtocol, ConnectionState,
+    AdapterStats, AdapterStatus, AdapterType, ConnectionState,
     DnsConfig, Ipv4Config, Ipv6Config, NetworkAdapter, NetworkConnection, Route, RouteType,
 };
 use sysinfo::Networks;
@@ -39,6 +39,7 @@ use serde::Deserialize;
 #[cfg(target_os = "windows")]
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "PascalCase")]
+#[allow(dead_code)]
 struct Win32NetworkAdapterConfiguration {
     description: Option<String>,
     #[serde(rename = "DHCPEnabled")]
@@ -144,7 +145,7 @@ impl NetworkCollector {
                 };
 
                 // Get adapter name (GUID-like)
-                let adapter_name = if !adapter.AdapterName.is_null() {
+                let _adapter_name = if !adapter.AdapterName.is_null() {
                     std::ffi::CStr::from_ptr(adapter.AdapterName.0 as *const i8)
                         .to_string_lossy()
                         .to_string()
@@ -175,7 +176,7 @@ impl NetworkCollector {
 
                 // Get link speed in Mbps
                 let speed_mbps = if adapter.TransmitLinkSpeed > 0 {
-                    Some((adapter.TransmitLinkSpeed / 1_000_000) as u64)
+                    Some(adapter.TransmitLinkSpeed / 1_000_000)
                 } else {
                     None
                 };
@@ -574,6 +575,7 @@ impl NetworkCollector {
     }
 
     #[cfg(target_os = "windows")]
+    #[allow(dead_code)]
     fn tcp_state_to_enum(state: u32) -> ConnectionState {
         match state {
             1 => ConnectionState::Closed,
@@ -592,6 +594,7 @@ impl NetworkCollector {
     }
 
     #[cfg(target_os = "windows")]
+    #[allow(dead_code)]
     fn get_process_name(pid: u32) -> Option<String> {
         use windows::Win32::System::Threading::{OpenProcess, PROCESS_QUERY_LIMITED_INFORMATION};
         use windows::Win32::System::ProcessStatus::GetModuleBaseNameW;
@@ -684,6 +687,7 @@ impl NetworkCollector {
     }
 
     /// Detect adapter type from name
+    #[allow(dead_code)]
     fn detect_adapter_type(name: &str) -> AdapterType {
         let name_lower = name.to_lowercase();
         if name_lower.contains("wi-fi") || name_lower.contains("wireless") || name_lower.contains("wlan") {
@@ -701,6 +705,7 @@ impl NetworkCollector {
 }
 
 /// Format MAC address bytes into string
+#[allow(dead_code)]
 fn format_mac_address(bytes: &[u8]) -> String {
     bytes
         .iter()
@@ -717,7 +722,7 @@ mod tests {
     fn test_get_adapters() {
         let adapters = NetworkCollector::get_adapters();
         // Should return at least the loopback adapter
-        assert!(adapters.len() >= 0); // May be empty in test environment
+        let _ = adapters; // May be empty in test environment
     }
 
     #[test]

@@ -7,6 +7,9 @@ pub mod collectors;
 pub mod commands;
 pub mod models;
 
-pub use collectors::*;
-pub use commands::*;
-pub use models::*;
+// Re-export commonly used items without ambiguity
+pub use collectors::hardware::HardwareCollector;
+pub use collectors::network::NetworkCollector;
+pub use collectors::process::ProcessCollector;
+pub use collectors::storage::StorageCollector;
+pub use collectors::system::SystemCollector;
