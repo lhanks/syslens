@@ -66,7 +66,7 @@ type SortDirection = 'asc' | 'desc';
             series1Color="syslens-accent-blue"
             [showYAxis]="true"
             yAxisFormat="percent"
-            [yAxisWidth]="32"
+            [yAxisWidth]="40"
           />
         </div>
 
@@ -116,7 +116,7 @@ type SortDirection = 'asc' | 'desc';
             series1Color="syslens-accent-cyan"
             [showYAxis]="true"
             yAxisFormat="percent"
-            [yAxisWidth]="32"
+            [yAxisWidth]="40"
           />
         </div>
 

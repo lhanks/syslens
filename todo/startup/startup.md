@@ -9,7 +9,6 @@ Tech Stack: Tauri 2.0 (Rust) + Angular 21 + Tailwind CSS
 ** IMPORTANT ** Process the tasks below (in this section).  Expand them if needed and put them in the appropriate sections below.
 ** IMPORTANT ** Do not remove this section. Just clear out the tasks once processed.
 
-- All the line graphs across all the components should be the same size so that the bottom of the graphs are aligned.
 - Add process details dialog that opens when you click a process in the processes list. It should provide as much information as possible about the process.
 - Major change. Get the spec agent to design it out.
     - Add add a database of hardware devices and all the information that we need to look up. If we can't find it on their website, we will create a local database of the information (in a json file)(image/specification/drivers/documentation)
@@ -22,27 +21,27 @@ Tech Stack: Tauri 2.0 (Rust) + Angular 21 + Tailwind CSS
 
 ## 2. Infrastructure
 
-- [ ] 2.1 Configure GitHub Actions CI pipeline
+- [x] 2.1 Configure GitHub Actions CI pipeline
 - [ ] 2.3 Configure Tauri build for Windows installer
 - [ ] 2.4 Set up code signing (optional, for later)
 
 ## 3. Backend Implementation (Rust)
 
-- [ ] 3.6 Add real-time metrics polling
+- [x] 3.6 Add real-time metrics polling
 
 ## 4. Frontend Implementation (Angular)
 
-- [ ] 4.8 Add real-time data refresh with signals
+- [x] 4.8 Add real-time data refresh with signals
 - [ ] 4.27 Add deep device information with internet lookup (specs, images, documentation links)
-- [ ] 4.29 Fix line graphs to have fixed height (prevent container resize on update)
+- [x] 4.29 Fix line graphs to have fixed height (prevent container resize on update)
 
 ## 5. Quality
 
 - [ ] 5.1 Set up Rust test framework with unit tests
 - [ ] 5.2 Set up Angular test framework (Jasmine/Karma)
-- [ ] 5.3 Configure ESLint for frontend
-- [ ] 5.4 Configure Clippy for backend
-- [ ] 5.5 Add pre-commit hooks (lint, format)
+- [x] 5.3 Configure ESLint for frontend
+- [x] 5.4 Configure Clippy for backend
+- [x] 5.5 Add pre-commit hooks (lint, format)
 
 ## 6. Documentation
 
@@ -70,10 +69,10 @@ Tech Stack: Tauri 2.0 (Rust) + Angular 21 + Tailwind CSS
 ## Progress
 
 - Total Tasks: 25
-- Completed: 7
-- Remaining: 18
+- Completed: 14
+- Remaining: 11
 
-Last Updated: 2025-12-28 (Session 2)
+Last Updated: 2025-12-28 (Session 3)
 
 ---
 
@@ -137,6 +136,21 @@ Last Updated: 2025-12-28 (Session 2)
 
 ### Backend Implementation (Rust)
 - [x] 3.16 Fix CPU % normalization in process list (divide by core count)
+
+### Infrastructure
+- [x] 2.1 Configure GitHub Actions CI pipeline (ESLint, Clippy, TypeScript, Rust build)
+
+### Backend Implementation (Rust)
+- [x] 3.6 Add real-time metrics polling (MetricsHistoryService with 1-second polling)
+
+### Frontend Implementation (Angular)
+- [x] 4.8 Add real-time data refresh with signals (MetricsHistoryService uses Angular signals)
+- [x] 4.29 Fix line graphs to have fixed height (consistent yAxisWidth=40 for alignment)
+
+### Quality
+- [x] 5.3 Configure ESLint for frontend (ESLint 9 flat config with Angular plugins)
+- [x] 5.4 Configure Clippy for backend (clippy.toml + fixed all warnings)
+- [x] 5.5 Add pre-commit hooks (lint, format) with Husky
 
 ### Documentation
 - [x] 6.1 Complete README with build instructions
