@@ -115,15 +115,12 @@ export class MetricsHistoryService implements OnDestroy {
         this.pushToHistory(this._cpuHistory, metrics.totalUsage);
       });
 
-    // Memory metrics - every second
+    // Memory metrics - every second (store bytes for GB display on y-axis)
     this.hardwareService.getMemoryMetricsPolling()
       .pipe(takeUntil(this.destroy$))
       .subscribe(metrics => {
         this._memoryUsedBytes.set(metrics.inUseBytes);
-        if (this.memoryInfo) {
-          const usage = (metrics.inUseBytes / this.memoryInfo.totalBytes) * 100;
-          this.pushToHistory(this._memoryHistory, usage);
-        }
+        this.pushToHistory(this._memoryHistory, metrics.inUseBytes);
       });
 
     // Disk performance - every second

@@ -87,13 +87,13 @@ type SortDirection = 'asc' | 'desc';
           </div>
           <app-line-graph
             [series1]="memoryHistory()"
-            [maxValue]="100"
-            [width]="220"
+            [maxValue]="memoryTotalBytes()"
+            [width]="230"
             [height]="40"
             series1Color="syslens-accent-purple"
             [showYAxis]="true"
-            yAxisFormat="percent"
-            [yAxisWidth]="28"
+            yAxisFormat="bytes"
+            [yAxisWidth]="38"
           />
         </div>
 
