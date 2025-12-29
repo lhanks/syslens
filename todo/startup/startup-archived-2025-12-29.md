@@ -159,10 +159,35 @@ This task list guided the initial development of Syslens from project setup thro
 5. **Production Ready**: Windows installer builds (NSIS + MSI) successfully tested
 6. **Professional Branding**: Complete brand identity with logo, style guide, and assets
 
+---
+
+## Post-Archive Completed Tasks
+
+These tasks were completed after the initial archive date:
+
+### Performance Optimizations (December 29, 2025)
+
+- [x] **Optimize backend CPU usage with shared SysInfoState**
+  - Created state.rs with cached System instance (avoids recreating on every call)
+  - Updated CPU/memory/process commands to use shared state
+  - Increased frontend polling intervals from 1s to 2s
+  - Reduced 50ms blocking sleeps by caching refresh timestamps
+
+- [x] **Improve startup responsiveness with lazy loading**
+  - Made SysInfoState initialization lazy (skip process refresh at startup)
+  - Added skeleton loading UI to dashboard (animated placeholders)
+  - Changed from forkJoin (blocking) to progressive loading (each card updates independently)
+  - Users list deferred until first process access
+
+### Features (December 29, 2025)
+
+- [x] **Add option to kill process on the process details dialog**
+
+---
+
 ## Next Steps
 
 For continued development, create a new task list focusing on:
 - Post-release bug fixes and refinements
 - Feature enhancements from section 9.1 (hardware database, AI features)
-- Performance optimizations
 - Cross-platform support (macOS, Linux)
