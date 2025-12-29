@@ -13,6 +13,19 @@ pub struct HardwareCollector;
 impl HardwareCollector {
     /// Get CPU static information
     pub fn get_cpu_info() -> CpuInfo {
+        #[cfg(target_os = "windows")]
+        {
+            Self::get_cpu_info_windows()
+        }
+
+        #[cfg(not(target_os = "windows"))]
+        {
+            Self::get_cpu_info_generic()
+        }
+    }
+
+    #[cfg(not(target_os = "windows"))]
+    fn get_cpu_info_generic() -> CpuInfo {
         let mut sys = System::new();
         sys.refresh_cpu_specifics(CpuRefreshKind::new().with_frequency());
 
@@ -37,6 +50,122 @@ impl HardwareCollector {
                 l3_kb: 0,
             },
             socket: String::new(),
+            tdp_watts: None,
+        }
+    }
+
+    #[cfg(target_os = "windows")]
+    fn get_cpu_info_windows() -> CpuInfo {
+        use wmi::{COMLibrary, WMIConnection};
+        use serde::Deserialize;
+
+        let mut sys = System::new();
+        sys.refresh_cpu_specifics(CpuRefreshKind::new().with_frequency());
+
+        let cpus = sys.cpus();
+        let cpu = cpus.first();
+
+        // Get basic info from sysinfo
+        let name = cpu.map(|c| c.brand().to_string()).unwrap_or_else(|| "Unknown".to_string());
+        let manufacturer = cpu.map(|c| c.vendor_id().to_string()).unwrap_or_else(|| "Unknown".to_string());
+        let base_clock = cpu.map(|c| c.frequency() as u32).unwrap_or(0);
+        let physical_cores = sys.physical_core_count().unwrap_or(0) as u32;
+        let logical_processors = cpus.len() as u32;
+
+        // Get cache and socket info from WMI
+        #[derive(Deserialize, Debug)]
+        #[serde(rename = "Win32_Processor")]
+        #[serde(rename_all = "PascalCase")]
+        struct Win32Processor {
+            #[serde(rename = "L2CacheSize")]
+            l2_cache_size: Option<u32>,
+            #[serde(rename = "L3CacheSize")]
+            l3_cache_size: Option<u32>,
+            max_clock_speed: Option<u32>,
+            socket_designation: Option<String>,
+        }
+
+        #[derive(Deserialize, Debug)]
+        #[serde(rename = "Win32_CacheMemory")]
+        #[serde(rename_all = "PascalCase")]
+        struct Win32CacheMemory {
+            purpose: Option<String>,
+            max_cache_size: Option<u32>,
+            level: Option<u16>,
+        }
+
+        let mut cache = CacheInfo {
+            l1_data_kb: 0,
+            l1_instruction_kb: 0,
+            l2_kb: 0,
+            l3_kb: 0,
+        };
+        let mut socket = String::new();
+        let mut max_clock = base_clock;
+
+        if let Ok(com) = COMLibrary::new() {
+            if let Ok(wmi_con) = WMIConnection::new(com) {
+                // Get processor info (L2, L3, socket)
+                if let Ok(processors) = wmi_con.query::<Win32Processor>() {
+                    if let Some(proc) = processors.first() {
+                        cache.l2_kb = proc.l2_cache_size.unwrap_or(0);
+                        cache.l3_kb = proc.l3_cache_size.unwrap_or(0);
+                        max_clock = proc.max_clock_speed.unwrap_or(base_clock);
+                        socket = proc.socket_designation.clone().unwrap_or_default();
+                    }
+                }
+
+                // Get cache info from Win32_CacheMemory
+                // WMI Level values: 3=Primary(L1), 4=Secondary(L2), 5=Tertiary(L3)
+                if let Ok(caches) = wmi_con.query::<Win32CacheMemory>() {
+                    for cache_entry in caches {
+                        let level = cache_entry.level.unwrap_or(0);
+                        let size_kb = cache_entry.max_cache_size.unwrap_or(0);
+                        let purpose = cache_entry.purpose.as_deref().unwrap_or("");
+
+                        match level {
+                            3 => {
+                                // L1 cache (Primary)
+                                if purpose.to_lowercase().contains("data") {
+                                    cache.l1_data_kb = size_kb;
+                                } else if purpose.to_lowercase().contains("instruction") {
+                                    cache.l1_instruction_kb = size_kb;
+                                } else if cache.l1_data_kb == 0 {
+                                    cache.l1_data_kb = size_kb;
+                                }
+                            }
+                            4 => {
+                                // L2 cache (Secondary) - use if not set from Win32_Processor
+                                if cache.l2_kb == 0 {
+                                    cache.l2_kb = size_kb;
+                                }
+                            }
+                            5 => {
+                                // L3 cache (Tertiary) - use if not set from Win32_Processor
+                                if cache.l3_kb == 0 {
+                                    cache.l3_kb = size_kb;
+                                }
+                            }
+                            _ => {}
+                        }
+                    }
+                }
+            }
+        }
+
+        CpuInfo {
+            name,
+            manufacturer,
+            architecture: std::env::consts::ARCH.to_string(),
+            family: String::new(),
+            model: String::new(),
+            stepping: String::new(),
+            physical_cores,
+            logical_processors,
+            base_clock_mhz: base_clock,
+            max_clock_mhz: max_clock,
+            cache,
+            socket,
             tdp_watts: None,
         }
     }
@@ -568,6 +697,140 @@ impl HardwareCollector {
         Vec::new()
     }
 
+    /// Parse EDID data to extract monitor information.
+    /// EDID (Extended Display Identification Data) is a 128-byte block that contains
+    /// the actual monitor name, manufacturer, and specifications.
+    #[cfg(target_os = "windows")]
+    fn parse_edid(edid: &[u8]) -> Option<(String, String)> {
+        // EDID must be at least 128 bytes
+        if edid.len() < 128 {
+            return None;
+        }
+
+        // Verify EDID header (bytes 0-7 should be 00 FF FF FF FF FF FF 00)
+        let expected_header = [0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00];
+        if edid[0..8] != expected_header {
+            return None;
+        }
+
+        // Parse manufacturer ID from bytes 8-9 (3-letter PNP ID encoded in 2 bytes)
+        let mfg_bytes = ((edid[8] as u16) << 8) | (edid[9] as u16);
+        let char1 = ((mfg_bytes >> 10) & 0x1F) as u8 + b'A' - 1;
+        let char2 = ((mfg_bytes >> 5) & 0x1F) as u8 + b'A' - 1;
+        let char3 = (mfg_bytes & 0x1F) as u8 + b'A' - 1;
+        let manufacturer_code = format!("{}{}{}", char1 as char, char2 as char, char3 as char);
+
+        // Map common manufacturer codes to names
+        let manufacturer = match manufacturer_code.as_str() {
+            "DEL" => "Dell",
+            "SAM" => "Samsung",
+            "LEN" => "Lenovo",
+            "ACR" => "Acer",
+            "ACI" => "Asus",
+            "AUS" => "Asus",
+            "BNQ" => "BenQ",
+            "HWP" => "HP",
+            "LGD" => "LG Display",
+            "GSM" => "LG Electronics",
+            "PHL" => "Philips",
+            "AOC" => "AOC",
+            "VSC" => "ViewSonic",
+            "NEC" => "NEC",
+            "EIZ" => "Eizo",
+            "IVM" => "Iiyama",
+            "MED" => "Medion",
+            "MSI" => "MSI",
+            "GBT" => "Gigabyte",
+            _ => &manufacturer_code,
+        }.to_string();
+
+        // Look for monitor name in descriptor blocks (bytes 54-125)
+        // Each descriptor block is 18 bytes. Descriptor type 0xFC = Monitor Name
+        let mut monitor_name = None;
+        for i in 0..4 {
+            let offset = 54 + (i * 18);
+            if offset + 18 > edid.len() {
+                break;
+            }
+
+            // Check if this is a display descriptor (first 2 bytes are 0)
+            if edid[offset] == 0 && edid[offset + 1] == 0 {
+                let descriptor_type = edid[offset + 3];
+
+                // 0xFC = Monitor Name
+                if descriptor_type == 0xFC {
+                    // Name is in bytes 5-17 (13 characters, padded with 0x0A or space)
+                    let name_bytes = &edid[offset + 5..offset + 18];
+                    let name: String = name_bytes
+                        .iter()
+                        .take_while(|&&b| b != 0x0A && b != 0x00)
+                        .map(|&b| b as char)
+                        .collect::<String>()
+                        .trim()
+                        .to_string();
+
+                    if !name.is_empty() {
+                        monitor_name = Some(name);
+                        break;
+                    }
+                }
+            }
+        }
+
+        // Fall back to product code if no name found
+        let name = monitor_name.unwrap_or_else(|| {
+            let product_code = ((edid[11] as u16) << 8) | (edid[10] as u16);
+            format!("{} {:04X}", manufacturer, product_code)
+        });
+
+        Some((manufacturer, name))
+    }
+
+    /// Read EDID data from Windows Registry for all monitors.
+    /// Returns a map of DeviceID prefix -> (manufacturer, name)
+    #[cfg(target_os = "windows")]
+    fn get_edid_info_from_registry() -> std::collections::HashMap<String, (String, String)> {
+        use winreg::enums::*;
+        use winreg::RegKey;
+
+        let mut edid_map = std::collections::HashMap::new();
+
+        let hklm = RegKey::predef(HKEY_LOCAL_MACHINE);
+        let display_path = r"SYSTEM\CurrentControlSet\Enum\DISPLAY";
+
+        if let Ok(display_key) = hklm.open_subkey(display_path) {
+            // Iterate over monitor types (e.g., "DELA1A2", "GSM5BBF")
+            if let Ok(monitor_types) = display_key.enum_keys().collect::<Result<Vec<_>, _>>() {
+                for monitor_type in monitor_types {
+                    let type_path = format!(r"{}\{}", display_path, monitor_type);
+                    if let Ok(type_key) = hklm.open_subkey(&type_path) {
+                        // Iterate over instances
+                        if let Ok(instances) = type_key.enum_keys().collect::<Result<Vec<_>, _>>() {
+                            for instance in instances {
+                                let edid_path = format!(r"{}\{}\Device Parameters", type_path, instance);
+                                if let Ok(params_key) = hklm.open_subkey(&edid_path) {
+                                    if let Ok(edid_data) = params_key.get_raw_value("EDID") {
+                                        if let Some((manufacturer, name)) = Self::parse_edid(&edid_data.bytes) {
+                                            // Use monitor_type as the key (e.g., "DELA1A2")
+                                            // This matches the DeviceID from EnumDisplayDevices
+                                            edid_map.insert(monitor_type.clone(), (manufacturer.clone(), name.clone()));
+                                            log::debug!(
+                                                "EDID found: {} -> {} {}",
+                                                monitor_type, manufacturer, name
+                                            );
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        edid_map
+    }
+
     /// Get connected monitors
     #[cfg(target_os = "windows")]
     pub fn get_monitors() -> Vec<Monitor> {
@@ -603,6 +866,9 @@ impl HardwareCollector {
 
         let mut monitors = Vec::new();
 
+        // Get EDID data from registry for real monitor names
+        let edid_info = Self::get_edid_info_from_registry();
+
         if let Ok(com) = COMLibrary::new() {
             if let Ok(wmi_con) = WMIConnection::new(com) {
                 // Get video controller info for refresh rate
@@ -626,7 +892,37 @@ impl HardwareCollector {
                 let monitor_info: Result<Vec<Win32DesktopMonitor>, _> = wmi_con.query();
                 if let Ok(wmi_monitors) = monitor_info {
                     for (idx, mon) in wmi_monitors.into_iter().enumerate() {
-                        let name = mon.name.unwrap_or_else(|| format!("Display {}", idx + 1));
+                        let device_id = mon.device_id.clone().unwrap_or_else(|| format!("monitor-{}", idx));
+
+                        // Try to find EDID info by matching device ID
+                        // WMI DeviceID format: "DesktopMonitor1" or "\\.\DISPLAY1\Monitor0"
+                        // Registry format: "DELA1A2" (manufacturer + product code)
+                        // We need to check if any EDID key is present in a connected monitor
+                        let (edid_manufacturer, edid_name) = edid_info.iter()
+                            .find(|(key, _)| {
+                                // Match if the key appears in the device ID or matches any connected monitor
+                                device_id.contains(*key)
+                            })
+                            .map(|(_, (mfg, name))| (Some(mfg.clone()), Some(name.clone())))
+                            .unwrap_or((None, None));
+
+                        // Use EDID name if available, otherwise WMI name
+                        let wmi_name = mon.name.clone().unwrap_or_else(|| format!("Display {}", idx + 1));
+                        let name = edid_name.unwrap_or_else(|| {
+                            // If WMI gives "Generic PnP Monitor", try to use EDID data by index
+                            if wmi_name.contains("Generic") {
+                                // Try to match by index if we have EDID data
+                                if idx < edid_info.len() {
+                                    if let Some((_, (_, edid_name))) = edid_info.iter().nth(idx) {
+                                        return edid_name.clone();
+                                    }
+                                }
+                            }
+                            wmi_name
+                        });
+
+                        // Use EDID manufacturer if available
+                        let manufacturer = edid_manufacturer.or(mon.manufacturer);
 
                         // Try to get resolution from monitor, fall back to video controller
                         let mon_resolution = match (mon.screen_width, mon.screen_height) {
@@ -635,13 +931,13 @@ impl HardwareCollector {
                         };
 
                         monitors.push(Monitor {
-                            id: mon.device_id.unwrap_or_else(|| format!("monitor-{}", idx)),
+                            id: device_id,
                             name,
-                            manufacturer: mon.manufacturer,
+                            manufacturer,
                             resolution: mon_resolution,
-                            size_inches: None, // Would need EDID parsing
-                            connection: "Unknown".to_string(), // WMI doesn't provide this directly
-                            hdr_support: false, // Would need more advanced API
+                            size_inches: None,
+                            connection: "Unknown".to_string(),
+                            hdr_support: false,
                             refresh_rate_hz: refresh_rate,
                         });
                     }
@@ -674,14 +970,14 @@ impl HardwareCollector {
 
         // Fallback: Use EnumDisplayMonitors if WMI returns nothing
         if monitors.is_empty() {
-            monitors = Self::get_monitors_from_gdi();
+            monitors = Self::get_monitors_from_gdi(&edid_info);
         }
 
         monitors
     }
 
     #[cfg(target_os = "windows")]
-    fn get_monitors_from_gdi() -> Vec<Monitor> {
+    fn get_monitors_from_gdi(edid_info: &std::collections::HashMap<String, (String, String)>) -> Vec<Monitor> {
         use windows::Win32::Graphics::Gdi::{
             EnumDisplayDevicesW, EnumDisplaySettingsW, DEVMODEW, DISPLAY_DEVICEW,
             ENUM_CURRENT_SETTINGS,
@@ -762,23 +1058,41 @@ impl HardwareCollector {
                     if (monitor_device.StateFlags & DISPLAY_DEVICE_ATTACHED_TO_DESKTOP) != 0 {
                         found_monitor = true;
 
+                        // DeviceID format: "MONITOR\DELA1A2\{GUID}"
                         let monitor_id: String = monitor_device.DeviceID
                             .iter()
                             .take_while(|&&c| c != 0)
                             .map(|&c| c as u8 as char)
                             .collect();
 
-                        let monitor_name: String = monitor_device.DeviceString
+                        let gdi_name: String = monitor_device.DeviceString
                             .iter()
                             .take_while(|&&c| c != 0)
                             .map(|&c| c as u8 as char)
                             .collect();
 
-                        let display_name = if monitor_name.is_empty() {
-                            format!("Display {}", monitors.len() + 1)
-                        } else {
-                            monitor_name
-                        };
+                        // Try to find EDID info by matching DeviceID
+                        // DeviceID format: "MONITOR\DELA1A2\{GUID}"
+                        let (edid_manufacturer, edid_name) = edid_info.iter()
+                            .find(|(key, _)| monitor_id.contains(key.as_str()))
+                            .map(|(_, (mfg, name))| (Some(mfg.clone()), Some(name.clone())))
+                            .unwrap_or((None, None));
+
+                        // Use EDID name if available, otherwise GDI name
+                        let display_name = edid_name.unwrap_or_else(|| {
+                            if gdi_name.is_empty() || gdi_name.contains("Generic") {
+                                // Try to match by index if we have EDID data
+                                let idx = monitors.len();
+                                if idx < edid_info.len() {
+                                    if let Some((_, (_, name))) = edid_info.iter().nth(idx) {
+                                        return name.clone();
+                                    }
+                                }
+                                format!("Display {}", monitors.len() + 1)
+                            } else {
+                                gdi_name
+                            }
+                        });
 
                         monitors.push(Monitor {
                             id: if monitor_id.is_empty() {
@@ -787,7 +1101,7 @@ impl HardwareCollector {
                                 monitor_id
                             },
                             name: display_name,
-                            manufacturer: None,
+                            manufacturer: edid_manufacturer,
                             resolution: resolution.clone(),
                             size_inches: None,
                             connection: "Unknown".to_string(),

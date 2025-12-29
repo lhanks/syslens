@@ -9,14 +9,7 @@ Tech Stack: Tauri 2.0 (Rust) + Angular 21 + Tailwind CSS
 ** IMPORTANT ** Process the tasks below (in this section).  Expand them if needed and put them in the appropriate sections below.
 ** IMPORTANT ** Do not remove this section. Just clear out the tasks once processed.
 
-- On the hardware -> processor component, the cache size is wrong.
-- Save latest state that can be loaded at startup prior to updating to get the current state.
-- Add process details dialog that opens when you click a process in the processes list. It should provide as much information as possible about the process.
-- Major change. Get the spec agent to design it out.
-    - Add add a database of hardware devices and all the information that we need to look up. If we can't find it on their website, we will create a local database of the information (in a json file)(image/specification/drivers/documentation)
-    - Create an AI agent that can be used to search for the device information not found in the database.
-    - Create a database of process history and use AI to analyze usage patterns.
-    - Add a settings dialog that allows the user to configure the app. Include settings for the API keys for the AI agent and the internet fetcher.
+(no new tasks)
 
 ## 1. Setup
 
@@ -25,18 +18,22 @@ Tech Stack: Tauri 2.0 (Rust) + Angular 21 + Tailwind CSS
 ## 2. Infrastructure
 
 - [x] 2.1 Configure GitHub Actions CI pipeline
+- [ ] 2.2 Add state persistence service (cache latest metrics/data for faster startup)
 - [ ] 2.3 Configure Tauri build for Windows installer
 - [ ] 2.4 Set up code signing (optional, for later)
 
 ## 3. Backend Implementation (Rust)
 
 - [x] 3.6 Add real-time metrics polling
+- [ ] 3.17 Fix display detection (shows "Generic" instead of actual monitor model)
+- [ ] 3.18 Fix processor cache size reporting (currently incorrect)
 
 ## 4. Frontend Implementation (Angular)
 
 - [x] 4.8 Add real-time data refresh with signals
 - [~] 4.27 Add deep device information with internet lookup (Phase 2 complete: internet fetching)
 - [x] 4.29 Fix line graphs to have fixed height (prevent container resize on update)
+- [ ] 4.31 Add process details dialog (comprehensive process information on click)
 
 ## 5. Quality
 
@@ -67,15 +64,23 @@ Tech Stack: Tauri 2.0 (Rust) + Angular 21 + Tailwind CSS
 - [x] 8.6 Generate brand assets (icons, splash screens)
 - [x] 8.7 Create brand guidelines document
 
+## 9. Future Enhancements (Requires Spec Design)
+
+- [ ] 9.1 Get spec agent to design hardware database and AI-enhanced features
+    - Local hardware device database (JSON) with images/specs/drivers/documentation
+    - AI agent for searching device information not in database
+    - Process history database with AI-powered usage pattern analysis
+    - Settings dialog for API keys (AI agent, internet fetcher)
+
 ---
 
 ## Progress
 
-- Total Tasks: 25
+- Total Tasks: 30
 - Completed: 14
-- Remaining: 11
+- Remaining: 16
 
-Last Updated: 2025-12-28 (Session 3)
+Last Updated: 2025-12-28 (Session 4)
 
 ---
 
