@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+  <title>Syslens Pulse v1 - Square Icon Version</title>
+  <defs>
+    <linearGradient id="pulseGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#06b6d4;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#22c55e;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="bgGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0f172a;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1e293b;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <!-- Rounded square background -->
+  <rect x="32" y="32" width="192" height="192" fill="url(#bgGrad1)" rx="32"/>
+
+  <!-- Circular pulse container -->
+  <circle cx="128" cy="128" r="80" fill="none" stroke="#334155" stroke-width="2" opacity="0.3"/>
+
+  <!-- Circular waveform path (polar coordinates) -->
+  <path d="M 128 48 L 128 60 L 140 60 L 140 48 L 148 48 L 148 70 L 160 70 L 160 48
+           L 168 48 L 168 55 L 180 55 L 180 48 L 188 48 L 188 65 L 200 65 L 200 85
+           L 208 85 L 208 100 L 200 100 L 200 115 L 188 115 L 188 128 L 180 128
+           L 180 135 L 168 135 L 168 148 L 160 148 L 160 155 L 148 155 L 148 168
+           L 140 168 L 140 180 L 128 180 L 128 188 L 115 188 L 115 196 L 100 196
+           L 100 208 L 85 208 L 85 200 L 70 200 L 70 188 L 60 188 L 60 180
+           L 48 180 L 48 168 L 60 168 L 60 160 L 48 160 L 48 148 L 55 148
+           L 55 140 L 48 140 L 48 128 L 60 128 L 60 115 L 48 115 L 48 100
+           L 56 100 L 56 85 L 68 85 L 68 70 L 80 70 L 80 60 L 96 60
+           L 96 48 Z"
+        fill="none"
+        stroke="url(#pulseGrad1)"
+        stroke-width="4"
+        stroke-linecap="square"
+        stroke-linejoin="miter"/>
+
+  <!-- Center dot indicator -->
+  <circle cx="128" cy="128" r="8" fill="#3b82f6">
+    <animate attributeName="r" values="8;12;8" dur="2s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="1;0.6;1" dur="2s" repeatCount="indefinite"/>
+  </circle>
+
+  <!-- Rotating scan line -->
+  <line x1="128" y1="128" x2="128" y2="68" stroke="#06b6d4" stroke-width="2" opacity="0.5">
+    <animateTransform
+      attributeName="transform"
+      type="rotate"
+      from="0 128 128"
+      to="360 128 128"
+      dur="4s"
+      repeatCount="indefinite"/>
+  </line>
+
+  <!-- Peak indicators at key points -->
+  <circle cx="148" cy="48" r="4" fill="#22c55e">
+    <animate attributeName="opacity" values="1;0.3;1" dur="2s" repeatCount="indefinite"/>
+  </circle>
+  <circle cx="208" cy="85" r="4" fill="#06b6d4">
+    <animate attributeName="opacity" values="0.3;1;0.3" dur="2s" repeatCount="indefinite"/>
+  </circle>
+  <circle cx="168" cy="168" r="4" fill="#8b5cf6">
+    <animate attributeName="opacity" values="1;0.3;1" dur="2s" begin="1s" repeatCount="indefinite"/>
+  </circle>
+  <circle cx="48" cy="115" r="4" fill="#3b82f6">
+    <animate attributeName="opacity" values="0.3;1;0.3" dur="2s" begin="1s" repeatCount="indefinite"/>
+  </circle>
+</svg>

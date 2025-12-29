@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Syslens - Logo + Wordmark Concepts</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: Inter, -apple-system, system-ui, sans-serif;
+      background: #0F172A;
+      color: #E2E8F0;
+      padding: 40px;
+      min-height: 100vh;
+    }
+    h1 {
+      text-align: center;
+      font-size: 32px;
+      margin-bottom: 40px;
+      background: linear-gradient(135deg, #3B82F6, #8B5CF6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+      gap: 30px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    .card {
+      background: #1E293B;
+      border: 1px solid #334155;
+      border-radius: 12px;
+      padding: 24px;
+    }
+    .card:hover { border-color: #3B82F6; }
+    .card h2 {
+      font-size: 16px;
+      color: #3B82F6;
+      margin-bottom: 16px;
+    }
+    .preview {
+      background: #020617;
+      border-radius: 8px;
+      padding: 30px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 150px;
+    }
+    .preview img {
+      max-width: 100%;
+      height: auto;
+    }
+    .desc {
+      color: #94A3B8;
+      font-size: 14px;
+      margin-top: 12px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Logo + Wordmark Concepts</h1>
+  <p style="text-align:center;color:#94A3B8;margin-bottom:40px;">Using the Binary Pulse Wave (Option 12)</p>
+
+  <div class="grid">
+    <div class="card">
+      <h2>V1 - Horizontal</h2>
+      <div class="preview">
+        <img src="assets/logo-wordmark-v1.svg" alt="Horizontal layout">
+      </div>
+      <p class="desc">Icon left, text right. Standard horizontal lockup for headers.</p>
+    </div>
+
+    <div class="card">
+      <h2>V2 - Horizontal Compact</h2>
+      <div class="preview">
+        <img src="assets/logo-wordmark-v2.svg" alt="Compact horizontal">
+      </div>
+      <p class="desc">Scaled down icon with tighter spacing. For navigation bars.</p>
+    </div>
+
+    <div class="card">
+      <h2>V3 - Compact Nav</h2>
+      <div class="preview">
+        <img src="assets/logo-wordmark-v3.svg" alt="Compact nav">
+      </div>
+      <p class="desc">Small icon + text for tight spaces like headers.</p>
+    </div>
+
+    <div class="card">
+      <h2>V4 - Text with Pulse Underline</h2>
+      <div class="preview">
+        <img src="assets/logo-wordmark-v4.svg" alt="Pulse underline">
+      </div>
+      <p class="desc">Binary pulse wave as an underline beneath the wordmark.</p>
+    </div>
+
+    <div class="card">
+      <h2>V5 - Icon + Gradient Text</h2>
+      <div class="preview">
+        <img src="assets/logo-wordmark-v5.svg" alt="Gradient text">
+      </div>
+      <p class="desc">Icon with gradient text matching the pulse wave colors.</p>
+    </div>
+
+    <div class="card">
+      <h2>V6 - Monospace Tech</h2>
+      <div class="preview">
+        <img src="assets/logo-wordmark-v6.svg" alt="Monospace">
+      </div>
+      <p class="desc">JetBrains Mono font with blinking cursor. Developer aesthetic.</p>
+    </div>
+  </div>
+
+  <p style="text-align:center;color:#64748B;margin-top:40px;">Press Ctrl+F5 to hard refresh if you see old versions</p>
+</body>
+</html>

@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+  <title>Syslens Pulse v3 - Aggressive Dynamic</title>
+  <defs>
+    <linearGradient id="aggressiveGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#8b5cf6;stop-opacity:1" />
+      <stop offset="30%" style="stop-color:#3b82f6;stop-opacity:1" />
+      <stop offset="70%" style="stop-color:#06b6d4;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#22c55e;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="secondaryAggressive" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#ec4899;stop-opacity:0.6" />
+      <stop offset="100%" style="stop-color:#8b5cf6;stop-opacity:0.6" />
+    </linearGradient>
+  </defs>
+
+  <!-- Background glow effect -->
+  <rect x="30" y="70" width="196" height="116" fill="#0f172a" opacity="0.1" rx="12"/>
+
+  <!-- Primary aggressive waveform - higher peaks, sharper transitions -->
+  <path d="M 35 128 L 42 128 L 42 55 L 52 55 L 52 128 L 62 128 L 62 85 L 72 85 L 72 45 L 82 45
+           L 82 128 L 92 128 L 92 75 L 102 75 L 102 35 L 115 35 L 115 128 L 128 128
+           L 128 65 L 140 65 L 140 40 L 152 40 L 152 128 L 165 128 L 165 80 L 175 80
+           L 175 50 L 185 50 L 185 128 L 195 128 L 195 90 L 205 90 L 205 60 L 218 60 L 218 128"
+        fill="none"
+        stroke="url(#aggressiveGrad)"
+        stroke-width="5"
+        stroke-linecap="square"
+        stroke-linejoin="miter"/>
+
+  <!-- Secondary high-frequency wave -->
+  <path d="M 35 128 L 45 128 L 45 145 L 55 145 L 55 128 L 65 128 L 65 155 L 75 155 L 75 128
+           L 88 128 L 88 150 L 100 150 L 100 128 L 113 128 L 113 160 L 128 160 L 128 128
+           L 143 128 L 143 152 L 158 152 L 158 128 L 173 128 L 173 148 L 188 148 L 188 128
+           L 203 128 L 203 142 L 218 142 L 218 128"
+        fill="none"
+        stroke="url(#secondaryAggressive)"
+        stroke-width="3"
+        stroke-linecap="square"
+        stroke-linejoin="miter"/>
+
+  <!-- Center baseline with pulse -->
+  <line x1="30" y1="128" x2="226" y2="128" stroke="#06b6d4" stroke-width="2" opacity="0.3">
+    <animate attributeName="opacity" values="0.3;0.6;0.3" dur="1.5s" repeatCount="indefinite"/>
+  </line>
+
+  <!-- Dramatic peak indicators -->
+  <circle cx="102" cy="35" r="6" fill="#22c55e">
+    <animate attributeName="opacity" values="1;0.2;1" dur="1.5s" repeatCount="indefinite"/>
+    <animate attributeName="r" values="6;9;6" dur="1.5s" repeatCount="indefinite"/>
+  </circle>
+  <circle cx="72" cy="45" r="6" fill="#06b6d4">
+    <animate attributeName="opacity" values="0.2;1;0.2" dur="1.5s" repeatCount="indefinite"/>
+    <animate attributeName="r" values="6;9;6" dur="1.5s" repeatCount="indefinite"/>
+  </circle>
+  <circle cx="140" cy="40" r="6" fill="#8b5cf6">
+    <animate attributeName="opacity" values="1;0.2;1" dur="1.5s" begin="0.5s" repeatCount="indefinite"/>
+    <animate attributeName="r" values="6;9;6" dur="1.5s" begin="0.5s" repeatCount="indefinite"/>
+  </circle>
+
+  <!-- Energy particles -->
+  <circle cx="102" cy="35" r="2" fill="#22c55e" opacity="0.8">
+    <animate attributeName="cy" values="35;25;35" dur="2s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0.8;0;0.8" dur="2s" repeatCount="indefinite"/>
+  </circle>
+  <circle cx="72" cy="45" r="2" fill="#06b6d4" opacity="0.8">
+    <animate attributeName="cy" values="45;35;45" dur="2s" begin="0.3s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0.8;0;0.8" dur="2s" begin="0.3s" repeatCount="indefinite"/>
+  </circle>
+
+  <!-- Corner brackets - more aggressive style -->
+  <path d="M 25 70 L 25 82 M 25 70 L 37 70" stroke="#8b5cf6" stroke-width="3" opacity="0.7"/>
+  <path d="M 231 70 L 231 82 M 231 70 L 219 70" stroke="#3b82f6" stroke-width="3" opacity="0.7"/>
+  <path d="M 25 186 L 25 174 M 25 186 L 37 186" stroke="#22c55e" stroke-width="3" opacity="0.7"/>
+  <path d="M 231 186 L 231 174 M 231 186 L 219 186" stroke="#06b6d4" stroke-width="3" opacity="0.7"/>
+</svg>

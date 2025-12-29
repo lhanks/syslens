@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 70">
+  <title>Syslens Logo - Text with Pulse Underline</title>
+  <defs>
+    <linearGradient id="grad2" x1="0%" y1="100%" x2="0%" y2="0%">
+      <stop offset="0%" style="stop-color:#22c55e"/>
+      <stop offset="100%" style="stop-color:#06b6d4"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Wordmark: Sys (green) + lens (blue) -->
+  <text x="130" y="40" text-anchor="middle" font-family="Inter, -apple-system, system-ui, sans-serif" font-size="42" font-weight="700" letter-spacing="-1">
+    <tspan fill="#22c55e">Sys</tspan><tspan fill="#3b82f6">lens</tspan>
+  </text>
+
+  <!-- Pulse wave underline (from option-2 style) -->
+  <path d="M 15 58 L 40 58 L 55 48 L 70 65 L 85 45 L 100 58 L 130 58 L 145 50 L 160 63 L 175 55 L 190 58 L 205 52 L 220 60 L 245 58"
+        fill="none" stroke="url(#grad2)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

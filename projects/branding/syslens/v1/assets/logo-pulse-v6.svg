@@ -1,0 +1,105 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+  <title>Syslens Pulse v6 - Gradient Background Badge</title>
+  <defs>
+    <linearGradient id="badgeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1e293b;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#0f172a;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1e293b;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="pulseGrad6" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#06b6d4;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#22c55e;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="borderGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#8b5cf6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#06b6d4;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <!-- Background badge shape -->
+  <rect x="20" y="60" width="216" height="136" fill="url(#badgeGrad)" rx="16"/>
+
+  <!-- Gradient border -->
+  <rect x="20" y="60" width="216" height="136" fill="none" stroke="url(#borderGrad)" stroke-width="2" rx="16" opacity="0.6"/>
+
+  <!-- Inner border highlight -->
+  <rect x="28" y="68" width="200" height="120" fill="none" stroke="#3b82f6" stroke-width="1" rx="10" opacity="0.2"/>
+
+  <!-- Background grid pattern -->
+  <line x1="70" y1="68" x2="70" y2="188" stroke="#1e3a5f" stroke-width="1" opacity="0.15"/>
+  <line x1="128" y1="68" x2="128" y2="188" stroke="#1e3a5f" stroke-width="1" opacity="0.15"/>
+  <line x1="186" y1="68" x2="186" y2="188" stroke="#1e3a5f" stroke-width="1" opacity="0.15"/>
+  <line x1="28" y1="100" x2="228" y2="100" stroke="#1e3a5f" stroke-width="1" opacity="0.15"/>
+  <line x1="28" y1="128" x2="228" y2="128" stroke="#1e3a5f" stroke-width="1" opacity="0.2"/>
+  <line x1="28" y1="156" x2="228" y2="156" stroke="#1e3a5f" stroke-width="1" opacity="0.15"/>
+
+  <!-- Waveform -->
+  <path d="M 35 128 L 45 128 L 45 95 L 60 95 L 60 128 L 72 128 L 72 80 L 88 80 L 88 128
+           L 100 128 L 100 105 L 115 105 L 115 128 L 128 128 L 128 90 L 143 90 L 143 128
+           L 156 128 L 156 100 L 172 100 L 172 128 L 184 128 L 184 85 L 200 85 L 200 128
+           L 212 128 L 212 110 L 221 110 L 221 128"
+        fill="none"
+        stroke="url(#pulseGrad6)"
+        stroke-width="5"
+        stroke-linecap="square"
+        stroke-linejoin="miter"/>
+
+  <!-- Secondary glow wave behind -->
+  <path d="M 35 128 L 45 128 L 45 95 L 60 95 L 60 128 L 72 128 L 72 80 L 88 80 L 88 128
+           L 100 128 L 100 105 L 115 105 L 115 128 L 128 128 L 128 90 L 143 90 L 143 128
+           L 156 128 L 156 100 L 172 100 L 172 128 L 184 128 L 184 85 L 200 85 L 200 128
+           L 212 128 L 212 110 L 221 110 L 221 128"
+        fill="none"
+        stroke="#3b82f6"
+        stroke-width="10"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        opacity="0.15"
+        filter="blur(4px)"/>
+
+  <!-- Baseline -->
+  <line x1="35" y1="128" x2="221" y2="128" stroke="#06b6d4" stroke-width="1.5" opacity="0.3"/>
+
+  <!-- Peak indicators with glow -->
+  <circle cx="72" cy="80" r="5" fill="#22c55e">
+    <animate attributeName="opacity" values="1;0.4;1" dur="2s" repeatCount="indefinite"/>
+  </circle>
+  <circle cx="72" cy="80" r="8" fill="#22c55e" opacity="0.3">
+    <animate attributeName="r" values="8;12;8" dur="2s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0.3;0;0.3" dur="2s" repeatCount="indefinite"/>
+  </circle>
+
+  <circle cx="128" cy="90" r="5" fill="#06b6d4">
+    <animate attributeName="opacity" values="0.4;1;0.4" dur="2s" repeatCount="indefinite"/>
+  </circle>
+  <circle cx="128" cy="90" r="8" fill="#06b6d4" opacity="0.3">
+    <animate attributeName="r" values="8;12;8" dur="2s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0.3;0;0.3" dur="2s" repeatCount="indefinite"/>
+  </circle>
+
+  <circle cx="184" cy="85" r="5" fill="#8b5cf6">
+    <animate attributeName="opacity" values="1;0.4;1" dur="2s" begin="1s" repeatCount="indefinite"/>
+  </circle>
+  <circle cx="184" cy="85" r="8" fill="#8b5cf6" opacity="0.3">
+    <animate attributeName="r" values="8;12;8" dur="2s" begin="1s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0.3;0;0.3" dur="2s" begin="1s" repeatCount="indefinite"/>
+  </circle>
+
+  <!-- Scan line effect -->
+  <line x1="128" y1="68" x2="128" y2="188" stroke="#06b6d4" stroke-width="2" opacity="0.2">
+    <animateTransform
+      attributeName="transform"
+      type="translate"
+      values="-98 0; 98 0; -98 0"
+      dur="3s"
+      repeatCount="indefinite"/>
+  </line>
+
+  <!-- Corner accents on badge -->
+  <path d="M 20 76 L 20 68 L 28 68" stroke="#3b82f6" stroke-width="2" opacity="0.5"/>
+  <path d="M 236 76 L 236 68 L 228 68" stroke="#06b6d4" stroke-width="2" opacity="0.5"/>
+  <path d="M 20 180 L 20 188 L 28 188" stroke="#22c55e" stroke-width="2" opacity="0.5"/>
+  <path d="M 236 180 L 236 188 L 228 188" stroke="#8b5cf6" stroke-width="2" opacity="0.5"/>
+</svg>

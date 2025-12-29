@@ -1,0 +1,88 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+  <title>Syslens Logo Option 10 - Hexagonal Data Grid</title>
+  <defs>
+    <linearGradient id="hexGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#8b5cf6;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="hexGrad2" x1="100%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#06b6d4;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#22c55e;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <!-- Center hexagon (largest) -->
+  <path d="M 128 78 L 168 103 L 168 153 L 128 178 L 88 153 L 88 103 Z"
+        fill="none"
+        stroke="url(#hexGrad1)"
+        stroke-width="4"/>
+
+  <!-- Inner hexagon -->
+  <path d="M 128 98 L 153 113 L 153 143 L 128 158 L 103 143 L 103 113 Z"
+        fill="#0f172a"
+        stroke="#3b82f6"
+        stroke-width="2"
+        opacity="0.6"/>
+
+  <!-- Top hexagons -->
+  <path d="M 128 38 L 155 53 L 155 83 L 128 98 L 101 83 L 101 53 Z"
+        fill="none"
+        stroke="url(#hexGrad2)"
+        stroke-width="2.5"
+        opacity="0.7"/>
+
+  <!-- Top-right hexagon -->
+  <path d="M 175 63 L 202 78 L 202 108 L 175 123 L 148 108 L 148 78 Z"
+        fill="none"
+        stroke="#06b6d4"
+        stroke-width="2"
+        opacity="0.5"/>
+
+  <!-- Top-left hexagon -->
+  <path d="M 81 63 L 108 78 L 108 108 L 81 123 L 54 108 L 54 78 Z"
+        fill="none"
+        stroke="#8b5cf6"
+        stroke-width="2"
+        opacity="0.5"/>
+
+  <!-- Bottom-right hexagon -->
+  <path d="M 175 133 L 202 148 L 202 178 L 175 193 L 148 178 L 148 148 Z"
+        fill="none"
+        stroke="#22c55e"
+        stroke-width="2"
+        opacity="0.5"/>
+
+  <!-- Bottom-left hexagon -->
+  <path d="M 81 133 L 108 148 L 108 178 L 81 193 L 54 178 L 54 148 Z"
+        fill="none"
+        stroke="#3b82f6"
+        stroke-width="2"
+        opacity="0.5"/>
+
+  <!-- Bottom hexagon -->
+  <path d="M 128 158 L 155 173 L 155 203 L 128 218 L 101 203 L 101 173 Z"
+        fill="none"
+        stroke="url(#hexGrad2)"
+        stroke-width="2.5"
+        opacity="0.7"/>
+
+  <!-- Center focal point -->
+  <circle cx="128" cy="128" r="6" fill="#3b82f6"/>
+  <circle cx="128" cy="128" r="3" fill="#ffffff"/>
+
+  <!-- Data points at hexagon vertices -->
+  <circle cx="128" cy="78" r="3" fill="#06b6d4"/>
+  <circle cx="168" cy="103" r="3" fill="#22c55e"/>
+  <circle cx="168" cy="153" r="3" fill="#8b5cf6"/>
+  <circle cx="128" cy="178" r="3" fill="#3b82f6"/>
+  <circle cx="88" cy="153" r="3" fill="#06b6d4"/>
+  <circle cx="88" cy="103" r="3" fill="#22c55e"/>
+
+  <!-- Connecting lines (data flow) -->
+  <line x1="128" y1="128" x2="128" y2="78" stroke="#3b82f6" stroke-width="1.5" opacity="0.3"/>
+  <line x1="128" y1="128" x2="168" y2="103" stroke="#06b6d4" stroke-width="1.5" opacity="0.3"/>
+  <line x1="128" y1="128" x2="168" y2="153" stroke="#22c55e" stroke-width="1.5" opacity="0.3"/>
+  <line x1="128" y1="128" x2="128" y2="178" stroke="#8b5cf6" stroke-width="1.5" opacity="0.3"/>
+  <line x1="128" y1="128" x2="88" y2="153" stroke="#3b82f6" stroke-width="1.5" opacity="0.3"/>
+  <line x1="128" y1="128" x2="88" y2="103" stroke="#06b6d4" stroke-width="1.5" opacity="0.3"/>
+</svg>

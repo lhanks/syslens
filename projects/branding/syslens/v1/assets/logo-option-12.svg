@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+  <title>Syslens Logo Option 12 - Binary Pulse Wave</title>
+  <defs>
+    <linearGradient id="waveGrad1" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#06b6d4;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#22c55e;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="waveGrad2" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#8b5cf6;stop-opacity:0.8" />
+      <stop offset="100%" style="stop-color:#3b82f6;stop-opacity:0.8" />
+    </linearGradient>
+  </defs>
+
+  <!-- Background frame -->
+  <rect x="30" y="80" width="196" height="96" fill="#0f172a" opacity="0.2" rx="8"/>
+
+  <!-- Binary-style pulse waveform (main wave) -->
+  <path d="M 35 128 L 45 128 L 45 100 L 60 100 L 60 128 L 70 128 L 70 85 L 85 85 L 85 128 L 95 128
+           L 95 110 L 110 110 L 110 128 L 128 128 L 128 95 L 145 95 L 145 128 L 155 128
+           L 155 105 L 170 105 L 170 128 L 180 128 L 180 90 L 195 90 L 195 128 L 205 128
+           L 205 115 L 220 115 L 220 128"
+        fill="none"
+        stroke="url(#waveGrad1)"
+        stroke-width="5"
+        stroke-linecap="square"
+        stroke-linejoin="miter"/>
+
+  <!-- Secondary pulse wave (offset, lower amplitude) -->
+  <path d="M 35 128 L 50 128 L 50 140 L 68 140 L 68 128 L 82 128 L 82 145 L 100 145 L 100 128
+           L 118 128 L 118 135 L 138 135 L 138 128 L 156 128 L 156 150 L 174 150 L 174 128
+           L 192 128 L 192 142 L 208 142 L 208 128 L 220 128"
+        fill="none"
+        stroke="url(#waveGrad2)"
+        stroke-width="3"
+        stroke-linecap="square"
+        stroke-linejoin="miter"
+        opacity="0.6"/>
+
+  <!-- Center baseline -->
+  <line x1="30" y1="128" x2="226" y2="128" stroke="#334155" stroke-width="1" opacity="0.3"/>
+
+  <!-- Vertical grid markers -->
+  <line x1="70" y1="80" x2="70" y2="176" stroke="#334155" stroke-width="1" opacity="0.15"/>
+  <line x1="128" y1="80" x2="128" y2="176" stroke="#334155" stroke-width="1" opacity="0.15"/>
+  <line x1="186" y1="80" x2="186" y2="176" stroke="#334155" stroke-width="1" opacity="0.15"/>
+
+  <!-- Peak indicator dots -->
+  <circle cx="70" cy="85" r="4" fill="#22c55e">
+    <animate attributeName="opacity" values="1;0.3;1" dur="2s" repeatCount="indefinite"/>
+  </circle>
+  <circle cx="128" cy="95" r="4" fill="#06b6d4">
+    <animate attributeName="opacity" values="0.3;1;0.3" dur="2s" repeatCount="indefinite"/>
+  </circle>
+  <circle cx="180" cy="90" r="4" fill="#8b5cf6">
+    <animate attributeName="opacity" values="1;0.3;1" dur="2s" begin="0.5s" repeatCount="indefinite"/>
+  </circle>
+
+  <!-- Scan line effect -->
+  <line x1="128" y1="80" x2="128" y2="176" stroke="#3b82f6" stroke-width="2" opacity="0.4">
+    <animateTransform
+      attributeName="transform"
+      type="translate"
+      values="-98 0; 98 0; -98 0"
+      dur="3s"
+      repeatCount="indefinite"/>
+  </line>
+
+  <!-- Corner frame brackets -->
+  <path d="M 30 80 L 30 88 M 30 80 L 38 80" stroke="#3b82f6" stroke-width="2" opacity="0.5"/>
+  <path d="M 226 80 L 226 88 M 226 80 L 218 80" stroke="#3b82f6" stroke-width="2" opacity="0.5"/>
+  <path d="M 30 176 L 30 168 M 30 176 L 38 176" stroke="#22c55e" stroke-width="2" opacity="0.5"/>
+  <path d="M 226 176 L 226 168 M 226 176 L 218 176" stroke="#22c55e" stroke-width="2" opacity="0.5"/>
+</svg>

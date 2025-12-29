@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+  <title>Syslens Pulse v2 - Minimal Single Wave</title>
+  <defs>
+    <linearGradient id="minimalGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#06b6d4;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <!-- Simple clean waveform - fewer transitions, cleaner lines -->
+  <path d="M 40 128 L 60 128 L 60 90 L 85 90 L 85 128 L 105 128
+           L 105 70 L 135 70 L 135 128 L 155 128 L 155 95 L 180 95
+           L 180 128 L 200 128 L 200 80 L 216 80 L 216 128"
+        fill="none"
+        stroke="url(#minimalGrad)"
+        stroke-width="6"
+        stroke-linecap="round"
+        stroke-linejoin="round"/>
+
+  <!-- Baseline -->
+  <line x1="40" y1="128" x2="216" y2="128" stroke="#334155" stroke-width="1.5" opacity="0.2"/>
+
+  <!-- Single peak indicator -->
+  <circle cx="105" cy="70" r="5" fill="#06b6d4">
+    <animate attributeName="opacity" values="1;0.4;1" dur="2s" repeatCount="indefinite"/>
+    <animate attributeName="r" values="5;7;5" dur="2s" repeatCount="indefinite"/>
+  </circle>
+</svg>

@@ -38,7 +38,8 @@
       "Bash(./bin/run-app-prod:*)",
       "Bash(\"/c/Users/lesli/.cargo/bin/cargo\" check)",
       "Bash(\"/c/Users/lesli/.cargo/bin/cargo\" clippy -- -D warnings)",
-      "Bash(netstat:*)"
+      "Bash(netstat:*)",
+      "Bash(start /c/dev/syslens/projects/branding/syslens/v1/index.html)"
     ],
     "deny": []
   }

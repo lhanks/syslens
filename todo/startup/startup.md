@@ -13,6 +13,7 @@
 
 ## Recently Completed
 
+- [x] Create new logo concepts (5 new options: Hexagonal Grid, Minimalist S, Binary Pulse, Layer Stack, Aperture)
 - [x] Setup marketing website for the app (Next.js 16 + Tailwind, landing page with branding)
 - [x] Setup Vercel deployment for marketing website (vercel.json config, README instructions)
 - [x] Update GitHub CI pipeline (added frontend tests, fixed Rust toolchain action)

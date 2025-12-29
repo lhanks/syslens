@@ -1,0 +1,90 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+  <title>Syslens Logo Option 14 - Aperture Shutter</title>
+  <defs>
+    <linearGradient id="bladeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1e3a8a;stop-opacity:1" />
+    </linearGradient>
+    <radialGradient id="centerGlow">
+      <stop offset="0%" style="stop-color:#06b6d4;stop-opacity:0.8" />
+      <stop offset="100%" style="stop-color:#06b6d4;stop-opacity:0" />
+    </radialGradient>
+  </defs>
+
+  <!-- Outer ring (lens housing) -->
+  <circle cx="128" cy="128" r="100" fill="none" stroke="#1e293b" stroke-width="8"/>
+  <circle cx="128" cy="128" r="96" fill="none" stroke="#334155" stroke-width="2"/>
+
+  <!-- Aperture blades (6 blades forming hexagonal opening) -->
+  <!-- Blade 1 (top) -->
+  <path d="M 128 28 L 100 80 L 128 85 L 156 80 Z"
+        fill="url(#bladeGrad)"
+        stroke="#0f172a"
+        stroke-width="1.5"/>
+
+  <!-- Blade 2 (top-right) -->
+  <path d="M 214.85 78 L 170 105 L 165 128 L 175 148 Z"
+        fill="url(#bladeGrad)"
+        stroke="#0f172a"
+        stroke-width="1.5"/>
+
+  <!-- Blade 3 (bottom-right) -->
+  <path d="M 214.85 178 L 175 148 L 165 128 L 170 108 Z"
+        fill="url(#bladeGrad)"
+        stroke="#0f172a"
+        stroke-width="1.5"/>
+
+  <!-- Blade 4 (bottom) -->
+  <path d="M 128 228 L 156 176 L 128 171 L 100 176 Z"
+        fill="url(#bladeGrad)"
+        stroke="#0f172a"
+        stroke-width="1.5"/>
+
+  <!-- Blade 5 (bottom-left) -->
+  <path d="M 41.15 178 L 86 151 L 91 128 L 81 108 Z"
+        fill="url(#bladeGrad)"
+        stroke="#0f172a"
+        stroke-width="1.5"/>
+
+  <!-- Blade 6 (top-left) -->
+  <path d="M 41.15 78 L 81 108 L 91 128 L 86 148 Z"
+        fill="url(#bladeGrad)"
+        stroke="#0f172a"
+        stroke-width="1.5"/>
+
+  <!-- Center hexagonal opening (light coming through) -->
+  <path d="M 128 85 L 165 108 L 165 148 L 128 171 L 91 148 L 91 108 Z"
+        fill="url(#centerGlow)"
+        opacity="0.6"/>
+
+  <!-- Inner hexagon highlight -->
+  <path d="M 128 85 L 165 108 L 165 148 L 128 171 L 91 148 L 91 108 Z"
+        fill="none"
+        stroke="#06b6d4"
+        stroke-width="2"
+        opacity="0.8"/>
+
+  <!-- Center circle (focal point) -->
+  <circle cx="128" cy="128" r="25" fill="#0f172a"/>
+  <circle cx="128" cy="128" r="20" fill="none" stroke="#3b82f6" stroke-width="2"/>
+  <circle cx="128" cy="128" r="12" fill="#3b82f6" opacity="0.3"/>
+
+  <!-- Lens highlight -->
+  <ellipse cx="140" cy="115" rx="8" ry="12" fill="#ffffff" opacity="0.4"/>
+
+  <!-- Mechanical indicators (blade pivot points) -->
+  <circle cx="128" cy="28" r="4" fill="#22c55e"/>
+  <circle cx="214.85" cy="78" r="4" fill="#06b6d4"/>
+  <circle cx="214.85" cy="178" r="4" fill="#8b5cf6"/>
+  <circle cx="128" cy="228" r="4" fill="#22c55e"/>
+  <circle cx="41.15" cy="178" r="4" fill="#06b6d4"/>
+  <circle cx="41.15" cy="78" r="4" fill="#8b5cf6"/>
+
+  <!-- F-stop markings (simplified) -->
+  <text x="230" y="132" font-family="monospace" font-size="10" fill="#64748b">f/2.8</text>
+
+  <!-- Rotation indicator marks -->
+  <line x1="128" y1="20" x2="128" y2="15" stroke="#64748b" stroke-width="1.5"/>
+  <line x1="220" y1="70" x2="224" y2="67" stroke="#64748b" stroke-width="1.5"/>
+  <line x1="220" y1="186" x2="224" y2="189" stroke="#64748b" stroke-width="1.5"/>
+</svg>
