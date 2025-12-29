@@ -1,0 +1,40 @@
+{
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": null,
+
+  "[rust]": {
+    "editor.defaultFormatter": "rust-lang.rust-analyzer",
+    "editor.formatOnSave": true
+  },
+
+  "[typescript]": {
+    "editor.defaultFormatter": "dbaeumer.vscode-eslint",
+    "editor.formatOnSave": true
+  },
+
+  "[html]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+
+  "rust-analyzer.cargo.features": "all",
+  "rust-analyzer.checkOnSave.command": "clippy",
+
+  "eslint.workingDirectories": ["projects/ui"],
+
+  "tailwindCSS.includeLanguages": {
+    "html": "html",
+    "typescript": "typescript"
+  },
+
+  "files.exclude": {
+    "**/node_modules": true,
+    "**/target": true,
+    "**/.angular": true
+  },
+
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/target": true,
+    "**/dist": true
+  }
+}

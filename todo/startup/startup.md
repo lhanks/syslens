@@ -13,7 +13,7 @@ Tech Stack: Tauri 2.0 (Rust) + Angular 21 + Tailwind CSS
 
 ## 1. Setup
 
-- [ ] 1.6 Set up IDE extensions (Rust Analyzer, Angular Language Service)
+- [x] 1.6 Set up IDE extensions (Rust Analyzer, Angular Language Service)
 
 ## 2. Infrastructure
 
@@ -77,8 +77,8 @@ Tech Stack: Tauri 2.0 (Rust) + Angular 21 + Tailwind CSS
 ## Progress
 
 - Total Tasks: 30
-- Completed: 25
-- Remaining: 5
+- Completed: 26
+- Remaining: 4
 
 Last Updated: 2025-12-29 (Session 7)
 
@@ -92,6 +92,7 @@ Last Updated: 2025-12-29 (Session 7)
 - [x] 1.3 Install backend dependencies (cargo build in projects/backend)
 - [x] 1.4 Verify Angular dev server runs (npm start)
 - [x] 1.5 Verify Tauri dev mode works (cargo tauri dev)
+- [x] 1.6 Set up IDE extensions (docs/IDE_SETUP.md + .vscode config files)
 
 ### Infrastructure
 - [x] 2.2 Set up build scripts in bin/ folder

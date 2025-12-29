@@ -1,0 +1,12 @@
+{
+  "recommendations": [
+    "rust-lang.rust-analyzer",
+    "vadimcn.vscode-lldb",
+    "serayuzgur.crates",
+    "angular.ng-template",
+    "dbaeumer.vscode-eslint",
+    "bradlc.vscode-tailwindcss",
+    "tamasfe.even-better-toml"
+  ],
+  "unwantedRecommendations": []
+}
