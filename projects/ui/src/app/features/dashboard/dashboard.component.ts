@@ -94,7 +94,6 @@ import { BytesPipe, UptimePipe } from '@shared/pipes';
           <h3 class="text-sm text-syslens-text-muted mb-2">Network</h3>
           <div class="mb-2">
             <app-line-graph
-              [width]="200"
               [height]="50"
               [series1]="metricsService.networkDownHistory()"
               [series2]="metricsService.networkUpHistory()"
@@ -103,7 +102,7 @@ import { BytesPipe, UptimePipe } from '@shared/pipes';
               series2Color="syslens-accent-blue"
               [showYAxis]="true"
               yAxisFormat="bytes"
-              [yAxisWidth]="32"
+              [yAxisWidth]="40"
             />
           </div>
           <div class="space-y-1">

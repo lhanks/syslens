@@ -24,11 +24,11 @@ const DEFAULT_INTERVAL_MS = 1000;
   standalone: true,
   imports: [CommonModule],
   template: `
-    <div class="flex items-stretch" [style.height.px]="height">
+    <div class="flex items-stretch w-full" [style.height.px]="height">
       <!-- Y-axis labels -->
       @if (showYAxis) {
-        <div class="flex flex-col justify-between text-right pr-1 text-[9px] font-mono text-syslens-text-muted"
-             [style.min-width.px]="yAxisWidth">
+        <div class="flex flex-col justify-between text-right pr-1 text-[9px] font-mono text-syslens-text-muted flex-shrink-0"
+             [style.width.px]="yAxisWidth">
           <span>{{ formatYValue(maxValue) }}</span>
           <span>{{ formatYValue(maxValue / 2) }}</span>
           <span>0</span>
@@ -36,7 +36,9 @@ const DEFAULT_INTERVAL_MS = 1000;
       }
 
       <!-- Graph -->
-      <svg [attr.width]="graphWidth" [attr.height]="height" class="overflow-visible flex-1">
+      <svg [attr.viewBox]="'0 0 ' + graphWidth + ' ' + height"
+           preserveAspectRatio="none"
+           class="overflow-visible flex-1">
         <!-- Background grid lines -->
         <g class="grid-lines">
           @for (y of gridLines(); track y) {
@@ -98,6 +100,7 @@ const DEFAULT_INTERVAL_MS = 1000;
   styles: [`
     :host {
       display: block;
+      width: 100%;
     }
   `]
 })

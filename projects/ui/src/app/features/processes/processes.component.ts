@@ -62,12 +62,11 @@ type SortDirection = 'asc' | 'desc';
           <app-line-graph
             [series1]="cpuHistory()"
             [maxValue]="100"
-            [width]="220"
             [height]="40"
             series1Color="syslens-accent-blue"
             [showYAxis]="true"
             yAxisFormat="percent"
-            [yAxisWidth]="28"
+            [yAxisWidth]="32"
           />
         </div>
 
@@ -88,12 +87,11 @@ type SortDirection = 'asc' | 'desc';
           <app-line-graph
             [series1]="memoryHistory()"
             [maxValue]="memoryTotalBytes()"
-            [width]="230"
             [height]="40"
             series1Color="syslens-accent-purple"
             [showYAxis]="true"
             yAxisFormat="bytes"
-            [yAxisWidth]="38"
+            [yAxisWidth]="40"
           />
         </div>
 
@@ -114,12 +112,11 @@ type SortDirection = 'asc' | 'desc';
           <app-line-graph
             [series1]="diskHistory()"
             [maxValue]="100"
-            [width]="220"
             [height]="40"
             series1Color="syslens-accent-cyan"
             [showYAxis]="true"
             yAxisFormat="percent"
-            [yAxisWidth]="28"
+            [yAxisWidth]="32"
           />
         </div>
 
@@ -144,13 +141,12 @@ type SortDirection = 'asc' | 'desc';
             [series1]="networkDownloadHistory()"
             [series2]="networkUploadHistory()"
             [maxValue]="networkMaxSpeed()"
-            [width]="220"
             [height]="40"
             series1Color="syslens-accent-green"
             series2Color="syslens-accent-blue"
             [showYAxis]="true"
             yAxisFormat="bytes"
-            [yAxisWidth]="28"
+            [yAxisWidth]="40"
           />
         </div>
       </div>
