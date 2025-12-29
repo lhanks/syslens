@@ -1,15 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import {
-  Observable,
-  interval,
-  switchMap,
-  startWith,
-  shareReplay,
-  BehaviorSubject,
-  of,
-  tap,
-  catchError,
-} from 'rxjs';
+import { Observable, interval, switchMap, startWith, shareReplay, of, tap, concat } from 'rxjs';
 import { TauriService } from './tauri.service';
 import { DataCacheService, CacheKeys } from './data-cache.service';
 import { NetworkAdapter, AdapterStats, NetworkConnection, Route } from '../models/network.model';
@@ -25,55 +15,28 @@ export class NetworkService {
   private tauri = inject(TauriService);
   private cache = inject(DataCacheService);
 
-  // BehaviorSubject for cache-first pattern
-  private adapters$ = new BehaviorSubject<NetworkAdapter[] | null>(null);
-
-  // Track if fresh data has been fetched
-  private adaptersFetched = false;
+  // Cached observable for static data
+  private adaptersCache$: Observable<NetworkAdapter[]> | null = null;
 
   // Cached observable for polling
   private adaptersPolling$: Observable<NetworkAdapter[]> | null = null;
 
-  constructor() {
-    this.loadCachedData();
-  }
-
-  /**
-   * Load cached network data on startup
-   */
-  private loadCachedData(): void {
-    const adapters = this.cache.load<NetworkAdapter[]>(CacheKeys.NETWORK_ADAPTERS);
-    if (adapters) this.adapters$.next(adapters);
-  }
-
   /**
    * Get all network adapters with their configuration.
-   * Returns cached data immediately, then fetches fresh data in background.
+   * Returns cached data immediately if available, then fetches fresh data.
    */
   getNetworkAdapters(): Observable<NetworkAdapter[]> {
-    if (!this.adaptersFetched) {
-      this.adaptersFetched = true;
-      this.tauri
-        .invoke<NetworkAdapter[]>('get_network_adapters')
-        .pipe(
-          tap((data) => {
-            this.cache.save(CacheKeys.NETWORK_ADAPTERS, data);
-            this.adapters$.next(data);
-          }),
-          catchError((err) => {
-            console.error('Failed to fetch network adapters:', err);
-            return of(null);
-          })
-        )
-        .subscribe();
-    }
+    if (!this.adaptersCache$) {
+      const cached = this.cache.load<NetworkAdapter[]>(CacheKeys.NETWORK_ADAPTERS);
+      const fetch$ = this.tauri.invoke<NetworkAdapter[]>('get_network_adapters').pipe(
+        tap((data) => this.cache.save(CacheKeys.NETWORK_ADAPTERS, data))
+      );
 
-    return this.adapters$.asObservable().pipe(
-      switchMap((data) =>
-        data ? of(data) : this.tauri.invoke<NetworkAdapter[]>('get_network_adapters')
-      ),
-      shareReplay(1)
-    );
+      this.adaptersCache$ = cached
+        ? concat(of(cached), fetch$).pipe(shareReplay(1))
+        : fetch$.pipe(shareReplay(1));
+    }
+    return this.adaptersCache$;
   }
 
   /**
@@ -84,10 +47,7 @@ export class NetworkService {
       this.adaptersPolling$ = interval(30000).pipe(
         startWith(0),
         switchMap(() => this.tauri.invoke<NetworkAdapter[]>('get_network_adapters')),
-        tap((data) => {
-          this.cache.save(CacheKeys.NETWORK_ADAPTERS, data);
-          this.adapters$.next(data);
-        }),
+        tap((data) => this.cache.save(CacheKeys.NETWORK_ADAPTERS, data)),
         shareReplay(1)
       );
     }
@@ -149,12 +109,9 @@ export class NetworkService {
    * Clear cached network data (both in-memory and persistent).
    */
   clearCache(): void {
-    // Reset fetch flag
-    this.adaptersFetched = false;
+    // Clear observable cache
+    this.adaptersCache$ = null;
     this.adaptersPolling$ = null;
-
-    // Clear in-memory cache
-    this.adapters$.next(null);
 
     // Clear persistent cache
     this.cache.clear(CacheKeys.NETWORK_ADAPTERS);
