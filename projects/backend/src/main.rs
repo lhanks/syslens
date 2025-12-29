@@ -54,6 +54,13 @@ fn main() {
             // Process commands
             commands::get_processes,
             commands::get_process_summary,
+            // Device info commands
+            commands::get_device_deep_info,
+            commands::search_device_info,
+            commands::get_cached_devices,
+            commands::clear_device_cache,
+            commands::cleanup_device_cache,
+            commands::get_device_database_stats,
         ])
         .run(tauri::generate_context!())
         .expect("Error while running Syslens application");

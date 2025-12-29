@@ -6,6 +6,7 @@
 pub mod collectors;
 pub mod commands;
 pub mod models;
+pub mod services;
 
 // Re-export commonly used items without ambiguity
 pub use collectors::hardware::HardwareCollector;
@@ -13,3 +14,4 @@ pub use collectors::network::NetworkCollector;
 pub use collectors::process::ProcessCollector;
 pub use collectors::storage::StorageCollector;
 pub use collectors::system::SystemCollector;
+pub use services::{CacheManager, LocalDatabaseManager};

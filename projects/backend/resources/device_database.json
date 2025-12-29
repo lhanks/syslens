@@ -1,0 +1,923 @@
+{
+  "version": "1.0.0",
+  "lastUpdated": "2025-12-28T00:00:00Z",
+  "devices": {
+    "cpu": [
+      {
+        "deviceId": "cpu-intel-i9-14900k",
+        "deviceType": "Cpu",
+        "identifier": {
+          "manufacturer": "Intel",
+          "model": "Core i9-14900K",
+          "partNumber": "BX8071514900K",
+          "serialNumber": null,
+          "hardwareIds": []
+        },
+        "specifications": {
+          "specs": {
+            "cores": "24",
+            "threads": "32",
+            "pCores": "8",
+            "eCores": "16",
+            "baseClock": "3.2 GHz",
+            "boostClock": "6.0 GHz",
+            "cache": "36 MB",
+            "tdp": "125 W",
+            "socket": "LGA1700",
+            "lithography": "Intel 7"
+          },
+          "categories": [
+            {
+              "name": "Performance",
+              "specs": [
+                {"label": "P-Cores", "value": "8", "unit": null},
+                {"label": "E-Cores", "value": "16", "unit": null},
+                {"label": "Threads", "value": "32", "unit": null},
+                {"label": "Base Clock", "value": "3.2", "unit": "GHz"},
+                {"label": "Boost Clock", "value": "6.0", "unit": "GHz"}
+              ]
+            },
+            {
+              "name": "Cache & Memory",
+              "specs": [
+                {"label": "L3 Cache", "value": "36", "unit": "MB"},
+                {"label": "Memory Support", "value": "DDR4-3200, DDR5-5600", "unit": null}
+              ]
+            },
+            {
+              "name": "Thermal & Power",
+              "specs": [
+                {"label": "Base TDP", "value": "125", "unit": "W"},
+                {"label": "Max Turbo Power", "value": "253", "unit": "W"}
+              ]
+            }
+          ],
+          "description": "14th Gen Intel Core desktop processor with hybrid architecture",
+          "releaseDate": "2023-10-17",
+          "eolDate": null
+        },
+        "drivers": null,
+        "documentation": {
+          "productPage": "https://ark.intel.com/content/www/us/en/ark/products/236773/intel-core-i9-processor-14900k-36m-cache-up-to-6-00-ghz.html",
+          "supportPage": "https://www.intel.com/content/www/us/en/support/products/236773.html",
+          "manuals": [],
+          "datasheets": [],
+          "firmwareUpdates": []
+        },
+        "images": {
+          "primaryImage": "https://www.intel.com/content/dam/www/central-libraries/us/en/images/2023-10/i9-702x702.png",
+          "gallery": [],
+          "thumbnail": null
+        },
+        "metadata": {
+          "source": "LocalDatabase",
+          "lastUpdated": "2025-12-28T00:00:00Z",
+          "expiresAt": "2026-12-28T00:00:00Z",
+          "sourceUrl": null,
+          "aiConfidence": null
+        }
+      },
+      {
+        "deviceId": "cpu-intel-i7-14700k",
+        "deviceType": "Cpu",
+        "identifier": {
+          "manufacturer": "Intel",
+          "model": "Core i7-14700K",
+          "partNumber": "BX8071514700K",
+          "serialNumber": null,
+          "hardwareIds": []
+        },
+        "specifications": {
+          "specs": {
+            "cores": "20",
+            "threads": "28",
+            "pCores": "8",
+            "eCores": "12",
+            "baseClock": "3.4 GHz",
+            "boostClock": "5.6 GHz",
+            "cache": "33 MB",
+            "tdp": "125 W",
+            "socket": "LGA1700",
+            "lithography": "Intel 7"
+          },
+          "categories": [
+            {
+              "name": "Performance",
+              "specs": [
+                {"label": "P-Cores", "value": "8", "unit": null},
+                {"label": "E-Cores", "value": "12", "unit": null},
+                {"label": "Threads", "value": "28", "unit": null},
+                {"label": "Base Clock", "value": "3.4", "unit": "GHz"},
+                {"label": "Boost Clock", "value": "5.6", "unit": "GHz"}
+              ]
+            },
+            {
+              "name": "Cache & Memory",
+              "specs": [
+                {"label": "L3 Cache", "value": "33", "unit": "MB"},
+                {"label": "Memory Support", "value": "DDR4-3200, DDR5-5600", "unit": null}
+              ]
+            }
+          ],
+          "description": "14th Gen Intel Core i7 desktop processor",
+          "releaseDate": "2023-10-17",
+          "eolDate": null
+        },
+        "drivers": null,
+        "documentation": {
+          "productPage": "https://ark.intel.com/content/www/us/en/ark/products/236777/intel-core-i7-processor-14700k-33m-cache-up-to-5-60-ghz.html",
+          "supportPage": "https://www.intel.com/content/www/us/en/support/products/236777.html",
+          "manuals": [],
+          "datasheets": [],
+          "firmwareUpdates": []
+        },
+        "images": {
+          "primaryImage": "https://www.intel.com/content/dam/www/central-libraries/us/en/images/2023-10/i7-702x702.png",
+          "gallery": [],
+          "thumbnail": null
+        },
+        "metadata": {
+          "source": "LocalDatabase",
+          "lastUpdated": "2025-12-28T00:00:00Z",
+          "expiresAt": "2026-12-28T00:00:00Z",
+          "sourceUrl": null,
+          "aiConfidence": null
+        }
+      },
+      {
+        "deviceId": "cpu-amd-ryzen9-7950x",
+        "deviceType": "Cpu",
+        "identifier": {
+          "manufacturer": "AMD",
+          "model": "Ryzen 9 7950X",
+          "partNumber": "100-100000514WOF",
+          "serialNumber": null,
+          "hardwareIds": []
+        },
+        "specifications": {
+          "specs": {
+            "cores": "16",
+            "threads": "32",
+            "baseClock": "4.5 GHz",
+            "boostClock": "5.7 GHz",
+            "cache": "80 MB",
+            "tdp": "170 W",
+            "socket": "AM5",
+            "lithography": "5nm"
+          },
+          "categories": [
+            {
+              "name": "Performance",
+              "specs": [
+                {"label": "Cores", "value": "16", "unit": null},
+                {"label": "Threads", "value": "32", "unit": null},
+                {"label": "Base Clock", "value": "4.5", "unit": "GHz"},
+                {"label": "Boost Clock", "value": "5.7", "unit": "GHz"}
+              ]
+            },
+            {
+              "name": "Cache",
+              "specs": [
+                {"label": "L2 Cache", "value": "16", "unit": "MB"},
+                {"label": "L3 Cache", "value": "64", "unit": "MB"},
+                {"label": "Total Cache", "value": "80", "unit": "MB"}
+              ]
+            }
+          ],
+          "description": "AMD Ryzen 9 7950X Zen 4 desktop processor",
+          "releaseDate": "2022-09-27",
+          "eolDate": null
+        },
+        "drivers": null,
+        "documentation": {
+          "productPage": "https://www.amd.com/en/products/processors/desktops/ryzen/7000-series/amd-ryzen-9-7950x.html",
+          "supportPage": "https://www.amd.com/en/support/downloads/drivers.html",
+          "manuals": [],
+          "datasheets": [],
+          "firmwareUpdates": []
+        },
+        "images": {
+          "primaryImage": "https://www.amd.com/content/dam/amd/en/images/products/processors/ryzen/2505503-ryzen-9-702x390.png",
+          "gallery": [],
+          "thumbnail": null
+        },
+        "metadata": {
+          "source": "LocalDatabase",
+          "lastUpdated": "2025-12-28T00:00:00Z",
+          "expiresAt": "2026-12-28T00:00:00Z",
+          "sourceUrl": null,
+          "aiConfidence": null
+        }
+      },
+      {
+        "deviceId": "cpu-amd-ryzen7-7800x3d",
+        "deviceType": "Cpu",
+        "identifier": {
+          "manufacturer": "AMD",
+          "model": "Ryzen 7 7800X3D",
+          "partNumber": "100-100000910WOF",
+          "serialNumber": null,
+          "hardwareIds": []
+        },
+        "specifications": {
+          "specs": {
+            "cores": "8",
+            "threads": "16",
+            "baseClock": "4.2 GHz",
+            "boostClock": "5.0 GHz",
+            "cache": "104 MB",
+            "tdp": "120 W",
+            "socket": "AM5",
+            "lithography": "5nm"
+          },
+          "categories": [
+            {
+              "name": "Performance",
+              "specs": [
+                {"label": "Cores", "value": "8", "unit": null},
+                {"label": "Threads", "value": "16", "unit": null},
+                {"label": "Base Clock", "value": "4.2", "unit": "GHz"},
+                {"label": "Boost Clock", "value": "5.0", "unit": "GHz"}
+              ]
+            },
+            {
+              "name": "Cache (3D V-Cache)",
+              "specs": [
+                {"label": "L2 Cache", "value": "8", "unit": "MB"},
+                {"label": "L3 Cache", "value": "96", "unit": "MB"},
+                {"label": "Total Cache", "value": "104", "unit": "MB"}
+              ]
+            }
+          ],
+          "description": "AMD Ryzen 7 7800X3D with 3D V-Cache - optimized for gaming",
+          "releaseDate": "2023-04-06",
+          "eolDate": null
+        },
+        "drivers": null,
+        "documentation": {
+          "productPage": "https://www.amd.com/en/products/processors/desktops/ryzen/7000-series/amd-ryzen-7-7800x3d.html",
+          "supportPage": "https://www.amd.com/en/support/downloads/drivers.html",
+          "manuals": [],
+          "datasheets": [],
+          "firmwareUpdates": []
+        },
+        "images": {
+          "primaryImage": "https://www.amd.com/content/dam/amd/en/images/products/processors/ryzen/2505503-ryzen-7-702x390.png",
+          "gallery": [],
+          "thumbnail": null
+        },
+        "metadata": {
+          "source": "LocalDatabase",
+          "lastUpdated": "2025-12-28T00:00:00Z",
+          "expiresAt": "2026-12-28T00:00:00Z",
+          "sourceUrl": null,
+          "aiConfidence": null
+        }
+      }
+    ],
+    "gpu": [
+      {
+        "deviceId": "gpu-nvidia-rtx4090",
+        "deviceType": "Gpu",
+        "identifier": {
+          "manufacturer": "NVIDIA",
+          "model": "GeForce RTX 4090",
+          "partNumber": null,
+          "serialNumber": null,
+          "hardwareIds": ["10DE:2684"]
+        },
+        "specifications": {
+          "specs": {
+            "architecture": "Ada Lovelace",
+            "cudaCores": "16384",
+            "baseClock": "2235 MHz",
+            "boostClock": "2520 MHz",
+            "memory": "24 GB GDDR6X",
+            "memoryBus": "384-bit",
+            "tdp": "450 W"
+          },
+          "categories": [
+            {
+              "name": "GPU Engine",
+              "specs": [
+                {"label": "Architecture", "value": "Ada Lovelace", "unit": null},
+                {"label": "CUDA Cores", "value": "16384", "unit": null},
+                {"label": "Base Clock", "value": "2235", "unit": "MHz"},
+                {"label": "Boost Clock", "value": "2520", "unit": "MHz"}
+              ]
+            },
+            {
+              "name": "Memory",
+              "specs": [
+                {"label": "Memory Size", "value": "24", "unit": "GB"},
+                {"label": "Memory Type", "value": "GDDR6X", "unit": null},
+                {"label": "Memory Bus", "value": "384", "unit": "bit"}
+              ]
+            },
+            {
+              "name": "Power",
+              "specs": [
+                {"label": "TDP", "value": "450", "unit": "W"},
+                {"label": "Power Connector", "value": "16-pin (12VHPWR)", "unit": null}
+              ]
+            }
+          ],
+          "description": "NVIDIA GeForce RTX 4090 - Flagship gaming GPU",
+          "releaseDate": "2022-10-12",
+          "eolDate": null
+        },
+        "drivers": {
+          "installedVersion": null,
+          "latestVersion": null,
+          "downloadUrl": null,
+          "releaseDate": null,
+          "releaseNotesUrl": null,
+          "driverPageUrl": "https://www.nvidia.com/Download/index.aspx",
+          "updateAvailable": false
+        },
+        "documentation": {
+          "productPage": "https://www.nvidia.com/en-us/geforce/graphics-cards/40-series/rtx-4090/",
+          "supportPage": "https://www.nvidia.com/en-us/geforce/drivers/",
+          "manuals": [],
+          "datasheets": [],
+          "firmwareUpdates": []
+        },
+        "images": {
+          "primaryImage": "https://images.nvidia.com/aem-dam/Solutions/geforce/ada/graphics-cards/geforce-rtx-4090/geforce-rtx-4090-full-package-lg-2x.png",
+          "gallery": [],
+          "thumbnail": null
+        },
+        "metadata": {
+          "source": "LocalDatabase",
+          "lastUpdated": "2025-12-28T00:00:00Z",
+          "expiresAt": "2026-12-28T00:00:00Z",
+          "sourceUrl": null,
+          "aiConfidence": null
+        }
+      },
+      {
+        "deviceId": "gpu-nvidia-rtx4080",
+        "deviceType": "Gpu",
+        "identifier": {
+          "manufacturer": "NVIDIA",
+          "model": "GeForce RTX 4080",
+          "partNumber": null,
+          "serialNumber": null,
+          "hardwareIds": ["10DE:2704"]
+        },
+        "specifications": {
+          "specs": {
+            "architecture": "Ada Lovelace",
+            "cudaCores": "9728",
+            "baseClock": "2205 MHz",
+            "boostClock": "2505 MHz",
+            "memory": "16 GB GDDR6X",
+            "memoryBus": "256-bit",
+            "tdp": "320 W"
+          },
+          "categories": [
+            {
+              "name": "GPU Engine",
+              "specs": [
+                {"label": "Architecture", "value": "Ada Lovelace", "unit": null},
+                {"label": "CUDA Cores", "value": "9728", "unit": null},
+                {"label": "Base Clock", "value": "2205", "unit": "MHz"},
+                {"label": "Boost Clock", "value": "2505", "unit": "MHz"}
+              ]
+            },
+            {
+              "name": "Memory",
+              "specs": [
+                {"label": "Memory Size", "value": "16", "unit": "GB"},
+                {"label": "Memory Type", "value": "GDDR6X", "unit": null},
+                {"label": "Memory Bus", "value": "256", "unit": "bit"}
+              ]
+            }
+          ],
+          "description": "NVIDIA GeForce RTX 4080 - High-end gaming GPU",
+          "releaseDate": "2022-11-16",
+          "eolDate": null
+        },
+        "drivers": {
+          "installedVersion": null,
+          "latestVersion": null,
+          "downloadUrl": null,
+          "releaseDate": null,
+          "releaseNotesUrl": null,
+          "driverPageUrl": "https://www.nvidia.com/Download/index.aspx",
+          "updateAvailable": false
+        },
+        "documentation": {
+          "productPage": "https://www.nvidia.com/en-us/geforce/graphics-cards/40-series/rtx-4080-family/",
+          "supportPage": "https://www.nvidia.com/en-us/geforce/drivers/",
+          "manuals": [],
+          "datasheets": [],
+          "firmwareUpdates": []
+        },
+        "images": {
+          "primaryImage": "https://images.nvidia.com/aem-dam/Solutions/geforce/ada/graphics-cards/geforce-rtx-4080/geforce-rtx-4080-full-package-lg-2x.png",
+          "gallery": [],
+          "thumbnail": null
+        },
+        "metadata": {
+          "source": "LocalDatabase",
+          "lastUpdated": "2025-12-28T00:00:00Z",
+          "expiresAt": "2026-12-28T00:00:00Z",
+          "sourceUrl": null,
+          "aiConfidence": null
+        }
+      },
+      {
+        "deviceId": "gpu-amd-rx7900xtx",
+        "deviceType": "Gpu",
+        "identifier": {
+          "manufacturer": "AMD",
+          "model": "Radeon RX 7900 XTX",
+          "partNumber": null,
+          "serialNumber": null,
+          "hardwareIds": ["1002:744C"]
+        },
+        "specifications": {
+          "specs": {
+            "architecture": "RDNA 3",
+            "streamProcessors": "6144",
+            "gameClock": "2300 MHz",
+            "boostClock": "2500 MHz",
+            "memory": "24 GB GDDR6",
+            "memoryBus": "384-bit",
+            "tdp": "355 W"
+          },
+          "categories": [
+            {
+              "name": "GPU Engine",
+              "specs": [
+                {"label": "Architecture", "value": "RDNA 3", "unit": null},
+                {"label": "Stream Processors", "value": "6144", "unit": null},
+                {"label": "Game Clock", "value": "2300", "unit": "MHz"},
+                {"label": "Boost Clock", "value": "2500", "unit": "MHz"}
+              ]
+            },
+            {
+              "name": "Memory",
+              "specs": [
+                {"label": "Memory Size", "value": "24", "unit": "GB"},
+                {"label": "Memory Type", "value": "GDDR6", "unit": null},
+                {"label": "Infinity Cache", "value": "96", "unit": "MB"}
+              ]
+            }
+          ],
+          "description": "AMD Radeon RX 7900 XTX - Flagship RDNA 3 GPU",
+          "releaseDate": "2022-12-13",
+          "eolDate": null
+        },
+        "drivers": {
+          "installedVersion": null,
+          "latestVersion": null,
+          "downloadUrl": null,
+          "releaseDate": null,
+          "releaseNotesUrl": null,
+          "driverPageUrl": "https://www.amd.com/en/support/downloads/drivers.html",
+          "updateAvailable": false
+        },
+        "documentation": {
+          "productPage": "https://www.amd.com/en/products/graphics/amd-radeon-rx-7900xtx",
+          "supportPage": "https://www.amd.com/en/support/downloads/drivers.html",
+          "manuals": [],
+          "datasheets": [],
+          "firmwareUpdates": []
+        },
+        "images": {
+          "primaryImage": "https://www.amd.com/content/dam/amd/en/images/products/graphics/radeon/rx-7900-series/rx-7900-xtx/rx-7900xtx-702x390.png",
+          "gallery": [],
+          "thumbnail": null
+        },
+        "metadata": {
+          "source": "LocalDatabase",
+          "lastUpdated": "2025-12-28T00:00:00Z",
+          "expiresAt": "2026-12-28T00:00:00Z",
+          "sourceUrl": null,
+          "aiConfidence": null
+        }
+      }
+    ],
+    "motherboard": [
+      {
+        "deviceId": "mb-asus-rog-maximus-z790",
+        "deviceType": "Motherboard",
+        "identifier": {
+          "manufacturer": "ASUS",
+          "model": "ROG MAXIMUS Z790 HERO",
+          "partNumber": "90MB1CZ0-M0EAY0",
+          "serialNumber": null,
+          "hardwareIds": []
+        },
+        "specifications": {
+          "specs": {
+            "chipset": "Intel Z790",
+            "socket": "LGA1700",
+            "formFactor": "ATX",
+            "memorySlots": "4",
+            "maxMemory": "192 GB",
+            "memoryType": "DDR5"
+          },
+          "categories": [
+            {
+              "name": "Platform",
+              "specs": [
+                {"label": "Chipset", "value": "Intel Z790", "unit": null},
+                {"label": "Socket", "value": "LGA1700", "unit": null},
+                {"label": "Form Factor", "value": "ATX", "unit": null}
+              ]
+            },
+            {
+              "name": "Memory",
+              "specs": [
+                {"label": "Memory Slots", "value": "4", "unit": null},
+                {"label": "Max Memory", "value": "192", "unit": "GB"},
+                {"label": "Memory Type", "value": "DDR5-7800+(OC)", "unit": null}
+              ]
+            },
+            {
+              "name": "Expansion",
+              "specs": [
+                {"label": "PCIe x16 Slots", "value": "2", "unit": null},
+                {"label": "M.2 Slots", "value": "5", "unit": null}
+              ]
+            }
+          ],
+          "description": "ASUS ROG MAXIMUS Z790 HERO - Premium Intel gaming motherboard",
+          "releaseDate": "2022-10-20",
+          "eolDate": null
+        },
+        "drivers": {
+          "installedVersion": null,
+          "latestVersion": null,
+          "downloadUrl": null,
+          "releaseDate": null,
+          "releaseNotesUrl": null,
+          "driverPageUrl": "https://rog.asus.com/motherboards/rog-maximus/rog-maximus-z790-hero/helpdesk_download/",
+          "updateAvailable": false
+        },
+        "documentation": {
+          "productPage": "https://rog.asus.com/motherboards/rog-maximus/rog-maximus-z790-hero/",
+          "supportPage": "https://rog.asus.com/motherboards/rog-maximus/rog-maximus-z790-hero/helpdesk_download/",
+          "manuals": [
+            {
+              "title": "User Manual",
+              "url": "https://dlcdnets.asus.com/pub/ASUS/mb/LGA1700/ROG_MAXIMUS_Z790_HERO/E21287_ROG_MAXIMUS_Z790_HERO_UM_V2_WEB.pdf",
+              "fileType": "PDF",
+              "language": "en"
+            }
+          ],
+          "datasheets": [],
+          "firmwareUpdates": []
+        },
+        "images": {
+          "primaryImage": "https://dlcdnwebimgs.asus.com/gain/65C47854-E453-4A07-B3D0-8A8F2D0B2B07/w1000/h732",
+          "gallery": [],
+          "thumbnail": null
+        },
+        "metadata": {
+          "source": "LocalDatabase",
+          "lastUpdated": "2025-12-28T00:00:00Z",
+          "expiresAt": "2026-12-28T00:00:00Z",
+          "sourceUrl": null,
+          "aiConfidence": null
+        }
+      },
+      {
+        "deviceId": "mb-msi-meg-x670e-ace",
+        "deviceType": "Motherboard",
+        "identifier": {
+          "manufacturer": "MSI",
+          "model": "MEG X670E ACE",
+          "partNumber": null,
+          "serialNumber": null,
+          "hardwareIds": []
+        },
+        "specifications": {
+          "specs": {
+            "chipset": "AMD X670E",
+            "socket": "AM5",
+            "formFactor": "E-ATX",
+            "memorySlots": "4",
+            "maxMemory": "128 GB",
+            "memoryType": "DDR5"
+          },
+          "categories": [
+            {
+              "name": "Platform",
+              "specs": [
+                {"label": "Chipset", "value": "AMD X670E", "unit": null},
+                {"label": "Socket", "value": "AM5", "unit": null},
+                {"label": "Form Factor", "value": "E-ATX", "unit": null}
+              ]
+            },
+            {
+              "name": "Memory",
+              "specs": [
+                {"label": "Memory Slots", "value": "4", "unit": null},
+                {"label": "Max Memory", "value": "128", "unit": "GB"},
+                {"label": "Memory Type", "value": "DDR5-6600+(OC)", "unit": null}
+              ]
+            }
+          ],
+          "description": "MSI MEG X670E ACE - Premium AMD AM5 motherboard",
+          "releaseDate": "2022-09-27",
+          "eolDate": null
+        },
+        "drivers": {
+          "installedVersion": null,
+          "latestVersion": null,
+          "downloadUrl": null,
+          "releaseDate": null,
+          "releaseNotesUrl": null,
+          "driverPageUrl": "https://www.msi.com/Motherboard/MEG-X670E-ACE/support",
+          "updateAvailable": false
+        },
+        "documentation": {
+          "productPage": "https://www.msi.com/Motherboard/MEG-X670E-ACE",
+          "supportPage": "https://www.msi.com/Motherboard/MEG-X670E-ACE/support",
+          "manuals": [],
+          "datasheets": [],
+          "firmwareUpdates": []
+        },
+        "images": {
+          "primaryImage": "https://storage-asset.msi.com/global/picture/image/feature/mb/X670E/MEG-X670E-ACE/x670e-ace-kv.png",
+          "gallery": [],
+          "thumbnail": null
+        },
+        "metadata": {
+          "source": "LocalDatabase",
+          "lastUpdated": "2025-12-28T00:00:00Z",
+          "expiresAt": "2026-12-28T00:00:00Z",
+          "sourceUrl": null,
+          "aiConfidence": null
+        }
+      }
+    ],
+    "memory": [
+      {
+        "deviceId": "mem-corsair-vengeance-ddr5-6000",
+        "deviceType": "Memory",
+        "identifier": {
+          "manufacturer": "Corsair",
+          "model": "VENGEANCE DDR5 6000MHz",
+          "partNumber": "CMK32GX5M2B6000C36",
+          "serialNumber": null,
+          "hardwareIds": []
+        },
+        "specifications": {
+          "specs": {
+            "type": "DDR5",
+            "speed": "6000 MHz",
+            "capacity": "32 GB (2x16GB)",
+            "timing": "36-36-36-76",
+            "voltage": "1.35V"
+          },
+          "categories": [
+            {
+              "name": "Performance",
+              "specs": [
+                {"label": "Speed", "value": "6000", "unit": "MHz"},
+                {"label": "Capacity", "value": "32", "unit": "GB"},
+                {"label": "Kit Configuration", "value": "2x16GB", "unit": null}
+              ]
+            },
+            {
+              "name": "Timing",
+              "specs": [
+                {"label": "CAS Latency", "value": "36", "unit": null},
+                {"label": "Full Timing", "value": "36-36-36-76", "unit": null},
+                {"label": "Voltage", "value": "1.35", "unit": "V"}
+              ]
+            }
+          ],
+          "description": "Corsair VENGEANCE DDR5 high-performance memory",
+          "releaseDate": "2022-01-01",
+          "eolDate": null
+        },
+        "drivers": null,
+        "documentation": {
+          "productPage": "https://www.corsair.com/us/en/p/memory/cmk32gx5m2b6000c36/vengeance-32gb-2x16gb-ddr5-dram-6000mhz-c36-memory-kit-black-cmk32gx5m2b6000c36",
+          "supportPage": "https://www.corsair.com/us/en/support",
+          "manuals": [],
+          "datasheets": [],
+          "firmwareUpdates": []
+        },
+        "images": {
+          "primaryImage": "https://www.corsair.com/corsairmedia/sys_master/productcontent/CMK32GX5M2B6000C36-Gallery-QUASAR-01.png",
+          "gallery": [],
+          "thumbnail": null
+        },
+        "metadata": {
+          "source": "LocalDatabase",
+          "lastUpdated": "2025-12-28T00:00:00Z",
+          "expiresAt": "2026-12-28T00:00:00Z",
+          "sourceUrl": null,
+          "aiConfidence": null
+        }
+      },
+      {
+        "deviceId": "mem-gskill-trident-z5-rgb",
+        "deviceType": "Memory",
+        "identifier": {
+          "manufacturer": "G.SKILL",
+          "model": "Trident Z5 RGB DDR5-6400",
+          "partNumber": "F5-6400J3239G16GX2-TZ5RK",
+          "serialNumber": null,
+          "hardwareIds": []
+        },
+        "specifications": {
+          "specs": {
+            "type": "DDR5",
+            "speed": "6400 MHz",
+            "capacity": "32 GB (2x16GB)",
+            "timing": "32-39-39-102",
+            "voltage": "1.40V"
+          },
+          "categories": [
+            {
+              "name": "Performance",
+              "specs": [
+                {"label": "Speed", "value": "6400", "unit": "MHz"},
+                {"label": "Capacity", "value": "32", "unit": "GB"},
+                {"label": "Kit Configuration", "value": "2x16GB", "unit": null}
+              ]
+            },
+            {
+              "name": "Timing",
+              "specs": [
+                {"label": "CAS Latency", "value": "32", "unit": null},
+                {"label": "Full Timing", "value": "32-39-39-102", "unit": null},
+                {"label": "Voltage", "value": "1.40", "unit": "V"}
+              ]
+            }
+          ],
+          "description": "G.SKILL Trident Z5 RGB DDR5 premium memory with RGB lighting",
+          "releaseDate": "2022-01-01",
+          "eolDate": null
+        },
+        "drivers": null,
+        "documentation": {
+          "productPage": "https://www.gskill.com/product/165/374/1663834304/F5-6400J3239G16GX2-TZ5RK",
+          "supportPage": "https://www.gskill.com/support",
+          "manuals": [],
+          "datasheets": [],
+          "firmwareUpdates": []
+        },
+        "images": {
+          "primaryImage": "https://www.gskill.com/_upload/images/2209031508350.png",
+          "gallery": [],
+          "thumbnail": null
+        },
+        "metadata": {
+          "source": "LocalDatabase",
+          "lastUpdated": "2025-12-28T00:00:00Z",
+          "expiresAt": "2026-12-28T00:00:00Z",
+          "sourceUrl": null,
+          "aiConfidence": null
+        }
+      }
+    ],
+    "storage": [
+      {
+        "deviceId": "storage-samsung-990-pro-2tb",
+        "deviceType": "Storage",
+        "identifier": {
+          "manufacturer": "Samsung",
+          "model": "990 PRO 2TB",
+          "partNumber": "MZ-V9P2T0B/AM",
+          "serialNumber": null,
+          "hardwareIds": []
+        },
+        "specifications": {
+          "specs": {
+            "type": "NVMe SSD",
+            "capacity": "2 TB",
+            "interface": "PCIe 4.0 x4",
+            "formFactor": "M.2 2280",
+            "seqRead": "7450 MB/s",
+            "seqWrite": "6900 MB/s"
+          },
+          "categories": [
+            {
+              "name": "Capacity & Interface",
+              "specs": [
+                {"label": "Capacity", "value": "2", "unit": "TB"},
+                {"label": "Interface", "value": "PCIe 4.0 x4", "unit": null},
+                {"label": "Form Factor", "value": "M.2 2280", "unit": null}
+              ]
+            },
+            {
+              "name": "Performance",
+              "specs": [
+                {"label": "Sequential Read", "value": "7450", "unit": "MB/s"},
+                {"label": "Sequential Write", "value": "6900", "unit": "MB/s"},
+                {"label": "Random Read IOPS", "value": "1400000", "unit": "IOPS"}
+              ]
+            },
+            {
+              "name": "Endurance",
+              "specs": [
+                {"label": "TBW", "value": "1200", "unit": "TB"},
+                {"label": "MTBF", "value": "1.5M", "unit": "hours"}
+              ]
+            }
+          ],
+          "description": "Samsung 990 PRO - High-performance PCIe 4.0 NVMe SSD",
+          "releaseDate": "2022-10-18",
+          "eolDate": null
+        },
+        "drivers": null,
+        "documentation": {
+          "productPage": "https://www.samsung.com/us/computing/memory-storage/solid-state-drives/990-pro-pcie-4-0-nvme-ssd-2tb-mz-v9p2t0b-am/",
+          "supportPage": "https://www.samsung.com/us/support/model/MZ-V9P2T0B/AM/",
+          "manuals": [],
+          "datasheets": [],
+          "firmwareUpdates": []
+        },
+        "images": {
+          "primaryImage": "https://image-us.samsung.com/SamsungUS/home/computing/memory-and-storage/solid-state-drives/pdp/mz-v9p2t0bw/gallery/MZ-V9P2T0BW_001_Front_Black.jpg",
+          "gallery": [],
+          "thumbnail": null
+        },
+        "metadata": {
+          "source": "LocalDatabase",
+          "lastUpdated": "2025-12-28T00:00:00Z",
+          "expiresAt": "2026-12-28T00:00:00Z",
+          "sourceUrl": null,
+          "aiConfidence": null
+        }
+      },
+      {
+        "deviceId": "storage-wd-black-sn850x-2tb",
+        "deviceType": "Storage",
+        "identifier": {
+          "manufacturer": "Western Digital",
+          "model": "WD_BLACK SN850X 2TB",
+          "partNumber": "WDS200T2X0E",
+          "serialNumber": null,
+          "hardwareIds": []
+        },
+        "specifications": {
+          "specs": {
+            "type": "NVMe SSD",
+            "capacity": "2 TB",
+            "interface": "PCIe 4.0 x4",
+            "formFactor": "M.2 2280",
+            "seqRead": "7300 MB/s",
+            "seqWrite": "6600 MB/s"
+          },
+          "categories": [
+            {
+              "name": "Capacity & Interface",
+              "specs": [
+                {"label": "Capacity", "value": "2", "unit": "TB"},
+                {"label": "Interface", "value": "PCIe 4.0 x4", "unit": null},
+                {"label": "Form Factor", "value": "M.2 2280", "unit": null}
+              ]
+            },
+            {
+              "name": "Performance",
+              "specs": [
+                {"label": "Sequential Read", "value": "7300", "unit": "MB/s"},
+                {"label": "Sequential Write", "value": "6600", "unit": "MB/s"}
+              ]
+            },
+            {
+              "name": "Endurance",
+              "specs": [
+                {"label": "TBW", "value": "1200", "unit": "TB"},
+                {"label": "MTBF", "value": "1.75M", "unit": "hours"}
+              ]
+            }
+          ],
+          "description": "WD_BLACK SN850X - High-performance gaming SSD",
+          "releaseDate": "2022-07-29",
+          "eolDate": null
+        },
+        "drivers": null,
+        "documentation": {
+          "productPage": "https://www.westerndigital.com/products/internal-drives/wd-black-sn850x-nvme-ssd",
+          "supportPage": "https://support-en.wd.com/",
+          "manuals": [],
+          "datasheets": [],
+          "firmwareUpdates": []
+        },
+        "images": {
+          "primaryImage": "https://www.westerndigital.com/content/dam/store/en-us/assets/products/internal-storage/wd-black-sn850x-nvme-ssd/gallery/sn850x-prodshot-front.png",
+          "gallery": [],
+          "thumbnail": null
+        },
+        "metadata": {
+          "source": "LocalDatabase",
+          "lastUpdated": "2025-12-28T00:00:00Z",
+          "expiresAt": "2026-12-28T00:00:00Z",
+          "sourceUrl": null,
+          "aiConfidence": null
+        }
+      }
+    ]
+  }
+}
