@@ -20,6 +20,11 @@ Tech Stack: Tauri 2.0 (Rust) + Angular 21 + Tailwind CSS
 
 ## Recently Completed
 
+- [x] Improve startup responsiveness with lazy loading
+  - Made SysInfoState initialization lazy (skip process refresh at startup)
+  - Added skeleton loading UI to dashboard (animated placeholders)
+  - Changed from forkJoin (blocking) to progressive loading (each card updates independently)
+  - Users list deferred until first process access
 - [x] Optimize backend CPU usage with shared SysInfoState
   - Created state.rs with cached System instance (avoids recreating on every call)
   - Updated CPU/memory/process commands to use shared state

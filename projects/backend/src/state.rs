@@ -20,26 +20,27 @@ pub struct SysInfoState {
 }
 
 impl SysInfoState {
-    /// Create a new SysInfoState with an initialized System
+    /// Create a new SysInfoState with minimal initialization for fast startup.
+    /// CPU and memory are refreshed immediately (fast), but process list is deferred.
     pub fn new() -> Self {
-        // Create system with initial refresh
+        // Create system with minimal refresh for fast startup
         let mut system = System::new();
 
-        // Do initial refresh of all data we'll need
+        // Only refresh CPU and memory at startup (relatively fast)
+        // Process list is deferred until first access (expensive operation)
         system.refresh_cpu_all();
         system.refresh_memory_specifics(MemoryRefreshKind::everything());
-        system.refresh_processes_specifics(
-            sysinfo::ProcessesToUpdate::All,
-            ProcessRefreshKind::everything()
-        );
+        // NOTE: Skipping process refresh here for faster startup
+        // Processes will be loaded on-demand when first accessed
 
-        let users = Users::new_with_refreshed_list();
+        // Users list is also deferred (loaded on first process access)
+        let users = Users::new();
 
         Self {
             system: Mutex::new(system),
             users: Mutex::new(users),
             last_cpu_refresh: Mutex::new(Some(Instant::now())),
-            last_process_refresh: Mutex::new(Some(Instant::now())),
+            last_process_refresh: Mutex::new(None), // None = needs initial refresh
         }
     }
 

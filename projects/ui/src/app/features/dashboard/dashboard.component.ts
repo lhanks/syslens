@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { Subject, takeUntil, forkJoin } from 'rxjs';
+import { Subject, takeUntil } from 'rxjs';
 
 import { HardwareService, SystemService, NetworkService, StorageService, StatusService, MetricsHistoryService } from '@core/services';
 import { ProgressRingComponent, LineGraphComponent } from '@shared/components';
@@ -33,22 +33,27 @@ import { BytesPipe, UptimePipe } from '@shared/pipes';
       </div>
 
       <!-- System Info Banner -->
-      @if (deviceName) {
-        <div class="card bg-gradient-to-r from-syslens-bg-secondary to-syslens-bg-tertiary">
-          <div class="flex items-center gap-4">
-            <div class="w-12 h-12 rounded-xl bg-syslens-accent-blue/20 flex items-center justify-center">
-              <svg class="w-6 h-6 text-syslens-accent-blue" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-              </svg>
-            </div>
+      <div class="card bg-gradient-to-r from-syslens-bg-secondary to-syslens-bg-tertiary">
+        <div class="flex items-center gap-4">
+          <div class="w-12 h-12 rounded-xl bg-syslens-accent-blue/20 flex items-center justify-center">
+            <svg class="w-6 h-6 text-syslens-accent-blue" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+            </svg>
+          </div>
+          @if (deviceName) {
             <div>
               <h2 class="text-lg font-semibold text-syslens-text-primary">{{ deviceName }}</h2>
               <p class="text-sm text-syslens-text-secondary">{{ osName }} {{ osVersion }}</p>
             </div>
-          </div>
+          } @else {
+            <div class="space-y-2">
+              <div class="h-5 w-40 bg-syslens-bg-tertiary rounded animate-pulse"></div>
+              <div class="h-4 w-56 bg-syslens-bg-tertiary rounded animate-pulse"></div>
+            </div>
+          }
         </div>
-      }
+      </div>
 
       <!-- Real-time Metrics -->
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -59,7 +64,11 @@ import { BytesPipe, UptimePipe } from '@shared/pipes';
             label="CPU"
             [size]="100"
           />
-          <p class="mt-2 text-sm text-syslens-text-secondary">{{ cpuName }}</p>
+          @if (cpuName) {
+            <p class="mt-2 text-sm text-syslens-text-secondary">{{ cpuName }}</p>
+          } @else {
+            <div class="mt-2 h-4 w-32 bg-syslens-bg-tertiary rounded animate-pulse"></div>
+          }
         </a>
 
         <!-- Memory Usage -->
@@ -70,9 +79,13 @@ import { BytesPipe, UptimePipe } from '@shared/pipes';
             [size]="100"
             colorClass="stroke-syslens-accent-purple"
           />
-          <p class="mt-2 text-sm font-mono text-syslens-text-secondary">
-            <span style="min-width: 6ch; display: inline-block; text-align: right;">{{ memoryUsedBytes | bytes }}</span> / {{ memoryTotalBytes | bytes }}
-          </p>
+          @if (memoryTotalBytes) {
+            <p class="mt-2 text-sm font-mono text-syslens-text-secondary">
+              <span style="min-width: 6ch; display: inline-block; text-align: right;">{{ memoryUsedBytes | bytes }}</span> / {{ memoryTotalBytes | bytes }}
+            </p>
+          } @else {
+            <div class="mt-2 h-4 w-28 bg-syslens-bg-tertiary rounded animate-pulse"></div>
+          }
         </a>
 
         <!-- Primary Disk -->
@@ -83,9 +96,13 @@ import { BytesPipe, UptimePipe } from '@shared/pipes';
             [size]="100"
             colorClass="stroke-syslens-accent-cyan"
           />
-          <p class="mt-2 text-sm font-mono text-syslens-text-secondary">
-            <span style="min-width: 6ch; display: inline-block; text-align: right;">{{ diskUsedBytes | bytes }}</span> / {{ diskTotalBytes | bytes }}
-          </p>
+          @if (diskTotalBytes) {
+            <p class="mt-2 text-sm font-mono text-syslens-text-secondary">
+              <span style="min-width: 6ch; display: inline-block; text-align: right;">{{ diskUsedBytes | bytes }}</span> / {{ diskTotalBytes | bytes }}
+            </p>
+          } @else {
+            <div class="mt-2 h-4 w-28 bg-syslens-bg-tertiary rounded animate-pulse"></div>
+          }
         </a>
 
         <!-- Network -->
@@ -114,7 +131,11 @@ import { BytesPipe, UptimePipe } from '@shared/pipes';
               <span class="font-mono text-xs text-syslens-accent-blue" style="min-width: 8ch; text-align: right;">{{ metricsService.networkUpSpeed() | bytes }}/s</span>
             </div>
           </div>
-          <p class="mt-2 text-xs text-syslens-text-muted">{{ networkAdapterCount }} adapter(s)</p>
+          @if (networkLoaded) {
+            <p class="mt-2 text-xs text-syslens-text-muted">{{ networkAdapterCount }} adapter(s)</p>
+          } @else {
+            <div class="mt-2 h-3 w-20 bg-syslens-bg-tertiary rounded animate-pulse"></div>
+          }
         </a>
       </div>
 
@@ -214,9 +235,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   // Network
   networkAdapterCount = 0;
+  networkLoaded = false;
 
   ngOnInit(): void {
     this.loadInitialData();
+    // Start real-time updates immediately for responsive UI
+    this.startRealtimeUpdates();
   }
 
   ngOnDestroy(): void {
@@ -227,41 +251,56 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private loadInitialData(): void {
     this.statusService.startOperation('dashboard-init', 'Loading dashboard data...');
 
-    // Parallelize ALL initial data fetches for faster startup
-    forkJoin({
-      deviceInfo: this.systemService.getDeviceInfo(),
-      osInfo: this.systemService.getOsInfo(),
-      cpuInfo: this.hardwareService.getCpuInfo(),
-      memoryInfo: this.hardwareService.getMemoryInfo(),
-      volumes: this.storageService.getVolumes(),
-      adapters: this.networkService.getNetworkAdapters()
-    }).pipe(
-      takeUntil(this.destroy$)
-    ).subscribe(({ deviceInfo, osInfo, cpuInfo, memoryInfo, volumes, adapters }) => {
-      this.statusService.endOperation('dashboard-init');
-      // System info
-      this.deviceName = deviceInfo.computerName;
-      this.osName = osInfo.name;
-      this.osVersion = osInfo.version;
+    // Progressive loading: fire all requests in parallel, update UI as each completes
+    // This gives instant perceived responsiveness vs waiting for all to complete
 
-      // Hardware info
-      this.cpuName = cpuInfo.name;
-      this.memoryTotalBytes = memoryInfo.totalBytes;
+    // System info (fast, prioritized)
+    this.systemService.getDeviceInfo()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(deviceInfo => {
+        this.deviceName = deviceInfo.computerName;
+      });
 
-      // Storage - get system volume
-      const systemVolume = volumes.find(v => v.isSystem) || volumes[0];
-      if (systemVolume) {
-        this.diskTotalBytes = systemVolume.totalBytes;
-        this.diskUsedBytes = systemVolume.usedBytes;
-        this.diskUsage = systemVolume.percentUsed;
-      }
+    this.systemService.getOsInfo()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(osInfo => {
+        this.osName = osInfo.name;
+        this.osVersion = osInfo.version;
+      });
 
-      // Network adapters count
-      this.networkAdapterCount = adapters.filter(a => a.status === 'Up').length;
+    // Hardware info (medium priority)
+    this.hardwareService.getCpuInfo()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(cpuInfo => {
+        this.cpuName = cpuInfo.name;
+      });
 
-      // Start polling AFTER initial data is loaded (deferred startup)
-      this.startRealtimeUpdates();
-    });
+    this.hardwareService.getMemoryInfo()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(memoryInfo => {
+        this.memoryTotalBytes = memoryInfo.totalBytes;
+      });
+
+    // Storage (lower priority - visible but not critical)
+    this.storageService.getVolumes()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(volumes => {
+        const systemVolume = volumes.find(v => v.isSystem) || volumes[0];
+        if (systemVolume) {
+          this.diskTotalBytes = systemVolume.totalBytes;
+          this.diskUsedBytes = systemVolume.usedBytes;
+          this.diskUsage = systemVolume.percentUsed;
+        }
+      });
+
+    // Network adapters (lower priority)
+    this.networkService.getNetworkAdapters()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(adapters => {
+        this.networkAdapterCount = adapters.filter(a => a.status === 'Up').length;
+        this.networkLoaded = true;
+        this.statusService.endOperation('dashboard-init');
+      });
   }
 
   private startRealtimeUpdates(): void {
