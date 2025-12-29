@@ -203,7 +203,57 @@ export class TauriService {
       ],
       get_disk_health: [],
       get_disk_performance: [],
-      get_network_drives: []
+      get_network_drives: [],
+
+      // Device Deep Info
+      get_device_deep_info: {
+        deviceId: 'mock-device-001',
+        deviceType: 'Cpu',
+        identifier: {
+          manufacturer: 'Intel',
+          model: 'Core i9-13900K',
+          partNumber: 'BX8071513900K',
+          serialNumber: null,
+          hardwareIds: ['BFEBFBFF000B0671']
+        },
+        specifications: {
+          specs: {
+            'Cores': '24 (8P + 16E)',
+            'Threads': '32',
+            'Base Clock': '3.0 GHz',
+            'Max Turbo': '5.8 GHz',
+            'TDP': '125W'
+          },
+          categories: [],
+          description: 'Intel Core i9-13900K processor',
+          releaseDate: '2022-10-20'
+        },
+        drivers: {
+          installedVersion: '10.0.22621.0',
+          latestVersion: '10.0.22621.0',
+          downloadUrl: 'https://www.intel.com/download',
+          releaseDate: '2024-03-15',
+          updateAvailable: false
+        },
+        documentation: {
+          productPage: 'https://www.intel.com/products',
+          supportPage: 'https://www.intel.com/support',
+          manuals: [],
+          datasheets: [],
+          firmwareUpdates: []
+        },
+        images: {
+          primaryImage: 'https://www.intel.com/images/cpu.png',
+          gallery: []
+        },
+        metadata: {
+          source: 'AiAgent',
+          lastUpdated: '2024-12-28T00:00:00.000Z',
+          expiresAt: '2025-01-04T00:00:00.000Z',
+          sourceUrl: 'https://www.intel.com',
+          aiConfidence: 0.85
+        }
+      }
     };
 
     const data = mockData[command];

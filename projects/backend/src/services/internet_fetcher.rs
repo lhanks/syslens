@@ -34,13 +34,53 @@ impl InternetFetcher {
         Ok(Self { client })
     }
 
+    /// Normalize manufacturer name to a standard form.
+    /// Handles variations like "Advanced Micro Devices, Inc." -> "amd"
+    fn normalize_manufacturer(raw_manufacturer: &str, model: &str) -> String {
+        let lower = raw_manufacturer.to_lowercase();
+        let model_lower = model.to_lowercase();
+
+        // Check for AMD variations
+        if lower.contains("advanced") && lower.contains("micro") {
+            return "amd".to_string();
+        }
+        if lower == "amd" || lower.starts_with("amd ") {
+            return "amd".to_string();
+        }
+
+        // Check for NVIDIA variations
+        if lower.contains("nvidia") {
+            return "nvidia".to_string();
+        }
+
+        // Check for Intel variations
+        if lower.contains("intel") {
+            return "intel".to_string();
+        }
+
+        // Check model name for hints
+        if model_lower.contains("radeon") || model_lower.contains("ryzen") {
+            return "amd".to_string();
+        }
+        if model_lower.contains("geforce") || model_lower.contains("rtx") || model_lower.contains("gtx") {
+            return "nvidia".to_string();
+        }
+        if model_lower.contains("core i") || model_lower.contains("xeon") || model_lower.contains("celeron") || model_lower.contains("pentium") {
+            return "intel".to_string();
+        }
+
+        // Return cleaned lowercase version
+        lower.replace(',', "").replace('.', "").trim().to_string()
+    }
+
     /// Fetch device info from the appropriate manufacturer website.
     pub async fn fetch_device_info(
         &self,
         identifier: &DeviceIdentifier,
         device_type: &DeviceType,
     ) -> Result<DeviceDeepInfo> {
-        let manufacturer = identifier.manufacturer.to_lowercase();
+        let manufacturer = Self::normalize_manufacturer(&identifier.manufacturer, &identifier.model);
+        log::debug!("Normalized manufacturer: {} -> {}", identifier.manufacturer, manufacturer);
 
         match device_type {
             DeviceType::Cpu => match manufacturer.as_str() {
