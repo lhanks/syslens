@@ -19,7 +19,7 @@ Tech Stack: Tauri 2.0 (Rust) + Angular 21 + Tailwind CSS
 
 - [x] 2.1 Configure GitHub Actions CI pipeline
 - [x] 2.2 Add state persistence service (cache latest metrics/data for faster startup)
-- [ ] 2.3 Configure Tauri build for Windows installer
+- [x] 2.3 Configure Tauri build for Windows installer
 - [ ] 2.4 Set up code signing (optional, for later)
 
 ## 3. Backend Implementation (Rust)
@@ -77,8 +77,8 @@ Tech Stack: Tauri 2.0 (Rust) + Angular 21 + Tailwind CSS
 ## Progress
 
 - Total Tasks: 30
-- Completed: 20
-- Remaining: 10
+- Completed: 21
+- Remaining: 9
 
 Last Updated: 2025-12-29 (Session 6)
 
@@ -150,6 +150,7 @@ Last Updated: 2025-12-29 (Session 6)
 
 ### Infrastructure
 - [x] 2.1 Configure GitHub Actions CI pipeline (ESLint, Clippy, TypeScript, Rust build)
+- [x] 2.3 Configure Tauri build for Windows installer (NSIS + MSI bundle targets)
 
 ### Backend Implementation (Rust)
 - [x] 3.6 Add real-time metrics polling (MetricsHistoryService with 1-second polling)
