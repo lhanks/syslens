@@ -8,6 +8,14 @@ export interface NetworkDataPoint {
 
 const MAX_HISTORY_POINTS = 60; // 60 seconds of history
 
+// Pre-fill with zeros so array length is constant from the start
+// This prevents point spacing from changing as data fills in
+const INITIAL_HISTORY: NetworkDataPoint[] = Array.from({ length: MAX_HISTORY_POINTS }, () => ({
+  timestamp: 0,
+  downloadSpeed: 0,
+  uploadSpeed: 0
+}));
+
 /**
  * Service for tracking network speed history for graphing.
  */
@@ -15,7 +23,7 @@ const MAX_HISTORY_POINTS = 60; // 60 seconds of history
   providedIn: 'root'
 })
 export class NetworkHistoryService {
-  private history = signal<NetworkDataPoint[]>([]);
+  private history = signal<NetworkDataPoint[]>([...INITIAL_HISTORY]);
 
   /** Get the current history data points */
   dataPoints = computed(() => this.history());
@@ -50,18 +58,18 @@ export class NetworkHistoryService {
 
       const newPoints = [...points, newPoint];
 
-      // Keep only the last MAX_HISTORY_POINTS
+      // Keep only the last MAX_HISTORY_POINTS by removing from front
       if (newPoints.length > MAX_HISTORY_POINTS) {
-        return newPoints.slice(-MAX_HISTORY_POINTS);
+        newPoints.shift();
       }
       return newPoints;
     });
   }
 
   /**
-   * Clear all history data.
+   * Clear all history data (reset to initial zeros).
    */
   clear(): void {
-    this.history.set([]);
+    this.history.set([...INITIAL_HISTORY]);
   }
 }

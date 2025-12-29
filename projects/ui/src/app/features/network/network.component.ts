@@ -1,15 +1,28 @@
-import { Component, OnInit, OnDestroy, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Subject, takeUntil } from 'rxjs';
+import { Subject, takeUntil, interval } from 'rxjs';
+import { startWith } from 'rxjs/operators';
 
 import { NetworkService, StatusService } from '@core/services';
 import { NetworkAdapter, AdapterStats, NetworkConnection, Route } from '@core/models';
 import { BytesPipe } from '@shared/pipes';
+import { LineGraphComponent } from '@shared/components';
+
+const MAX_HISTORY_POINTS = 60;
+
+interface AdapterTrafficHistory {
+  downloadHistory: number[];
+  uploadHistory: number[];
+  downloadSpeed: number;
+  uploadSpeed: number;
+  maxSpeed: number;
+  previousStats: { bytesReceived: number; bytesSent: number; timestamp: number } | null;
+}
 
 @Component({
   selector: 'app-network',
   standalone: true,
-  imports: [CommonModule, BytesPipe],
+  imports: [CommonModule, BytesPipe, LineGraphComponent],
   template: `
     <div class="p-6 space-y-6">
       <!-- Header -->
@@ -24,7 +37,8 @@ import { BytesPipe } from '@shared/pipes';
         <div class="grid gap-4">
           @for (adapter of adapters; track adapter.id) {
             <div class="card">
-              <div class="flex items-start justify-between">
+              <!-- Header -->
+              <div class="flex items-start justify-between mb-4">
                 <div class="flex items-start gap-3">
                   <div class="status-dot mt-2" [class.online]="adapter.status === 'Up'" [class.offline]="adapter.status !== 'Up'"></div>
                   <div>
@@ -38,79 +52,96 @@ import { BytesPipe } from '@shared/pipes';
               </div>
 
               @if (adapter.status === 'Up') {
-                <div class="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <!-- IPv4 -->
-                  @if (adapter.ipv4Config) {
-                    <div>
-                      <p class="text-xs text-syslens-text-muted">IPv4 Address</p>
-                      <p class="font-mono text-sm text-syslens-text-primary">{{ adapter.ipv4Config.address }}</p>
-                    </div>
-                    <div>
-                      <p class="text-xs text-syslens-text-muted">Subnet Mask</p>
-                      <p class="font-mono text-sm text-syslens-text-primary">{{ adapter.ipv4Config.subnetMask }}</p>
-                    </div>
-                    @if (adapter.ipv4Config.defaultGateway) {
-                      <div>
-                        <p class="text-xs text-syslens-text-muted">Gateway</p>
-                        <p class="font-mono text-sm text-syslens-text-primary">{{ adapter.ipv4Config.defaultGateway }}</p>
+                <!-- Main content: Graph left, IP info right -->
+                <div class="flex gap-6">
+                  <!-- Left: Traffic Graph with stats -->
+                  <div class="flex-1 min-w-0">
+                    @if (adapterTrafficHistory[adapter.id]; as traffic) {
+                      <!-- Speed indicators -->
+                      <div class="flex items-center gap-6 mb-3">
+                        <div class="flex items-center gap-2">
+                          <span class="text-syslens-accent-green text-lg">↓</span>
+                          <div>
+                            <p class="font-mono text-lg font-bold text-syslens-accent-green">{{ traffic.downloadSpeed | bytes }}/s</p>
+                            <p class="text-xs text-syslens-text-muted">Download</p>
+                          </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                          <span class="text-syslens-accent-blue text-lg">↑</span>
+                          <div>
+                            <p class="font-mono text-lg font-bold text-syslens-accent-blue">{{ traffic.uploadSpeed | bytes }}/s</p>
+                            <p class="text-xs text-syslens-text-muted">Upload</p>
+                          </div>
+                        </div>
+                      </div>
+                      <!-- Graph -->
+                      <div class="h-20 bg-syslens-bg-tertiary/30 rounded-lg p-2">
+                        <app-line-graph
+                          [series1]="traffic.downloadHistory"
+                          [series2]="traffic.uploadHistory"
+                          [maxValue]="traffic.maxSpeed"
+                          [width]="400"
+                          [height]="64"
+                          series1Color="syslens-accent-green"
+                          series2Color="syslens-accent-blue"
+                        />
+                      </div>
+                      <!-- Total stats below graph -->
+                      @if (adapterStats[adapter.id]; as stats) {
+                        <div class="flex gap-6 mt-2 text-xs text-syslens-text-muted">
+                          <span>Total Received: <span class="text-syslens-accent-green font-mono">{{ stats.bytesReceived | bytes }}</span></span>
+                          <span>Total Sent: <span class="text-syslens-accent-blue font-mono">{{ stats.bytesSent | bytes }}</span></span>
+                        </div>
+                      }
+                    } @else {
+                      <div class="h-20 bg-syslens-bg-tertiary/30 rounded-lg flex items-center justify-center text-syslens-text-muted text-sm">
+                        Loading traffic data...
                       </div>
                     }
-                  }
-
-                  <!-- MAC Address -->
-                  <div>
-                    <p class="text-xs text-syslens-text-muted">MAC Address</p>
-                    <p class="font-mono text-sm text-syslens-text-primary">{{ adapter.macAddress }}</p>
                   </div>
 
-                  <!-- Speed -->
-                  @if (adapter.speedMbps) {
-                    <div>
-                      <p class="text-xs text-syslens-text-muted">Speed</p>
-                      <p class="font-mono text-sm text-syslens-text-primary">
-                        {{ adapter.speedMbps >= 1000 ? (adapter.speedMbps / 1000) + ' Gbps' : adapter.speedMbps + ' Mbps' }}
-                      </p>
-                    </div>
-                  }
-                </div>
-
-                <!-- DNS Servers -->
-                @if (adapter.dnsConfig.servers.length > 0) {
-                  <div class="mt-4">
-                    <p class="text-xs text-syslens-text-muted mb-1">DNS Servers</p>
-                    <div class="flex flex-wrap gap-2">
-                      @for (dns of adapter.dnsConfig.servers; track dns) {
-                        <span class="px-2 py-1 text-xs font-mono rounded bg-syslens-bg-tertiary text-syslens-text-secondary">
-                          {{ dns }}
-                        </span>
+                  <!-- Right: IP Configuration -->
+                  <div class="w-64 space-y-2 border-l border-syslens-border-primary pl-6">
+                    @if (adapter.ipv4Config) {
+                      <div>
+                        <p class="text-xs text-syslens-text-muted">IPv4 Address</p>
+                        <p class="font-mono text-sm text-syslens-text-primary">{{ adapter.ipv4Config.address }}</p>
+                      </div>
+                      <div>
+                        <p class="text-xs text-syslens-text-muted">Subnet Mask</p>
+                        <p class="font-mono text-sm text-syslens-text-primary">{{ adapter.ipv4Config.subnetMask }}</p>
+                      </div>
+                      @if (adapter.ipv4Config.defaultGateway) {
+                        <div>
+                          <p class="text-xs text-syslens-text-muted">Gateway</p>
+                          <p class="font-mono text-sm text-syslens-text-primary">{{ adapter.ipv4Config.defaultGateway }}</p>
+                        </div>
                       }
+                    }
+                    <div>
+                      <p class="text-xs text-syslens-text-muted">MAC Address</p>
+                      <p class="font-mono text-sm text-syslens-text-primary">{{ adapter.macAddress }}</p>
                     </div>
+                    @if (adapter.speedMbps) {
+                      <div>
+                        <p class="text-xs text-syslens-text-muted">Link Speed</p>
+                        <p class="font-mono text-sm text-syslens-text-primary">
+                          {{ adapter.speedMbps >= 1000 ? (adapter.speedMbps / 1000) + ' Gbps' : adapter.speedMbps + ' Mbps' }}
+                        </p>
+                      </div>
+                    }
+                    @if (adapter.dnsConfig.servers.length > 0) {
+                      <div>
+                        <p class="text-xs text-syslens-text-muted">DNS Servers</p>
+                        @for (dns of adapter.dnsConfig.servers; track dns) {
+                          <p class="font-mono text-sm text-syslens-text-primary">{{ dns }}</p>
+                        }
+                      </div>
+                    }
                   </div>
-                }
-
-                <!-- Real-time Stats -->
-                @if (adapterStats[adapter.id]; as stats) {
-                  <div class="mt-4 pt-4 border-t border-syslens-border-primary">
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                      <div>
-                        <p class="text-xs text-syslens-text-muted">Received</p>
-                        <p class="font-mono text-sm text-syslens-accent-green">{{ stats.bytesReceived | bytes }}</p>
-                      </div>
-                      <div>
-                        <p class="text-xs text-syslens-text-muted">Sent</p>
-                        <p class="font-mono text-sm text-syslens-accent-blue">{{ stats.bytesSent | bytes }}</p>
-                      </div>
-                      <div>
-                        <p class="text-xs text-syslens-text-muted">Packets In</p>
-                        <p class="font-mono text-sm text-syslens-text-primary">{{ stats.packetsReceived | number }}</p>
-                      </div>
-                      <div>
-                        <p class="text-xs text-syslens-text-muted">Packets Out</p>
-                        <p class="font-mono text-sm text-syslens-text-primary">{{ stats.packetsSent | number }}</p>
-                      </div>
-                    </div>
-                  </div>
-                }
+                </div>
+              } @else {
+                <p class="text-syslens-text-muted text-sm">Adapter is not connected</p>
               }
             </div>
           } @empty {
@@ -213,6 +244,7 @@ export class NetworkComponent implements OnInit, OnDestroy {
 
   adapters: NetworkAdapter[] = [];
   adapterStats: Record<string, AdapterStats> = {};
+  adapterTrafficHistory: Record<string, AdapterTrafficHistory> = {};
   connections: NetworkConnection[] = [];
   routes: Route[] = [];
 
@@ -226,6 +258,11 @@ export class NetworkComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
+  getGraphWidth(): number {
+    // Responsive width based on container
+    return Math.min(window.innerWidth - 100, 800);
+  }
+
   private loadNetworkData(): void {
     this.statusService.startOperation('network-init', 'Loading network information...');
 
@@ -234,14 +271,24 @@ export class NetworkComponent implements OnInit, OnDestroy {
       .subscribe(adapters => {
         this.adapters = adapters;
         this.statusService.endOperation('network-init');
-        // Start polling stats for active adapters
+
+        // Initialize traffic history for each adapter with initial data points
         adapters.filter(a => a.status === 'Up').forEach(adapter => {
-          this.networkService.getAdapterStatsPolling(adapter.id)
-            .pipe(takeUntil(this.destroy$))
-            .subscribe(stats => {
-              this.adapterStats[adapter.id] = stats;
-            });
+          // Pre-fill with MAX_HISTORY_POINTS zeros so array length is constant
+          // This prevents point spacing from changing as data fills in
+          const initialHistory = new Array(MAX_HISTORY_POINTS).fill(0);
+          this.adapterTrafficHistory[adapter.id] = {
+            downloadHistory: [...initialHistory],
+            uploadHistory: [...initialHistory],
+            downloadSpeed: 0,
+            uploadSpeed: 0,
+            maxSpeed: 1,
+            previousStats: null
+          };
         });
+
+        // Start polling stats for active adapters
+        this.startAdapterStatsPolling(adapters.filter(a => a.status === 'Up'));
       });
 
     this.networkService.getRoutingTable()
@@ -249,6 +296,87 @@ export class NetworkComponent implements OnInit, OnDestroy {
       .subscribe(routes => {
         this.routes = routes;
       });
+  }
+
+  private startAdapterStatsPolling(adapters: NetworkAdapter[]): void {
+    // Poll every second for smooth graphs
+    interval(1000).pipe(
+      startWith(0),
+      takeUntil(this.destroy$)
+    ).subscribe(() => {
+      adapters.forEach(adapter => {
+        this.networkService.getAdapterStats(adapter.id)
+          .pipe(takeUntil(this.destroy$))
+          .subscribe(stats => {
+            this.adapterStats[adapter.id] = stats;
+            this.updateTrafficHistory(adapter.id, stats);
+          });
+      });
+    });
+  }
+
+  private updateTrafficHistory(adapterId: string, stats: AdapterStats): void {
+    const history = this.adapterTrafficHistory[adapterId];
+    if (!history) return;
+
+    const now = Date.now();
+
+    if (history.previousStats) {
+      const timeDeltaSeconds = (now - history.previousStats.timestamp) / 1000;
+
+      if (timeDeltaSeconds > 0) {
+        const downloadDelta = stats.bytesReceived - history.previousStats.bytesReceived;
+        const uploadDelta = stats.bytesSent - history.previousStats.bytesSent;
+
+        // Calculate speeds (handle counter resets)
+        const downloadSpeed = downloadDelta >= 0 ? downloadDelta / timeDeltaSeconds : 0;
+        const uploadSpeed = uploadDelta >= 0 ? uploadDelta / timeDeltaSeconds : 0;
+
+        const newDownloadSpeed = Math.round(downloadSpeed);
+        const newUploadSpeed = Math.round(uploadSpeed);
+
+        // Create new arrays (triggers Angular change detection)
+        const newDownloadHistory = [...history.downloadHistory, newDownloadSpeed];
+        const newUploadHistory = [...history.uploadHistory, newUploadSpeed];
+
+        // Trim to max points
+        if (newDownloadHistory.length > MAX_HISTORY_POINTS) {
+          newDownloadHistory.shift();
+        }
+        if (newUploadHistory.length > MAX_HISTORY_POINTS) {
+          newUploadHistory.shift();
+        }
+
+        // Update max speed for graph scaling
+        const maxDown = Math.max(...newDownloadHistory, 1);
+        const maxUp = Math.max(...newUploadHistory, 1);
+
+        // Create new history object to trigger change detection
+        this.adapterTrafficHistory[adapterId] = {
+          downloadHistory: newDownloadHistory,
+          uploadHistory: newUploadHistory,
+          downloadSpeed: newDownloadSpeed,
+          uploadSpeed: newUploadSpeed,
+          maxSpeed: Math.max(maxDown, maxUp),
+          previousStats: {
+            bytesReceived: stats.bytesReceived,
+            bytesSent: stats.bytesSent,
+            timestamp: now
+          }
+        };
+        return;
+      }
+    }
+
+    // Store current stats for next iteration (first poll)
+    this.adapterTrafficHistory[adapterId] = {
+      ...history,
+      previousStats: {
+        bytesReceived: stats.bytesReceived,
+        bytesSent: stats.bytesSent,
+        timestamp: now
+      }
+    };
   }
 
   private startRealtimeUpdates(): void {

@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+  <title>Syslens Logo Option 9 - Constellation Network</title>
+  <defs>
+    <radialGradient id="nodeBlue">
+      <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#3b82f6;stop-opacity:0.3" />
+    </radialGradient>
+    <radialGradient id="nodePurple">
+      <stop offset="0%" style="stop-color:#8b5cf6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#8b5cf6;stop-opacity:0.3" />
+    </radialGradient>
+    <radialGradient id="nodeGreen">
+      <stop offset="0%" style="stop-color:#22c55e;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#22c55e;stop-opacity:0.3" />
+    </radialGradient>
+    <radialGradient id="nodeCyan">
+      <stop offset="0%" style="stop-color:#06b6d4;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#06b6d4;stop-opacity:0.3" />
+    </radialGradient>
+    <linearGradient id="connBlue" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:0.6" />
+      <stop offset="100%" style="stop-color:#8b5cf6;stop-opacity:0.6" />
+    </linearGradient>
+    <linearGradient id="connGreen" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#22c55e;stop-opacity:0.6" />
+      <stop offset="100%" style="stop-color:#06b6d4;stop-opacity:0.6" />
+    </linearGradient>
+  </defs>
+
+  <!-- Connection lines (constellation pattern) -->
+  <!-- Central hub connections -->
+  <line x1="128" y1="128" x2="70" y2="70" stroke="url(#connBlue)" stroke-width="2"/>
+  <line x1="128" y1="128" x2="186" y2="70" stroke="url(#connBlue)" stroke-width="2"/>
+  <line x1="128" y1="128" x2="70" y2="186" stroke="url(#connGreen)" stroke-width="2"/>
+  <line x1="128" y1="128" x2="186" y2="186" stroke="url(#connGreen)" stroke-width="2"/>
+  <line x1="128" y1="128" x2="128" y2="50" stroke="url(#connBlue)" stroke-width="2"/>
+  <line x1="128" y1="128" x2="206" y2="128" stroke="url(#connGreen)" stroke-width="2"/>
+  <line x1="128" y1="128" x2="128" y2="206" stroke="url(#connGreen)" stroke-width="2"/>
+  <line x1="128" y1="128" x2="50" y2="128" stroke="url(#connBlue)" stroke-width="2"/>
+
+  <!-- Outer ring connections -->
+  <line x1="70" y1="70" x2="128" y2="50" stroke="url(#connBlue)" stroke-width="1.5" opacity="0.6"/>
+  <line x1="186" y1="70" x2="128" y2="50" stroke="url(#connBlue)" stroke-width="1.5" opacity="0.6"/>
+  <line x1="186" y1="70" x2="206" y2="128" stroke="url(#connGreen)" stroke-width="1.5" opacity="0.6"/>
+  <line x1="186" y1="186" x2="206" y2="128" stroke="url(#connGreen)" stroke-width="1.5" opacity="0.6"/>
+  <line x1="70" y1="186" x2="128" y2="206" stroke="url(#connGreen)" stroke-width="1.5" opacity="0.6"/>
+  <line x1="186" y1="186" x2="128" y2="206" stroke="url(#connGreen)" stroke-width="1.5" opacity="0.6"/>
+  <line x1="70" y1="70" x2="50" y2="128" stroke="url(#connBlue)" stroke-width="1.5" opacity="0.6"/>
+  <line x1="70" y1="186" x2="50" y2="128" stroke="url(#connBlue)" stroke-width="1.5" opacity="0.6"/>
+
+  <!-- Network nodes (constellation stars) -->
+  <!-- Center node (largest) -->
+  <circle cx="128" cy="128" r="10" fill="url(#nodeBlue)"/>
+  <circle cx="128" cy="128" r="6" fill="#3b82f6"/>
+
+  <!-- Cardinal nodes -->
+  <circle cx="128" cy="50" r="7" fill="url(#nodePurple)"/>
+  <circle cx="128" cy="50" r="4" fill="#8b5cf6"/>
+
+  <circle cx="206" cy="128" r="7" fill="url(#nodeGreen)"/>
+  <circle cx="206" cy="128" r="4" fill="#22c55e"/>
+
+  <circle cx="128" cy="206" r="7" fill="url(#nodeGreen)"/>
+  <circle cx="128" cy="206" r="4" fill="#22c55e"/>
+
+  <circle cx="50" cy="128" r="7" fill="url(#nodePurple)"/>
+  <circle cx="50" cy="128" r="4" fill="#8b5cf6"/>
+
+  <!-- Diagonal nodes -->
+  <circle cx="70" cy="70" r="6" fill="url(#nodeBlue)"/>
+  <circle cx="70" cy="70" r="3.5" fill="#3b82f6"/>
+
+  <circle cx="186" cy="70" r="6" fill="url(#nodeCyan)"/>
+  <circle cx="186" cy="70" r="3.5" fill="#06b6d4"/>
+
+  <circle cx="186" cy="186" r="6" fill="url(#nodeGreen)"/>
+  <circle cx="186" cy="186" r="3.5" fill="#22c55e"/>
+
+  <circle cx="70" cy="186" r="6" fill="url(#nodeCyan)"/>
+  <circle cx="70" cy="186" r="3.5" fill="#06b6d4"/>
+
+  <!-- Pulsing data flow animation on center node -->
+  <circle cx="128" cy="128" r="6" fill="none" stroke="#3b82f6" stroke-width="2" opacity="0">
+    <animate attributeName="r" values="6;20;6" dur="3s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0.8;0;0.8" dur="3s" repeatCount="indefinite"/>
+  </circle>
+</svg>

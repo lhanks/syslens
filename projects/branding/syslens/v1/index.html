@@ -3,10 +3,22 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Syslens Brand Assets - v1</title>
-  <link rel="stylesheet" href="assets/colors.css">
-  <link rel="stylesheet" href="assets/fonts.css">
+  <title>Syslens - Logo Options v1</title>
   <style>
+    :root {
+      --bg-primary: #0f172a;
+      --bg-secondary: #1e293b;
+      --bg-tertiary: #334155;
+      --text-primary: #f1f5f9;
+      --text-secondary: #cbd5e1;
+      --text-muted: #94a3b8;
+      --accent-blue: #3b82f6;
+      --accent-purple: #8b5cf6;
+      --accent-green: #22c55e;
+      --accent-cyan: #06b6d4;
+      --border: #475569;
+    }
+
     * {
       margin: 0;
       padding: 0;
@@ -14,317 +26,652 @@
     }
 
     body {
-      background: var(--syslens-bg-primary);
-      color: var(--syslens-text-primary);
-      padding: 2rem;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      padding: 3rem 2rem;
+      min-height: 100vh;
+    }
+
+    .container {
       max-width: 1400px;
       margin: 0 auto;
     }
 
-    nav {
-      background: var(--syslens-bg-card);
-      padding: 1rem;
-      border-radius: var(--syslens-radius-lg);
-      margin-bottom: 2rem;
-      display: flex;
-      gap: 1rem;
-      flex-wrap: wrap;
+    header {
+      text-align: center;
+      margin-bottom: 3rem;
+      border-bottom: 2px solid var(--border);
+      padding-bottom: 2rem;
     }
 
-    nav a {
+    h1 {
+      font-size: 3rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+      background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .subtitle {
+      color: var(--text-secondary);
+      font-size: 1.125rem;
+      margin-bottom: 1rem;
+    }
+
+    .version {
+      display: inline-block;
+      background: var(--bg-secondary);
+      color: var(--accent-cyan);
       padding: 0.5rem 1rem;
-      border-radius: var(--syslens-radius-md);
-      transition: background var(--syslens-transition-fast);
+      border-radius: 6px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      border: 1px solid var(--border);
     }
 
-    nav a:hover {
-      background: var(--syslens-bg-hover);
-      text-decoration: none;
+    .intro {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 2rem;
+      margin-bottom: 3rem;
+    }
+
+    .intro h2 {
+      color: var(--accent-blue);
+      margin-bottom: 1rem;
+      font-size: 1.5rem;
+    }
+
+    .intro p {
+      color: var(--text-secondary);
+      line-height: 1.6;
+      margin-bottom: 1rem;
+    }
+
+    .concept-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 0.75rem;
+      margin-top: 1rem;
+    }
+
+    .concept-item {
+      background: var(--bg-tertiary);
+      padding: 0.75rem;
+      border-radius: 6px;
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      border-left: 3px solid var(--accent-green);
     }
 
     .grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
       gap: 2rem;
-      margin-top: 2rem;
+      margin-bottom: 3rem;
     }
 
     .card {
-      background: var(--syslens-bg-card);
-      border: 1px solid var(--syslens-border-subtle);
-      border-radius: var(--syslens-radius-lg);
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 12px;
       padding: 1.5rem;
-      transition: transform var(--syslens-transition-fast), box-shadow var(--syslens-transition-fast);
+      transition: transform 0.2s, border-color 0.2s;
     }
 
     .card:hover {
-      transform: translateY(-2px);
-      box-shadow: var(--syslens-shadow-md);
+      transform: translateY(-4px);
+      border-color: var(--accent-blue);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
     }
 
     .card h3 {
-      margin-bottom: 1rem;
-      font-size: var(--syslens-text-xl);
+      font-size: 1.25rem;
+      color: var(--text-primary);
+    }
+
+    .option-badge {
+      background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+      color: white;
+      padding: 0.25rem 0.75rem;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 700;
     }
 
     .preview {
-      background: var(--syslens-bg-secondary);
+      background: var(--bg-tertiary);
+      border-radius: 8px;
       padding: 2rem;
+      margin-bottom: 1rem;
       display: flex;
       align-items: center;
       justify-content: center;
-      border-radius: var(--syslens-radius-md);
+      min-height: 280px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .preview::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: radial-gradient(circle at center, rgba(59, 130, 246, 0.1), transparent);
+      pointer-events: none;
+    }
+
+    .preview img {
+      width: 100%;
+      max-width: 256px;
+      height: auto;
+      position: relative;
+      z-index: 1;
+    }
+
+    .description {
+      color: var(--text-secondary);
+      font-size: 0.9375rem;
+      line-height: 1.6;
       margin-bottom: 1rem;
-      min-height: 200px;
     }
 
-    .preview.dark {
-      background: var(--syslens-slate-950);
-    }
-
-    .preview.light {
-      background: var(--syslens-slate-200);
-    }
-
-    .meta {
+    .features {
       display: flex;
-      flex-direction: column;
+      flex-wrap: wrap;
       gap: 0.5rem;
-      padding-top: 1rem;
-      border-top: 1px solid var(--syslens-border-default);
     }
 
-    .meta-item {
+    .feature-tag {
+      background: var(--bg-primary);
+      color: var(--accent-cyan);
+      padding: 0.375rem 0.75rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      border: 1px solid var(--border);
+    }
+
+    .size-test {
+      background: var(--bg-primary);
+      border-radius: 8px;
+      padding: 1.5rem;
       display: flex;
-      justify-content: space-between;
-      font-size: var(--syslens-text-sm);
-    }
-
-    .meta-label {
-      color: var(--syslens-text-secondary);
-    }
-
-    .meta-value {
-      font-family: var(--syslens-font-mono);
-      color: var(--syslens-text-primary);
-    }
-
-    .download-btn {
-      display: inline-block;
-      padding: 0.5rem 1rem;
-      background: var(--syslens-action-primary);
-      color: white;
-      text-decoration: none;
-      border-radius: var(--syslens-radius-md);
-      font-size: var(--syslens-text-sm);
-      font-weight: var(--syslens-weight-medium);
-      transition: background var(--syslens-transition-fast);
+      align-items: center;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+      border: 1px solid var(--border);
       margin-top: 1rem;
     }
 
-    .download-btn:hover {
-      background: var(--syslens-action-primary-hover);
-      text-decoration: none;
+    .size-test-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
     }
 
-    .info-box {
-      background: var(--syslens-bg-card);
-      border-left: 4px solid var(--syslens-electric-blue);
-      padding: 1.5rem;
-      border-radius: var(--syslens-radius-md);
-      margin-bottom: 2rem;
-    }
-
-    .info-box h3 {
-      margin-bottom: 0.5rem;
-    }
-
-    .info-box p {
-      color: var(--syslens-text-secondary);
-      line-height: 1.6;
-    }
-
-    .tag {
-      display: inline-block;
-      padding: 0.25rem 0.75rem;
-      background: rgba(59, 130, 246, 0.2);
-      color: var(--syslens-electric-blue);
-      border-radius: var(--syslens-radius-full);
-      font-size: var(--syslens-text-xs);
-      font-weight: var(--syslens-weight-medium);
+    .size-label {
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      font-weight: 600;
       text-transform: uppercase;
-      letter-spacing: var(--syslens-tracking-wide);
-      margin-top: 0.5rem;
+    }
+
+    footer {
+      text-align: center;
+      padding-top: 2rem;
+      border-top: 2px solid var(--border);
+      color: var(--text-muted);
+      font-size: 0.875rem;
+    }
+
+    .color-legend {
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
+      flex-wrap: wrap;
+      margin-top: 2rem;
+    }
+
+    .color-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .color-swatch {
+      width: 24px;
+      height: 24px;
+      border-radius: 4px;
+      border: 2px solid var(--border);
+    }
+
+    .color-name {
+      color: var(--text-secondary);
+      font-size: 0.875rem;
+    }
+
+    @media (max-width: 768px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+
+      h1 {
+        font-size: 2rem;
+      }
+
+      body {
+        padding: 2rem 1rem;
+      }
     }
   </style>
 </head>
 <body>
-  <header style="margin-bottom: 3rem;">
-    <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
-      <img src="assets/logo-icon.svg" alt="Syslens Icon" width="60" height="60">
-      <div>
-        <h1 style="margin-bottom: 0.25rem;">Syslens Brand Assets</h1>
-        <p style="color: var(--syslens-text-secondary); font-size: var(--syslens-text-lg);">
-          Version 1.0 - December 2025
+  <div class="container">
+    <header>
+      <h1>Syslens Logo Options</h1>
+      <p class="subtitle">System Monitoring Dashboard - Visual Identity Exploration</p>
+      <span class="version">Version 1 - December 2025</span>
+    </header>
+
+    <div class="intro">
+      <h2>Design Exploration</h2>
+      <p>
+        Nine distinct visual concepts for the Syslens brand, each exploring different metaphors for system monitoring and insight.
+        All designs use the core brand palette and are optimized to scale from app icon (256x256) down to favicon size (16x16).
+      </p>
+      <div class="concept-list">
+        <div class="concept-item">🔍 Lens & Eye - Observation & Focus</div>
+        <div class="concept-item">📈 Pulse Graph - Real-time Monitoring</div>
+        <div class="concept-item">⚡ Circuit System - Technical Architecture</div>
+        <div class="concept-item">📊 Dashboard Gauge - Metrics & Performance</div>
+        <div class="concept-item">🖥️ Monitor Screen - Interface & Visibility</div>
+        <div class="concept-item">📡 Radar Scan - Continuous Monitoring</div>
+        <div class="concept-item">🌈 Prism Spectrum - Data Breakdown</div>
+        <div class="concept-item">🔐 Fingerprint - System Identity</div>
+        <div class="concept-item">✨ Constellation - Connected Components</div>
+      </div>
+    </div>
+
+    <div class="grid">
+      <!-- Option 1: Lens Eye -->
+      <div class="card">
+        <div class="card-header">
+          <h3>Lens Eye</h3>
+          <span class="option-badge">Option 1</span>
+        </div>
+        <div class="preview">
+          <img src="assets/logo-option-1.svg" alt="Lens Eye Logo">
+        </div>
+        <p class="description">
+          Represents observation, focus, and insight. The concentric circles suggest depth of analysis, while the scanning crosshairs and corner brackets evoke a targeting/monitoring interface. The gradient lens creates visual interest and depth.
         </p>
+        <div class="features">
+          <span class="feature-tag">Concentric rings</span>
+          <span class="feature-tag">Scan indicators</span>
+          <span class="feature-tag">Frame brackets</span>
+          <span class="feature-tag">Gradient depth</span>
+        </div>
+        <div class="size-test">
+          <div class="size-test-item">
+            <img src="assets/logo-option-1.svg" width="256" height="256" alt="256px">
+            <span class="size-label">256px</span>
+          </div>
+          <div class="size-test-item">
+            <img src="assets/logo-option-1.svg" width="64" height="64" alt="64px">
+            <span class="size-label">64px</span>
+          </div>
+          <div class="size-test-item">
+            <img src="assets/logo-option-1.svg" width="32" height="32" alt="32px">
+            <span class="size-label">32px</span>
+          </div>
+          <div class="size-test-item">
+            <img src="assets/logo-option-1.svg" width="16" height="16" alt="16px">
+            <span class="size-label">16px</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Option 2: Pulse Graph -->
+      <div class="card">
+        <div class="card-header">
+          <h3>Pulse Graph</h3>
+          <span class="option-badge">Option 2</span>
+        </div>
+        <div class="preview">
+          <img src="assets/logo-option-2.svg" alt="Pulse Graph Logo">
+        </div>
+        <p class="description">
+          Dynamic waveform visualization suggesting real-time activity monitoring. The oscillating line represents system metrics with peaks and valleys, while the grid structure evokes a professional monitoring dashboard. Emphasizes live data and performance tracking.
+        </p>
+        <div class="features">
+          <span class="feature-tag">Waveform pulse</span>
+          <span class="feature-tag">Grid layout</span>
+          <span class="feature-tag">Peak markers</span>
+          <span class="feature-tag">Activity flow</span>
+        </div>
+        <div class="size-test">
+          <div class="size-test-item">
+            <img src="assets/logo-option-2.svg" width="256" height="256" alt="256px">
+            <span class="size-label">256px</span>
+          </div>
+          <div class="size-test-item">
+            <img src="assets/logo-option-2.svg" width="64" height="64" alt="64px">
+            <span class="size-label">64px</span>
+          </div>
+          <div class="size-test-item">
+            <img src="assets/logo-option-2.svg" width="32" height="32" alt="32px">
+            <span class="size-label">32px</span>
+          </div>
+          <div class="size-test-item">
+            <img src="assets/logo-option-2.svg" width="16" height="16" alt="16px">
+            <span class="size-label">16px</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Option 3: Circuit System -->
+      <div class="card">
+        <div class="card-header">
+          <h3>Circuit System</h3>
+          <span class="option-badge">Option 3</span>
+        </div>
+        <div class="preview">
+          <img src="assets/logo-option-3.svg" alt="Circuit System Logo">
+        </div>
+        <p class="description">
+          Technical and architectural. Central processor chip connected to peripheral nodes represents the hub-and-spoke model of system monitoring. Circuit pathways and data flow indicators emphasize connectivity and information routing. Appeals to technical users.
+        </p>
+        <div class="features">
+          <span class="feature-tag">Processor core</span>
+          <span class="feature-tag">Network nodes</span>
+          <span class="feature-tag">Data paths</span>
+          <span class="feature-tag">System architecture</span>
+        </div>
+        <div class="size-test">
+          <div class="size-test-item">
+            <img src="assets/logo-option-3.svg" width="256" height="256" alt="256px">
+            <span class="size-label">256px</span>
+          </div>
+          <div class="size-test-item">
+            <img src="assets/logo-option-3.svg" width="64" height="64" alt="64px">
+            <span class="size-label">64px</span>
+          </div>
+          <div class="size-test-item">
+            <img src="assets/logo-option-3.svg" width="32" height="32" alt="32px">
+            <span class="size-label">32px</span>
+          </div>
+          <div class="size-test-item">
+            <img src="assets/logo-option-3.svg" width="16" height="16" alt="16px">
+            <span class="size-label">16px</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Option 4: Dashboard Gauge -->
+      <div class="card">
+        <div class="card-header">
+          <h3>Dashboard Gauge</h3>
+          <span class="option-badge">Option 4</span>
+        </div>
+        <div class="preview">
+          <img src="assets/logo-option-4.svg" alt="Dashboard Gauge Logo">
+        </div>
+        <p class="description">
+          Classic dashboard gauge metaphor with multi-colored segments representing different system metrics. The needle pointer indicates current status, while status LEDs suggest multiple monitoring points. Familiar and intuitive for performance monitoring.
+        </p>
+        <div class="features">
+          <span class="feature-tag">Gauge segments</span>
+          <span class="feature-tag">Pointer needle</span>
+          <span class="feature-tag">Status LEDs</span>
+          <span class="feature-tag">Performance dial</span>
+        </div>
+        <div class="size-test">
+          <div class="size-test-item">
+            <img src="assets/logo-option-4.svg" width="256" height="256" alt="256px">
+            <span class="size-label">256px</span>
+          </div>
+          <div class="size-test-item">
+            <img src="assets/logo-option-4.svg" width="64" height="64" alt="64px">
+            <span class="size-label">64px</span>
+          </div>
+          <div class="size-test-item">
+            <img src="assets/logo-option-4.svg" width="32" height="32" alt="32px">
+            <span class="size-label">32px</span>
+          </div>
+          <div class="size-test-item">
+            <img src="assets/logo-option-4.svg" width="16" height="16" alt="16px">
+            <span class="size-label">16px</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Option 5: Monitor Screen -->
+      <div class="card">
+        <div class="card-header">
+          <h3>Monitor Screen</h3>
+          <span class="option-badge">Option 5</span>
+        </div>
+        <div class="preview">
+          <img src="assets/logo-option-5.svg" alt="Monitor Screen Logo">
+        </div>
+        <p class="description">
+          Direct desktop monitor representation showing system stats on screen. Resource bars (CPU, MEM, DSK) and live graph communicate the app's purpose immediately. The "S" logo and power LED add brand identity. Most literal interpretation of the monitoring concept.
+        </p>
+        <div class="features">
+          <span class="feature-tag">Monitor frame</span>
+          <span class="feature-tag">System stats</span>
+          <span class="feature-tag">Resource bars</span>
+          <span class="feature-tag">Live data</span>
+        </div>
+        <div class="size-test">
+          <div class="size-test-item">
+            <img src="assets/logo-option-5.svg" width="256" height="256" alt="256px">
+            <span class="size-label">256px</span>
+          </div>
+          <div class="size-test-item">
+            <img src="assets/logo-option-5.svg" width="64" height="64" alt="64px">
+            <span class="size-label">64px</span>
+          </div>
+          <div class="size-test-item">
+            <img src="assets/logo-option-5.svg" width="32" height="32" alt="32px">
+            <span class="size-label">32px</span>
+          </div>
+          <div class="size-test-item">
+            <img src="assets/logo-option-5.svg" width="16" height="16" alt="16px">
+            <span class="size-label">16px</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Option 6: Radar Scan -->
+      <div class="card">
+        <div class="card-header">
+          <h3>Radar Scan</h3>
+          <span class="option-badge">Option 6</span>
+        </div>
+        <div class="preview">
+          <img src="assets/logo-option-6.svg" alt="Radar Scan Logo">
+        </div>
+        <p class="description">
+          Continuous monitoring visualization with sweeping radar beam and detection blips. The concentric circles represent scanning zones, while the rotating sweep suggests ongoing system surveillance. Animated detection points highlight active monitoring of system components.
+        </p>
+        <div class="features">
+          <span class="feature-tag">Radar sweep</span>
+          <span class="feature-tag">Detection blips</span>
+          <span class="feature-tag">Scan zones</span>
+          <span class="feature-tag">Active monitoring</span>
+        </div>
+        <div class="size-test">
+          <div class="size-test-item">
+            <img src="assets/logo-option-6.svg" width="256" height="256" alt="256px">
+            <span class="size-label">256px</span>
+          </div>
+          <div class="size-test-item">
+            <img src="assets/logo-option-6.svg" width="64" height="64" alt="64px">
+            <span class="size-label">64px</span>
+          </div>
+          <div class="size-test-item">
+            <img src="assets/logo-option-6.svg" width="32" height="32" alt="32px">
+            <span class="size-label">32px</span>
+          </div>
+          <div class="size-test-item">
+            <img src="assets/logo-option-6.svg" width="16" height="16" alt="16px">
+            <span class="size-label">16px</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Option 7: Prism Spectrum -->
+      <div class="card">
+        <div class="card-header">
+          <h3>Prism Spectrum</h3>
+          <span class="option-badge">Option 7</span>
+        </div>
+        <div class="preview">
+          <img src="assets/logo-option-7.svg" alt="Prism Spectrum Logo">
+        </div>
+        <p class="description">
+          Light refraction metaphor showing how complex system data is broken down into understandable components. White light enters the prism and emerges as distinct colored rays, representing the app's ability to analyze and separate different system metrics for clarity.
+        </p>
+        <div class="features">
+          <span class="feature-tag">Light refraction</span>
+          <span class="feature-tag">Data breakdown</span>
+          <span class="feature-tag">Spectrum analysis</span>
+          <span class="feature-tag">Component separation</span>
+        </div>
+        <div class="size-test">
+          <div class="size-test-item">
+            <img src="assets/logo-option-7.svg" width="256" height="256" alt="256px">
+            <span class="size-label">256px</span>
+          </div>
+          <div class="size-test-item">
+            <img src="assets/logo-option-7.svg" width="64" height="64" alt="64px">
+            <span class="size-label">64px</span>
+          </div>
+          <div class="size-test-item">
+            <img src="assets/logo-option-7.svg" width="32" height="32" alt="32px">
+            <span class="size-label">32px</span>
+          </div>
+          <div class="size-test-item">
+            <img src="assets/logo-option-7.svg" width="16" height="16" alt="16px">
+            <span class="size-label">16px</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Option 8: System Fingerprint -->
+      <div class="card">
+        <div class="card-header">
+          <h3>System Fingerprint</h3>
+          <span class="option-badge">Option 8</span>
+        </div>
+        <div class="preview">
+          <img src="assets/logo-option-8.svg" alt="Fingerprint Logo">
+        </div>
+        <p class="description">
+          Unique system identity pattern suggesting each machine has its own distinct characteristics. Fingerprint ridges represent the app's ability to deeply analyze and reveal your system's unique signature. Scanning overlay emphasizes digital identification and profiling.
+        </p>
+        <div class="features">
+          <span class="feature-tag">Unique identity</span>
+          <span class="feature-tag">Deep analysis</span>
+          <span class="feature-tag">System profiling</span>
+          <span class="feature-tag">Digital scan</span>
+        </div>
+        <div class="size-test">
+          <div class="size-test-item">
+            <img src="assets/logo-option-8.svg" width="256" height="256" alt="256px">
+            <span class="size-label">256px</span>
+          </div>
+          <div class="size-test-item">
+            <img src="assets/logo-option-8.svg" width="64" height="64" alt="64px">
+            <span class="size-label">64px</span>
+          </div>
+          <div class="size-test-item">
+            <img src="assets/logo-option-8.svg" width="32" height="32" alt="32px">
+            <span class="size-label">32px</span>
+          </div>
+          <div class="size-test-item">
+            <img src="assets/logo-option-8.svg" width="16" height="16" alt="16px">
+            <span class="size-label">16px</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Option 9: Constellation Network -->
+      <div class="card">
+        <div class="card-header">
+          <h3>Constellation Network</h3>
+          <span class="option-badge">Option 9</span>
+        </div>
+        <div class="preview">
+          <img src="assets/logo-option-9.svg" alt="Constellation Network Logo">
+        </div>
+        <p class="description">
+          Interconnected nodes forming a celestial pattern, representing how different system components work together as an integrated whole. The central hub with radiating connections shows the relationships between CPU, memory, disk, network, and other resources. Pulsing center suggests active data flow.
+        </p>
+        <div class="features">
+          <span class="feature-tag">Node network</span>
+          <span class="feature-tag">Component connections</span>
+          <span class="feature-tag">Data flow</span>
+          <span class="feature-tag">System integration</span>
+        </div>
+        <div class="size-test">
+          <div class="size-test-item">
+            <img src="assets/logo-option-9.svg" width="256" height="256" alt="256px">
+            <span class="size-label">256px</span>
+          </div>
+          <div class="size-test-item">
+            <img src="assets/logo-option-9.svg" width="64" height="64" alt="64px">
+            <span class="size-label">64px</span>
+          </div>
+          <div class="size-test-item">
+            <img src="assets/logo-option-9.svg" width="32" height="32" alt="32px">
+            <span class="size-label">32px</span>
+          </div>
+          <div class="size-test-item">
+            <img src="assets/logo-option-9.svg" width="16" height="16" alt="16px">
+            <span class="size-label">16px</span>
+          </div>
+        </div>
       </div>
     </div>
-  </header>
 
-  <nav>
-    <a href="index.html" style="background: var(--syslens-bg-hover);">Asset Gallery</a>
-    <a href="styleguide.html">Style Guide</a>
-    <a href="example-site.html">Example Site</a>
-    <a href="../BRAND.md">Brand Document</a>
-  </nav>
+    <div class="color-legend">
+      <div class="color-item">
+        <div class="color-swatch" style="background: #3b82f6;"></div>
+        <span class="color-name">Blue (#3b82f6)</span>
+      </div>
+      <div class="color-item">
+        <div class="color-swatch" style="background: #8b5cf6;"></div>
+        <span class="color-name">Purple (#8b5cf6)</span>
+      </div>
+      <div class="color-item">
+        <div class="color-swatch" style="background: #22c55e;"></div>
+        <span class="color-name">Green (#22c55e)</span>
+      </div>
+      <div class="color-item">
+        <div class="color-swatch" style="background: #06b6d4;"></div>
+        <span class="color-name">Cyan (#06b6d4)</span>
+      </div>
+    </div>
 
-  <div class="info-box">
-    <h3>About This Brand</h3>
-    <p>
-      Syslens is a desktop system information dashboard that provides real-time visibility into CPU, memory, disk, and network performance.
-      The brand identity combines professional precision with modern aesthetics, using a lens metaphor to represent clarity and focus.
-    </p>
-    <div class="tag">Clarity for your system</div>
+    <footer>
+      <p>Syslens Branding v1 - All 9 logos scale-tested from 256px to 16px</p>
+    </footer>
   </div>
-
-  <h2 style="margin-bottom: 1.5rem;">Logo Assets</h2>
-  <div class="grid">
-    <!-- Logo Icon -->
-    <div class="card">
-      <h3>Logo Icon</h3>
-      <div class="preview dark">
-        <img src="assets/logo-icon.svg" alt="Syslens Icon" width="180" height="180">
-      </div>
-      <div class="meta">
-        <div class="meta-item">
-          <span class="meta-label">Format</span>
-          <span class="meta-value">SVG</span>
-        </div>
-        <div class="meta-item">
-          <span class="meta-label">Size</span>
-          <span class="meta-value">256x256</span>
-        </div>
-        <div class="meta-item">
-          <span class="meta-label">Usage</span>
-          <span class="meta-value">App icon, avatars</span>
-        </div>
-      </div>
-      <a href="assets/logo-icon.svg" download class="download-btn">Download SVG</a>
-    </div>
-
-    <!-- Full Logo -->
-    <div class="card">
-      <h3>Full Logo + Wordmark</h3>
-      <div class="preview dark">
-        <img src="assets/logo-full.svg" alt="Syslens Full Logo" width="320" height="100">
-      </div>
-      <div class="meta">
-        <div class="meta-item">
-          <span class="meta-label">Format</span>
-          <span class="meta-value">SVG</span>
-        </div>
-        <div class="meta-item">
-          <span class="meta-label">Size</span>
-          <span class="meta-value">512x160</span>
-        </div>
-        <div class="meta-item">
-          <span class="meta-label">Usage</span>
-          <span class="meta-value">Headers, splash screens</span>
-        </div>
-      </div>
-      <a href="assets/logo-full.svg" download class="download-btn">Download SVG</a>
-    </div>
-
-    <!-- Favicon -->
-    <div class="card">
-      <h3>Favicon</h3>
-      <div class="preview dark">
-        <img src="assets/favicon.svg" alt="Syslens Favicon" width="96" height="96">
-      </div>
-      <div class="meta">
-        <div class="meta-item">
-          <span class="meta-label">Format</span>
-          <span class="meta-value">SVG</span>
-        </div>
-        <div class="meta-item">
-          <span class="meta-label">Size</span>
-          <span class="meta-value">32x32</span>
-        </div>
-        <div class="meta-item">
-          <span class="meta-label">Usage</span>
-          <span class="meta-value">Browser tab, bookmarks</span>
-        </div>
-      </div>
-      <a href="assets/favicon.svg" download class="download-btn">Download SVG</a>
-    </div>
-  </div>
-
-  <h2 style="margin-top: 3rem; margin-bottom: 1.5rem;">Design System Assets</h2>
-  <div class="grid">
-    <!-- Colors CSS -->
-    <div class="card">
-      <h3>Color Palette</h3>
-      <div class="preview" style="background: linear-gradient(135deg, #3B82F6 0%, #8B5CF6 50%, #06B6D4 100%); min-height: 120px;">
-      </div>
-      <p style="color: var(--syslens-text-secondary); font-size: var(--syslens-text-sm); margin-bottom: 1rem;">
-        Complete color system with CSS custom properties including primary colors, data visualization colors, and neutral scale.
-      </p>
-      <div class="meta">
-        <div class="meta-item">
-          <span class="meta-label">Format</span>
-          <span class="meta-value">CSS</span>
-        </div>
-        <div class="meta-item">
-          <span class="meta-label">Variables</span>
-          <span class="meta-value">50+ colors</span>
-        </div>
-      </div>
-      <a href="assets/colors.css" download class="download-btn">Download CSS</a>
-    </div>
-
-    <!-- Typography CSS -->
-    <div class="card">
-      <h3>Typography System</h3>
-      <div class="preview">
-        <div style="text-align: center;">
-          <div style="font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem;">SYSLENS</div>
-          <div style="font-family: var(--syslens-font-mono); font-size: 1.5rem; color: var(--syslens-electric-blue);">87.5%</div>
-        </div>
-      </div>
-      <p style="color: var(--syslens-text-secondary); font-size: var(--syslens-text-sm); margin-bottom: 1rem;">
-        Typography definitions with Inter for UI and JetBrains Mono for data display. Includes complete type scale and utility classes.
-      </p>
-      <div class="meta">
-        <div class="meta-item">
-          <span class="meta-label">Format</span>
-          <span class="meta-value">CSS</span>
-        </div>
-        <div class="meta-item">
-          <span class="meta-label">Fonts</span>
-          <span class="meta-value">Inter, JetBrains Mono</span>
-        </div>
-      </div>
-      <a href="assets/fonts.css" download class="download-btn">Download CSS</a>
-    </div>
-  </div>
-
-  <div class="info-box" style="margin-top: 3rem;">
-    <h3>Quick Start</h3>
-    <p style="margin-bottom: 1rem;">To use these brand assets in your project, include both CSS files in your HTML:</p>
-    <pre style="background: var(--syslens-bg-secondary); padding: 1rem; border-radius: var(--syslens-radius-md); overflow-x: auto;"><code>&lt;link rel="stylesheet" href="assets/colors.css"&gt;
-&lt;link rel="stylesheet" href="assets/fonts.css"&gt;</code></pre>
-  </div>
-
-  <div style="margin-top: 3rem; padding: 2rem; background: var(--syslens-bg-card); border-radius: var(--syslens-radius-lg); text-align: center;">
-    <h3 style="margin-bottom: 1rem;">Need Help?</h3>
-    <p style="color: var(--syslens-text-secondary); margin-bottom: 1.5rem;">
-      View the complete style guide for usage guidelines, component examples, and design patterns.
-    </p>
-    <a href="styleguide.html" class="download-btn" style="margin: 0;">View Style Guide</a>
-  </div>
-
-  <footer style="text-align: center; margin-top: 4rem; padding-top: 2rem; border-top: 1px solid var(--syslens-border-default); color: var(--syslens-text-secondary);">
-    <p>&copy; 2025 Syslens - All brand assets included</p>
-  </footer>
 </body>
 </html>

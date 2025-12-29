@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { Subject, takeUntil, interval, forkJoin, of } from 'rxjs';
@@ -219,13 +219,18 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private activeAdapters: NetworkAdapter[] = [];
   private previousNetworkStats: Map<string, { bytesReceived: number; bytesSent: number; timestamp: number }> = new Map();
 
-  // Network history for graph
-  get downloadHistory(): number[] {
-    return this.networkHistoryService.dataPoints().map(p => p.downloadSpeed);
-  }
+  // Network history for graph - use stable arrays updated via effect
+  // (getters with .map() create new arrays on every access, breaking change detection)
+  downloadHistory: number[] = [];
+  uploadHistory: number[] = [];
 
-  get uploadHistory(): number[] {
-    return this.networkHistoryService.dataPoints().map(p => p.uploadSpeed);
+  constructor() {
+    // Update history arrays only when service data actually changes
+    effect(() => {
+      const points = this.networkHistoryService.dataPoints();
+      this.downloadHistory = points.map(p => p.downloadSpeed);
+      this.uploadHistory = points.map(p => p.uploadSpeed);
+    });
   }
 
   ngOnInit(): void {

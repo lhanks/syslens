@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+  <title>Syslens Logo Option 8 - System Fingerprint</title>
+  <defs>
+    <linearGradient id="fingerGrad1" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#8b5cf6;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="fingerGrad2" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#06b6d4;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#22c55e;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <!-- Fingerprint ridges from center outward -->
+  <!-- Center core -->
+  <ellipse cx="128" cy="128" rx="15" ry="20" fill="none" stroke="url(#fingerGrad1)" stroke-width="3"/>
+
+  <!-- Layer 2 -->
+  <path d="M 128 88 Q 108 88 98 98 Q 88 108 88 128 Q 88 148 98 158 Q 108 168 128 168"
+        fill="none" stroke="url(#fingerGrad1)" stroke-width="2.5" opacity="0.9"/>
+
+  <!-- Layer 3 -->
+  <path d="M 128 68 Q 98 68 78 88 Q 58 108 58 128 Q 58 148 68 168 Q 78 188 98 198"
+        fill="none" stroke="url(#fingerGrad2)" stroke-width="2.5" opacity="0.8"/>
+
+  <!-- Layer 4 -->
+  <path d="M 128 48 Q 88 48 58 78 Q 28 108 28 128 Q 28 158 48 188 Q 68 218 98 228"
+        fill="none" stroke="url(#fingerGrad2)" stroke-width="2.5" opacity="0.7"/>
+
+  <!-- Right side ridges -->
+  <path d="M 128 88 Q 148 88 158 98 Q 168 108 168 128 Q 168 148 158 158 Q 148 168 128 168"
+        fill="none" stroke="url(#fingerGrad1)" stroke-width="2.5" opacity="0.9"/>
+
+  <path d="M 128 68 Q 158 68 178 88 Q 198 108 198 128 Q 198 148 188 168 Q 178 188 158 198"
+        fill="none" stroke="url(#fingerGrad2)" stroke-width="2.5" opacity="0.8"/>
+
+  <path d="M 128 48 Q 168 48 198 78 Q 228 108 228 128 Q 228 158 208 188 Q 188 218 158 228"
+        fill="none" stroke="url(#fingerGrad2)" stroke-width="2.5" opacity="0.7"/>
+
+  <!-- Characteristic fingerprint breaks/minutiae -->
+  <circle cx="145" cy="105" r="3" fill="#22c55e"/>
+  <circle cx="165" cy="135" r="3" fill="#06b6d4"/>
+  <circle cx="110" cy="115" r="3" fill="#8b5cf6"/>
+  <circle cx="90" cy="145" r="3" fill="#3b82f6"/>
+
+  <!-- Digital scan line effect -->
+  <rect x="28" y="120" width="200" height="2" fill="#22c55e" opacity="0.3">
+    <animate attributeName="y" values="48;208;48" dur="4s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0;0.6;0" dur="4s" repeatCount="indefinite"/>
+  </rect>
+
+  <!-- Corner brackets suggesting scanning -->
+  <path d="M 40 40 L 40 60 M 40 40 L 60 40" stroke="#22c55e" stroke-width="2" opacity="0.5"/>
+  <path d="M 216 40 L 216 60 M 216 40 L 196 40" stroke="#22c55e" stroke-width="2" opacity="0.5"/>
+  <path d="M 40 216 L 40 196 M 40 216 L 60 216" stroke="#22c55e" stroke-width="2" opacity="0.5"/>
+  <path d="M 216 216 L 216 196 M 216 216 L 196 216" stroke="#22c55e" stroke-width="2" opacity="0.5"/>
+</svg>

@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, signal, computed, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subject, takeUntil, interval, forkJoin, of } from 'rxjs';
@@ -135,8 +135,8 @@ type SortDirection = 'asc' | 'desc';
             </div>
           </div>
           <app-line-graph
-            [series1]="networkDownloadHistory()"
-            [series2]="networkUploadHistory()"
+            [series1]="networkDownloadHistory"
+            [series2]="networkUploadHistory"
             [maxValue]="networkMaxSpeed()"
             [width]="200"
             [height]="40"
@@ -348,10 +348,23 @@ export class ProcessesComponent implements OnInit, OnDestroy {
   private memoryMetrics = signal<MemoryMetrics | null>(null);
   private diskPerformance = signal<DiskPerformance[]>([]);
 
-  // History arrays for graphs
-  cpuHistory = signal<number[]>([]);
-  memoryHistory = signal<number[]>([]);
-  diskHistory = signal<number[]>([]);
+  // History arrays for graphs - pre-fill with zeros for constant array length
+  cpuHistory = signal<number[]>(new Array(MAX_HISTORY_POINTS).fill(0));
+  memoryHistory = signal<number[]>(new Array(MAX_HISTORY_POINTS).fill(0));
+  diskHistory = signal<number[]>(new Array(MAX_HISTORY_POINTS).fill(0));
+
+  // Network history - stable arrays updated via effect (not computed with .map())
+  networkDownloadHistory: number[] = [];
+  networkUploadHistory: number[] = [];
+
+  constructor() {
+    // Update network history arrays only when service data actually changes
+    effect(() => {
+      const points = this.networkHistoryService.dataPoints();
+      this.networkDownloadHistory = points.map(p => p.downloadSpeed);
+      this.networkUploadHistory = points.map(p => p.uploadSpeed);
+    });
+  }
 
   cpuUsage = computed(() => this.cpuMetrics()?.totalUsage ?? 0);
 
@@ -382,14 +395,6 @@ export class ProcessesComponent implements OnInit, OnDestroy {
     const points = this.networkHistoryService.dataPoints();
     if (points.length === 0) return 0;
     return points[points.length - 1].uploadSpeed;
-  });
-
-  networkDownloadHistory = computed(() => {
-    return this.networkHistoryService.dataPoints().map(p => p.downloadSpeed);
-  });
-
-  networkUploadHistory = computed(() => {
-    return this.networkHistoryService.dataPoints().map(p => p.uploadSpeed);
   });
 
   networkMaxSpeed = computed(() => {

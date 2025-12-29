@@ -9,6 +9,9 @@ Tech Stack: Tauri 2.0 (Rust) + Angular 21 + Tailwind CSS
 ** IMPORTANT ** Process the tasks below (in this section).  Expand them if needed and put them in the appropriate sections below.
 ** IMPORTANT ** Do not remove this section. Just clear out the tasks once processed.
 
+- There appears to be a problem with the CPU % in the processes list. It is not showing the correct value. (see "C:\Users\lesli\OneDrive\Pictures\Screenshots 1\Screenshot 2025-12-28 154204.png")
+- When displaying line graphs, smooth out the transition between data points. so that the lines are updated in a continuous/smooth manner
+- Add network connection traffic history to each connection on the network tab.
 
 ## 1. Setup
 
