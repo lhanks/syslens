@@ -688,39 +688,31 @@ impl HardwareCollector {
         };
 
         const DISPLAY_DEVICE_ACTIVE: u32 = 0x00000001;
+        const DISPLAY_DEVICE_ATTACHED_TO_DESKTOP: u32 = 0x00000001;
 
         let mut monitors = Vec::new();
-        let mut device_idx = 0u32;
+        let mut adapter_idx = 0u32;
 
+        // First loop: enumerate display adapters (GPUs)
         loop {
-            let mut display_device = DISPLAY_DEVICEW {
+            let mut adapter_device = DISPLAY_DEVICEW {
                 cb: std::mem::size_of::<DISPLAY_DEVICEW>() as u32,
                 ..Default::default()
             };
 
-            let result = unsafe {
-                EnumDisplayDevicesW(None, device_idx, &mut display_device, 0)
+            let adapter_result = unsafe {
+                EnumDisplayDevicesW(None, adapter_idx, &mut adapter_device, 0)
             };
 
-            if !result.as_bool() {
+            if !adapter_result.as_bool() {
                 break;
             }
 
-            // Check if this is an active display
-            if (display_device.StateFlags & DISPLAY_DEVICE_ACTIVE) != 0 {
-                let device_name: String = display_device.DeviceName
-                    .iter()
-                    .take_while(|&&c| c != 0)
-                    .map(|&c| c as u8 as char)
-                    .collect();
+            // Check if this adapter is active
+            if (adapter_device.StateFlags & DISPLAY_DEVICE_ACTIVE) != 0 {
+                let adapter_name: Vec<u16> = adapter_device.DeviceName.to_vec();
 
-                let device_string: String = display_device.DeviceString
-                    .iter()
-                    .take_while(|&&c| c != 0)
-                    .map(|&c| c as u8 as char)
-                    .collect();
-
-                // Get display settings
+                // Get display settings for this adapter
                 let mut dev_mode = DEVMODEW {
                     dmSize: std::mem::size_of::<DEVMODEW>() as u16,
                     ..Default::default()
@@ -728,7 +720,7 @@ impl HardwareCollector {
 
                 let settings_result = unsafe {
                     EnumDisplaySettingsW(
-                        windows::core::PCWSTR(display_device.DeviceName.as_ptr()),
+                        windows::core::PCWSTR(adapter_device.DeviceName.as_ptr()),
                         ENUM_CURRENT_SETTINGS,
                         &mut dev_mode,
                     )
@@ -743,19 +735,92 @@ impl HardwareCollector {
                     ("Unknown".to_string(), 60)
                 };
 
-                monitors.push(Monitor {
-                    id: device_name.clone(),
-                    name: if device_string.is_empty() { device_name } else { device_string },
-                    manufacturer: None,
-                    resolution,
-                    size_inches: None,
-                    connection: "Unknown".to_string(),
-                    hdr_support: false,
-                    refresh_rate_hz: refresh_rate,
-                });
+                // Second loop: enumerate monitors attached to this adapter
+                let mut monitor_idx = 0u32;
+                let mut found_monitor = false;
+
+                loop {
+                    let mut monitor_device = DISPLAY_DEVICEW {
+                        cb: std::mem::size_of::<DISPLAY_DEVICEW>() as u32,
+                        ..Default::default()
+                    };
+
+                    let monitor_result = unsafe {
+                        EnumDisplayDevicesW(
+                            windows::core::PCWSTR(adapter_name.as_ptr()),
+                            monitor_idx,
+                            &mut monitor_device,
+                            0,
+                        )
+                    };
+
+                    if !monitor_result.as_bool() {
+                        break;
+                    }
+
+                    // Check if this monitor is attached
+                    if (monitor_device.StateFlags & DISPLAY_DEVICE_ATTACHED_TO_DESKTOP) != 0 {
+                        found_monitor = true;
+
+                        let monitor_id: String = monitor_device.DeviceID
+                            .iter()
+                            .take_while(|&&c| c != 0)
+                            .map(|&c| c as u8 as char)
+                            .collect();
+
+                        let monitor_name: String = monitor_device.DeviceString
+                            .iter()
+                            .take_while(|&&c| c != 0)
+                            .map(|&c| c as u8 as char)
+                            .collect();
+
+                        let display_name = if monitor_name.is_empty() {
+                            format!("Display {}", monitors.len() + 1)
+                        } else {
+                            monitor_name
+                        };
+
+                        monitors.push(Monitor {
+                            id: if monitor_id.is_empty() {
+                                format!("monitor-{}-{}", adapter_idx, monitor_idx)
+                            } else {
+                                monitor_id
+                            },
+                            name: display_name,
+                            manufacturer: None,
+                            resolution: resolution.clone(),
+                            size_inches: None,
+                            connection: "Unknown".to_string(),
+                            hdr_support: false,
+                            refresh_rate_hz: refresh_rate,
+                        });
+                    }
+
+                    monitor_idx += 1;
+                }
+
+                // If no monitors found for this adapter, create a generic entry
+                if !found_monitor {
+                    let adapter_name_str: String = adapter_device.DeviceName
+                        .iter()
+                        .take_while(|&&c| c != 0)
+                        .map(|&c| c as u8 as char)
+                        .collect();
+
+                    monitors.push(Monitor {
+                        id: adapter_name_str.clone(),
+                        name: format!("Display {}", monitors.len() + 1),
+                        manufacturer: None,
+                        resolution,
+                        size_inches: None,
+                        connection: "Unknown".to_string(),
+                        hdr_support: false,
+                        refresh_rate_hz: refresh_rate,
+                    });
+                }
             }
 
-            device_idx += 1;
+            adapter_idx += 1;
         }
 
         monitors
