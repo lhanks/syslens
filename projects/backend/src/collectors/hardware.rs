@@ -506,10 +506,11 @@ impl HardwareCollector {
         let lower = adapter_compat.to_lowercase();
         if lower.contains("nvidia") {
             Some("NVIDIA".to_string())
+        } else if lower.contains("intel") {
+            // Check Intel before ATI to avoid false positive from "Corporation" containing "ati"
+            Some("Intel".to_string())
         } else if lower.contains("amd") || lower.contains("ati") {
             Some("AMD".to_string())
-        } else if lower.contains("intel") {
-            Some("Intel".to_string())
         } else {
             Some(adapter_compat.to_string())
         }
@@ -1207,5 +1208,140 @@ mod tests {
     fn test_get_memory_metrics() {
         let metrics = HardwareCollector::get_memory_metrics();
         assert!(metrics.in_use_bytes > 0);
+    }
+
+    #[test]
+    fn test_get_gpu_info() {
+        let gpus = HardwareCollector::get_gpu_info();
+        // Can be empty on systems without discrete GPU, but should not panic
+        for gpu in &gpus {
+            assert!(!gpu.id.is_empty());
+            assert!(!gpu.name.is_empty());
+        }
+    }
+
+    #[test]
+    fn test_get_motherboard_info() {
+        let info = HardwareCollector::get_motherboard_info();
+        // Should return at least manufacturer and product (may be "Unknown")
+        assert!(!info.manufacturer.is_empty());
+        assert!(!info.product.is_empty());
+    }
+
+    #[test]
+    fn test_get_monitors() {
+        let monitors = HardwareCollector::get_monitors();
+        // Should return at least one monitor on a desktop system
+        for monitor in &monitors {
+            assert!(!monitor.id.is_empty());
+            assert!(!monitor.name.is_empty());
+        }
+    }
+
+    #[cfg(target_os = "windows")]
+    #[test]
+    fn test_decode_memory_type() {
+        assert_eq!(HardwareCollector::decode_memory_type(0), "Unknown");
+        assert_eq!(HardwareCollector::decode_memory_type(20), "DDR");
+        assert_eq!(HardwareCollector::decode_memory_type(21), "DDR2");
+        assert_eq!(HardwareCollector::decode_memory_type(24), "DDR3");
+        assert_eq!(HardwareCollector::decode_memory_type(26), "DDR4");
+        assert_eq!(HardwareCollector::decode_memory_type(99), "Type 99");
+    }
+
+    #[cfg(target_os = "windows")]
+    #[test]
+    fn test_extract_speed_from_part_number() {
+        // DDR5 speeds
+        assert_eq!(HardwareCollector::extract_speed_from_part_number("FLBD516G6000HC38GBKT"), 6000);
+        assert_eq!(HardwareCollector::extract_speed_from_part_number("CMK32GX5M2B5600C36"), 5600);
+
+        // DDR4 speeds
+        assert_eq!(HardwareCollector::extract_speed_from_part_number("CMK16GX4M2B3200C16"), 3200);
+        assert_eq!(HardwareCollector::extract_speed_from_part_number("F4-3600C16D-16GTZNC"), 3600);
+
+        // No valid speed found
+        assert_eq!(HardwareCollector::extract_speed_from_part_number("RANDOMPART123"), 0);
+        assert_eq!(HardwareCollector::extract_speed_from_part_number(""), 0);
+    }
+
+    #[cfg(target_os = "windows")]
+    #[test]
+    fn test_extract_gpu_vendor() {
+        assert_eq!(HardwareCollector::extract_gpu_vendor("NVIDIA Corporation"), Some("NVIDIA".to_string()));
+        assert_eq!(HardwareCollector::extract_gpu_vendor("AMD Radeon"), Some("AMD".to_string()));
+        assert_eq!(HardwareCollector::extract_gpu_vendor("ATI Technologies"), Some("AMD".to_string()));
+        assert_eq!(HardwareCollector::extract_gpu_vendor("Intel Corporation"), Some("Intel".to_string()));
+        assert_eq!(HardwareCollector::extract_gpu_vendor("CustomVendor"), Some("CustomVendor".to_string()));
+    }
+
+    #[cfg(target_os = "windows")]
+    #[test]
+    fn test_get_gpu_driver_link() {
+        assert!(HardwareCollector::get_gpu_driver_link("NVIDIA", "").unwrap().contains("nvidia.com"));
+        assert!(HardwareCollector::get_gpu_driver_link("AMD", "").unwrap().contains("amd.com"));
+        assert!(HardwareCollector::get_gpu_driver_link("Intel", "").unwrap().contains("intel.com"));
+        assert!(HardwareCollector::get_gpu_driver_link("Unknown", "").is_none());
+    }
+
+    #[cfg(target_os = "windows")]
+    #[test]
+    fn test_get_motherboard_support_url() {
+        assert!(HardwareCollector::get_motherboard_support_url("ASUS", "").unwrap().contains("asus.com"));
+        assert!(HardwareCollector::get_motherboard_support_url("MSI", "").unwrap().contains("msi.com"));
+        assert!(HardwareCollector::get_motherboard_support_url("Gigabyte", "").unwrap().contains("gigabyte.com"));
+        assert!(HardwareCollector::get_motherboard_support_url("ASRock", "").unwrap().contains("asrock.com"));
+        assert!(HardwareCollector::get_motherboard_support_url("Unknown", "").is_none());
+    }
+
+    #[cfg(target_os = "windows")]
+    #[test]
+    fn test_parse_edid_valid() {
+        // Valid EDID header + manufacturer "DEL" (Dell) + monitor name
+        let mut edid = vec![0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00]; // Header
+
+        // Manufacturer ID for Dell: 'D'=4, 'E'=5, 'L'=12
+        // Encoded as: ((4 << 10) | (5 << 5) | 12) = 0x10AC
+        edid.push(0x10); // Byte 8
+        edid.push(0xAC); // Byte 9
+
+        // Product code (2 bytes, little endian)
+        edid.push(0xA2); // Byte 10
+        edid.push(0xA1); // Byte 11
+
+        // Pad to 54 bytes (before descriptors)
+        edid.resize(54, 0x00);
+
+        // Descriptor 1: Monitor name (starts at byte 54)
+        // 0x00, 0x00, 0x00, 0xFC = Monitor name descriptor
+        edid.extend_from_slice(&[0x00, 0x00, 0x00, 0xFC, 0x00]); // Descriptor header
+        edid.extend_from_slice(b"DELL S2722DGM"); // 13 chars
+
+        // Pad to 128 bytes
+        edid.resize(128, 0x00);
+
+        let result = HardwareCollector::parse_edid(&edid);
+        assert!(result.is_some());
+        let (manufacturer, name) = result.unwrap();
+        assert_eq!(manufacturer, "Dell");
+        assert_eq!(name, "DELL S2722DGM");
+    }
+
+    #[cfg(target_os = "windows")]
+    #[test]
+    fn test_parse_edid_invalid_header() {
+        // Invalid EDID header
+        let edid = vec![0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08];
+        let result = HardwareCollector::parse_edid(&edid);
+        assert!(result.is_none());
+    }
+
+    #[cfg(target_os = "windows")]
+    #[test]
+    fn test_parse_edid_too_short() {
+        // EDID too short (less than 128 bytes)
+        let edid = vec![0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00];
+        let result = HardwareCollector::parse_edid(&edid);
+        assert!(result.is_none());
     }
 }

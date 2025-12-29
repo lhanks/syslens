@@ -3,6 +3,7 @@
 use sysinfo::{System, Process, ProcessStatus, Users};
 use crate::models::process::{ProcessInfo, ProcessSummary};
 
+/// Collector for process information
 pub struct ProcessCollector;
 
 impl ProcessCollector {
@@ -84,5 +85,87 @@ impl ProcessCollector {
             disk_read_bytes: disk_usage.read_bytes,
             disk_write_bytes: disk_usage.written_bytes,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_get_processes() {
+        let processes = ProcessCollector::get_processes();
+        // System should have at least some processes
+        assert!(!processes.is_empty(), "Should have at least one process");
+
+        // All processes should have valid data
+        for process in &processes {
+            // PID 0 is valid on Windows (System Idle Process)
+            assert!(!process.name.is_empty(), "Process should have a name");
+            assert!(process.cpu_usage >= 0.0, "CPU usage should be non-negative");
+        }
+    }
+
+    #[test]
+    fn test_get_process_summary() {
+        let summary = ProcessCollector::get_process_summary();
+
+        // Should have at least one process
+        assert!(summary.total_count > 0, "Should have at least one process");
+
+        // Running + sleeping should not exceed total
+        assert!(
+            summary.running_count + summary.sleeping_count <= summary.total_count,
+            "Running + sleeping should not exceed total"
+        );
+
+        // CPU usage should be within valid range (0-100%)
+        assert!(summary.total_cpu_usage >= 0.0, "CPU usage should be non-negative");
+        assert!(summary.total_cpu_usage <= 100.0, "CPU usage should not exceed 100%");
+
+        // Memory should be positive
+        assert!(summary.total_memory_bytes > 0, "Total memory should be positive");
+    }
+
+    #[test]
+    fn test_process_info_serialization() {
+        let process_info = ProcessInfo {
+            pid: 1234,
+            parent_pid: Some(1000),
+            name: "test_process".to_string(),
+            cpu_usage: 5.5,
+            memory_bytes: 1024 * 1024 * 100, // 100 MB
+            virtual_memory_bytes: 1024 * 1024 * 500, // 500 MB
+            status: "Run".to_string(),
+            user: Some("testuser".to_string()),
+            command: "test_process --flag".to_string(),
+            start_time: 1704067200, // 2024-01-01 00:00:00 UTC
+            disk_read_bytes: 1024 * 1024,
+            disk_write_bytes: 512 * 1024,
+        };
+
+        let json = serde_json::to_string(&process_info).unwrap();
+        assert!(json.contains("\"pid\":1234"));
+        assert!(json.contains("\"parentPid\":1000"));
+        assert!(json.contains("\"name\":\"test_process\""));
+        assert!(json.contains("\"cpuUsage\":5.5"));
+        assert!(json.contains("\"status\":\"Run\""));
+    }
+
+    #[test]
+    fn test_process_summary_serialization() {
+        let summary = ProcessSummary {
+            total_count: 100,
+            running_count: 10,
+            sleeping_count: 85,
+            total_cpu_usage: 25.5,
+            total_memory_bytes: 1024 * 1024 * 1024 * 8, // 8 GB
+        };
+
+        let json = serde_json::to_string(&summary).unwrap();
+        assert!(json.contains("\"totalCount\":100"));
+        assert!(json.contains("\"runningCount\":10"));
+        assert!(json.contains("\"sleepingCount\":85"));
+        assert!(json.contains("\"totalCpuUsage\":25.5"));
     }
 }

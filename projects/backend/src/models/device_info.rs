@@ -316,3 +316,140 @@ impl Default for LocalDatabase {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_device_type_display() {
+        assert_eq!(format!("{}", DeviceType::Cpu), "CPU");
+        assert_eq!(format!("{}", DeviceType::Gpu), "GPU");
+        assert_eq!(format!("{}", DeviceType::Motherboard), "Motherboard");
+        assert_eq!(format!("{}", DeviceType::Memory), "Memory");
+        assert_eq!(format!("{}", DeviceType::Storage), "Storage");
+    }
+
+    #[test]
+    fn test_data_source_display() {
+        assert_eq!(format!("{}", DataSource::LocalDatabase), "Local Database");
+        assert_eq!(format!("{}", DataSource::ManufacturerWebsite), "Manufacturer Website");
+        assert_eq!(format!("{}", DataSource::ThirdPartyDatabase), "Third-Party Database");
+        assert_eq!(format!("{}", DataSource::AiAgent), "AI Agent");
+        assert_eq!(format!("{}", DataSource::Cache), "Cache");
+    }
+
+    #[test]
+    fn test_device_type_serialization() {
+        let cpu = DeviceType::Cpu;
+        let json = serde_json::to_string(&cpu).unwrap();
+        assert_eq!(json, "\"Cpu\"");
+
+        let gpu = DeviceType::Gpu;
+        let json = serde_json::to_string(&gpu).unwrap();
+        assert_eq!(json, "\"Gpu\"");
+    }
+
+    #[test]
+    fn test_device_type_deserialization() {
+        let cpu: DeviceType = serde_json::from_str("\"Cpu\"").unwrap();
+        assert_eq!(cpu, DeviceType::Cpu);
+
+        let gpu: DeviceType = serde_json::from_str("\"Gpu\"").unwrap();
+        assert_eq!(gpu, DeviceType::Gpu);
+    }
+
+    #[test]
+    fn test_device_identifier_serialization() {
+        let identifier = DeviceIdentifier {
+            manufacturer: "Intel".to_string(),
+            model: "Core i7-12700K".to_string(),
+            part_number: Some("BX8071512700K".to_string()),
+            serial_number: None,
+            hardware_ids: vec!["PCI\\VEN_8086".to_string()],
+        };
+
+        let json = serde_json::to_string(&identifier).unwrap();
+        assert!(json.contains("\"manufacturer\":\"Intel\""));
+        assert!(json.contains("\"model\":\"Core i7-12700K\""));
+        assert!(json.contains("\"partNumber\":\"BX8071512700K\""));
+        assert!(json.contains("\"serialNumber\":null"));
+        assert!(json.contains("\"hardwareIds\""));
+    }
+
+    #[test]
+    fn test_device_categories_get_by_type() {
+        let mut categories = DeviceCategories::default();
+
+        // Test get_by_type returns empty vectors for each type
+        assert!(categories.get_by_type(&DeviceType::Cpu).is_empty());
+        assert!(categories.get_by_type(&DeviceType::Gpu).is_empty());
+        assert!(categories.get_by_type(&DeviceType::Motherboard).is_empty());
+        assert!(categories.get_by_type(&DeviceType::Memory).is_empty());
+        assert!(categories.get_by_type(&DeviceType::Storage).is_empty());
+
+        // Test get_by_type_mut allows modification
+        categories.get_by_type_mut(&DeviceType::Cpu).push(DeviceDeepInfo {
+            device_id: "test-cpu".to_string(),
+            device_type: DeviceType::Cpu,
+            identifier: DeviceIdentifier {
+                manufacturer: "Intel".to_string(),
+                model: "Test CPU".to_string(),
+                part_number: None,
+                serial_number: None,
+                hardware_ids: vec![],
+            },
+            specifications: None,
+            drivers: None,
+            documentation: None,
+            images: None,
+            metadata: DataMetadata {
+                source: DataSource::LocalDatabase,
+                last_updated: Utc::now(),
+                expires_at: Utc::now(),
+                source_url: None,
+                ai_confidence: None,
+            },
+        });
+
+        assert_eq!(categories.get_by_type(&DeviceType::Cpu).len(), 1);
+    }
+
+    #[test]
+    fn test_local_database_default() {
+        let db = LocalDatabase::default();
+        assert_eq!(db.version, "1.0.0");
+        assert!(db.devices.cpu.is_empty());
+        assert!(db.devices.gpu.is_empty());
+    }
+
+    #[test]
+    fn test_spec_item_serialization() {
+        let item = SpecItem {
+            label: "Base Clock".to_string(),
+            value: "3.6 GHz".to_string(),
+            unit: Some("GHz".to_string()),
+        };
+
+        let json = serde_json::to_string(&item).unwrap();
+        assert!(json.contains("\"label\":\"Base Clock\""));
+        assert!(json.contains("\"value\":\"3.6 GHz\""));
+        assert!(json.contains("\"unit\":\"GHz\""));
+    }
+
+    #[test]
+    fn test_driver_info_defaults() {
+        let driver_info = DriverInfo {
+            installed_version: Some("1.0.0".to_string()),
+            latest_version: None,
+            download_url: None,
+            release_date: None,
+            release_notes_url: None,
+            driver_page_url: None,
+            update_available: false,
+        };
+
+        let json = serde_json::to_string(&driver_info).unwrap();
+        assert!(json.contains("\"updateAvailable\":false"));
+    }
+}

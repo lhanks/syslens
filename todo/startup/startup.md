@@ -37,7 +37,7 @@ Tech Stack: Tauri 2.0 (Rust) + Angular 21 + Tailwind CSS
 
 ## 5. Quality
 
-- [ ] 5.1 Set up Rust test framework with unit tests
+- [x] 5.1 Set up Rust test framework with unit tests
 - [ ] 5.2 Set up Angular test framework (Jasmine/Karma)
 - [x] 5.3 Configure ESLint for frontend
 - [x] 5.4 Configure Clippy for backend
@@ -77,8 +77,8 @@ Tech Stack: Tauri 2.0 (Rust) + Angular 21 + Tailwind CSS
 ## Progress
 
 - Total Tasks: 30
-- Completed: 18
-- Remaining: 12
+- Completed: 19
+- Remaining: 11
 
 Last Updated: 2025-12-29 (Session 6)
 
@@ -160,6 +160,7 @@ Last Updated: 2025-12-29 (Session 6)
 - [x] 4.31 Add process details dialog (ProcessDetailModalComponent with 3 tabs: Overview, Resources, Hierarchy)
 
 ### Quality
+- [x] 5.1 Set up Rust test framework with unit tests (56 tests: models, collectors, services)
 - [x] 5.3 Configure ESLint for frontend (ESLint 9 flat config with Angular plugins)
 - [x] 5.4 Configure Clippy for backend (clippy.toml + fixed all warnings)
 - [x] 5.5 Add pre-commit hooks (lint, format) with Husky
