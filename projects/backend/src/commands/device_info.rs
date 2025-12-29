@@ -1,7 +1,7 @@
 //! Tauri commands for deep device information.
 
 use crate::models::{DataSource, DeviceDeepInfo, DeviceIdentifier, DeviceType};
-use crate::services::{CacheManager, LocalDatabaseManager};
+use crate::services::{CacheManager, InternetFetcher, LocalDatabaseManager};
 use chrono::{Duration, Utc};
 use std::sync::OnceLock;
 
@@ -10,6 +10,9 @@ static CACHE_MANAGER: OnceLock<CacheManager> = OnceLock::new();
 
 /// Global local database manager instance
 static LOCAL_DB_MANAGER: OnceLock<LocalDatabaseManager> = OnceLock::new();
+
+/// Global internet fetcher instance
+static INTERNET_FETCHER: OnceLock<InternetFetcher> = OnceLock::new();
 
 /// Get or initialize the cache manager.
 fn get_cache_manager() -> &'static CacheManager {
@@ -25,12 +28,19 @@ fn get_local_db_manager() -> &'static LocalDatabaseManager {
     })
 }
 
+/// Get or initialize the internet fetcher.
+fn get_internet_fetcher() -> &'static InternetFetcher {
+    INTERNET_FETCHER.get_or_init(|| {
+        InternetFetcher::new().expect("Failed to initialize InternetFetcher")
+    })
+}
+
 /// Get deep device information by device ID and type.
 ///
 /// Data retrieval order:
 /// 1. Check cache (unless force_refresh)
 /// 2. Check local database
-/// 3. (Future: Internet fetch)
+/// 3. Fetch from internet (manufacturer websites)
 /// 4. (Future: AI agent lookup)
 #[tauri::command]
 pub async fn get_device_deep_info(
@@ -40,6 +50,7 @@ pub async fn get_device_deep_info(
 ) -> Result<DeviceDeepInfo, String> {
     let cache = get_cache_manager();
     let local_db = get_local_db_manager();
+    let fetcher = get_internet_fetcher();
 
     // 1. Check cache first (unless force_refresh)
     if !force_refresh {
@@ -67,7 +78,28 @@ pub async fn get_device_deep_info(
         return Ok(db_info);
     }
 
-    // 3. (Future: Internet fetch)
+    // 3. Fetch from internet (manufacturer websites)
+    log::info!("Local DB miss, attempting internet fetch for: {}", device_id);
+    match fetcher.fetch_device_info(&identifier, &device_type).await {
+        Ok(mut web_info) => {
+            log::info!("Successfully fetched device info from web for: {}", device_id);
+
+            // Ensure device_id is set correctly
+            web_info.device_id = device_id.clone();
+
+            // Cache the result
+            let cache_ttl = get_cache_ttl(&device_type);
+            if let Err(e) = cache.set(device_id.clone(), device_type.clone(), web_info.clone(), cache_ttl) {
+                log::warn!("Failed to cache web-fetched device info: {}", e);
+            }
+
+            return Ok(web_info);
+        }
+        Err(e) => {
+            log::warn!("Internet fetch failed for {}: {}", device_id, e);
+        }
+    }
+
     // 4. (Future: AI agent lookup)
 
     // Return not found error

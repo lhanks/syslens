@@ -71,7 +71,7 @@ impl LocalDatabaseManager {
     fn save(&self) -> Result<()> {
         let db = self.database.read()
             .map_err(|_| anyhow::anyhow!("Failed to acquire read lock"))?;
-        Self::save_database_file(&self.db_file, &*db)
+        Self::save_database_file(&self.db_file, &db)
     }
 
     /// Search for a device in the local database using fuzzy matching.
