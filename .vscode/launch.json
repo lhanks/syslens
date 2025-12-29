@@ -1,0 +1,22 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug Tauri App",
+      "type": "lldb",
+      "request": "launch",
+      "cargo": {
+        "args": ["build", "--manifest-path", "projects/backend/Cargo.toml"]
+      }
+    },
+    {
+      "name": "Debug Rust Tests",
+      "type": "lldb",
+      "request": "launch",
+      "cargo": {
+        "args": ["test", "--no-run", "--manifest-path", "projects/backend/Cargo.toml"]
+      },
+      "cwd": "${workspaceFolder}/projects/backend"
+    }
+  ]
+}
