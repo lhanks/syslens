@@ -36,6 +36,29 @@ jobs:
       - name: Type check
         run: npx tsc --noEmit
 
+  # Frontend tests
+  frontend-test:
+    name: Frontend Tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: projects/ui
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: projects/ui/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm test -- --watch=false --browsers=ChromeHeadless
+
   # Frontend build
   frontend-build:
     name: Frontend Build
@@ -70,7 +93,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Setup Rust
-        uses: dtolnay/rust-action@stable
+        uses: dtolnay/rust-toolchain@stable
         with:
           components: clippy
 
@@ -101,7 +124,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Setup Rust
-        uses: dtolnay/rust-action@stable
+        uses: dtolnay/rust-toolchain@stable
 
       - name: Cache cargo
         uses: actions/cache@v4
@@ -130,7 +153,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Setup Rust
-        uses: dtolnay/rust-action@stable
+        uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt
 

@@ -1,0 +1,57 @@
+<svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <title>Syslens Icon</title>
+  <defs>
+    <linearGradient id="primary-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#3B82F6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#8B5CF6;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="glow-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#06B6D4;stop-opacity:0.3" />
+      <stop offset="100%" style="stop-color:#8B5CF6;stop-opacity:0.3" />
+    </linearGradient>
+  </defs>
+
+  <!-- Outer lens ring -->
+  <circle cx="128" cy="128" r="96" fill="none" stroke="url(#primary-gradient)" stroke-width="8" opacity="0.4"/>
+
+  <!-- Inner lens ring -->
+  <circle cx="128" cy="128" r="80" fill="none" stroke="url(#primary-gradient)" stroke-width="4"/>
+
+  <!-- Graph lines (system metrics visualization) -->
+  <g opacity="0.9">
+    <!-- Line 1: CPU activity -->
+    <path d="M 60 140 Q 80 120, 100 135 T 140 125 T 180 110"
+          fill="none" stroke="#3B82F6" stroke-width="3" stroke-linecap="round"/>
+
+    <!-- Line 2: Memory usage -->
+    <path d="M 60 155 Q 80 145, 100 150 T 140 145 T 180 135"
+          fill="none" stroke="#8B5CF6" stroke-width="3" stroke-linecap="round"/>
+
+    <!-- Line 3: Network activity -->
+    <path d="M 60 170 Q 80 160, 100 165 T 140 155 T 180 150"
+          fill="none" stroke="#06B6D4" stroke-width="3" stroke-linecap="round"/>
+  </g>
+
+  <!-- Data points -->
+  <g fill="url(#primary-gradient)">
+    <circle cx="100" cy="135" r="4"/>
+    <circle cx="140" cy="125" r="4"/>
+    <circle cx="180" cy="110" r="4"/>
+
+    <circle cx="100" cy="150" r="3" fill="#8B5CF6"/>
+    <circle cx="140" cy="145" r="3" fill="#8B5CF6"/>
+    <circle cx="180" cy="135" r="3" fill="#8B5CF6"/>
+  </g>
+
+  <!-- Center focal point -->
+  <circle cx="128" cy="90" r="6" fill="url(#primary-gradient)"/>
+  <circle cx="128" cy="90" r="3" fill="#FFFFFF"/>
+
+  <!-- Crosshair overlay for "lens focus" -->
+  <g opacity="0.3" stroke="#3B82F6" stroke-width="1.5">
+    <line x1="128" y1="60" x2="128" y2="85"/>
+    <line x1="128" y1="195" x2="128" y2="220"/>
+    <line x1="60" y1="128" x2="85" y2="128"/>
+    <line x1="195" y1="128" x2="220" y2="128"/>
+  </g>
+</svg>
