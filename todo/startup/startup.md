@@ -50,7 +50,7 @@ Tech Stack: Tauri 2.0 (Rust) + Angular 21 + Tailwind CSS
 
 ## 7. Release
 
-- [ ] 7.1 Test Windows build and installer
+- [x] 7.1 Test Windows build and installer
 - [ ] 7.2 Create release checklist
 - [ ] 7.3 Tag v1.0.0 release
 
@@ -77,8 +77,8 @@ Tech Stack: Tauri 2.0 (Rust) + Angular 21 + Tailwind CSS
 ## Progress
 
 - Total Tasks: 30
-- Completed: 21
-- Remaining: 9
+- Completed: 22
+- Remaining: 8
 
 Last Updated: 2025-12-29 (Session 6)
 
@@ -169,3 +169,6 @@ Last Updated: 2025-12-29 (Session 6)
 
 ### Documentation
 - [x] 6.1 Complete README with build instructions
+
+### Release
+- [x] 7.1 Test Windows build and installer (NSIS + MSI both passed)
