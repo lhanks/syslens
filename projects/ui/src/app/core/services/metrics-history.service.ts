@@ -8,6 +8,8 @@ import { NetworkService } from './network.service';
 import { NetworkAdapter, AdapterStats, MemoryInfo } from '../models';
 
 const MAX_HISTORY_POINTS = 60; // 60 seconds of history
+const NETWORK_EMA_ALPHA = 0.3; // Smoothing factor for network speeds (0-1, lower = smoother)
+const MAX_DECAY_RATE = 0.95; // How fast the smoothed max decreases (per update)
 
 /**
  * Service for continuous metrics collection and history tracking.
@@ -46,6 +48,13 @@ export class MetricsHistoryService implements OnDestroy {
   private memoryInfo: MemoryInfo | null = null;
   private isStarted = false;
 
+  // Smoothed network speeds (EMA filtered)
+  private smoothedDownSpeed = 0;
+  private smoothedUpSpeed = 0;
+
+  // Smoothed max value for stable graph scaling
+  private _smoothedNetworkMax = signal(1024); // Start with 1KB minimum
+
   // Public read-only accessors
   cpuHistory = computed(() => this._cpuHistory());
   memoryHistory = computed(() => this._memoryHistory());
@@ -65,13 +74,8 @@ export class MetricsHistoryService implements OnDestroy {
   networkDownSpeed = computed(() => this._networkDownSpeed());
   networkUpSpeed = computed(() => this._networkUpSpeed());
 
-  networkMaxSpeed = computed(() => {
-    const down = this._networkDownHistory();
-    const up = this._networkUpHistory();
-    const maxDown = Math.max(...down, 1);
-    const maxUp = Math.max(...up, 1);
-    return Math.max(maxDown, maxUp);
-  });
+  // Use smoothed max for stable graph scaling (prevents jitter from scale changes)
+  networkMaxSpeed = computed(() => this._smoothedNetworkMax());
 
   /**
    * Start continuous metrics polling.
@@ -184,13 +188,54 @@ export class MetricsHistoryService implements OnDestroy {
       });
     }
 
-    const downSpeed = Math.round(totalDownloadSpeed);
-    const upSpeed = Math.round(totalUploadSpeed);
+    // Apply exponential moving average (EMA) smoothing to reduce jitter
+    this.smoothedDownSpeed = this.smoothedDownSpeed === 0
+      ? totalDownloadSpeed
+      : this.smoothedDownSpeed * (1 - NETWORK_EMA_ALPHA) + totalDownloadSpeed * NETWORK_EMA_ALPHA;
+    this.smoothedUpSpeed = this.smoothedUpSpeed === 0
+      ? totalUploadSpeed
+      : this.smoothedUpSpeed * (1 - NETWORK_EMA_ALPHA) + totalUploadSpeed * NETWORK_EMA_ALPHA;
+
+    const downSpeed = Math.round(this.smoothedDownSpeed);
+    const upSpeed = Math.round(this.smoothedUpSpeed);
 
     this._networkDownSpeed.set(downSpeed);
     this._networkUpSpeed.set(upSpeed);
     this.pushToHistory(this._networkDownHistory, downSpeed);
     this.pushToHistory(this._networkUpHistory, upSpeed);
+
+    // Update smoothed max for stable graph scaling
+    this.updateSmoothedMax(downSpeed, upSpeed);
+  }
+
+  private updateSmoothedMax(downSpeed: number, upSpeed: number): void {
+    const currentMax = this._smoothedNetworkMax();
+    const actualMax = Math.max(downSpeed, upSpeed);
+
+    // If actual value exceeds current max, increase immediately (with some headroom)
+    if (actualMax > currentMax) {
+      // Round up to a nice value with 20% headroom
+      this._smoothedNetworkMax.set(this.roundToNiceValue(actualMax * 1.2));
+    } else {
+      // Decay slowly towards the actual max (prevents sudden scale drops)
+      const decayedMax = currentMax * MAX_DECAY_RATE;
+      const minimumMax = Math.max(actualMax * 1.2, 1024); // At least 1KB or 20% above current
+      this._smoothedNetworkMax.set(Math.max(decayedMax, this.roundToNiceValue(minimumMax)));
+    }
+  }
+
+  private roundToNiceValue(value: number): number {
+    // Round to nice byte values for cleaner axis labels
+    const KB = 1024;
+    const MB = 1024 * 1024;
+
+    if (value < KB) return KB; // Minimum 1KB
+    if (value < 10 * KB) return Math.ceil(value / KB) * KB; // Round to nearest KB
+    if (value < 100 * KB) return Math.ceil(value / (10 * KB)) * 10 * KB; // Round to nearest 10KB
+    if (value < MB) return Math.ceil(value / (100 * KB)) * 100 * KB; // Round to nearest 100KB
+    if (value < 10 * MB) return Math.ceil(value / MB) * MB; // Round to nearest MB
+    if (value < 100 * MB) return Math.ceil(value / (10 * MB)) * 10 * MB; // Round to nearest 10MB
+    return Math.ceil(value / (100 * MB)) * 100 * MB; // Round to nearest 100MB
   }
 
   private pushToHistory(historySignal: ReturnType<typeof signal<number[]>>, value: number): void {
