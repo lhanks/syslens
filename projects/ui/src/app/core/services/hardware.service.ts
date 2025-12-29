@@ -70,10 +70,10 @@ export class HardwareService {
   }
 
   /**
-   * Get CPU metrics with polling (every second).
+   * Get CPU metrics with polling (every 2 seconds for performance).
    */
   getCpuMetricsPolling(): Observable<CpuMetrics> {
-    return interval(1000).pipe(
+    return interval(2000).pipe(
       startWith(0),
       switchMap(() => this.getCpuMetrics())
     );
@@ -107,10 +107,10 @@ export class HardwareService {
   }
 
   /**
-   * Get memory metrics with polling (every second).
+   * Get memory metrics with polling (every 2 seconds for performance).
    */
   getMemoryMetricsPolling(): Observable<MemoryMetrics> {
-    return interval(1000).pipe(
+    return interval(2000).pipe(
       startWith(0),
       switchMap(() => this.getMemoryMetrics())
     );

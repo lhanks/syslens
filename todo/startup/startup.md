@@ -16,10 +16,15 @@ Tech Stack: Tauri 2.0 (Rust) + Angular 21 + Tailwind CSS
 ** IMPORTANT ** Process the tasks below (in this section). Expand them if needed and put them in the appropriate sections below.
 ** IMPORTANT ** Do not remove this section. Just clear out the tasks once processed.
 
-- Analyze and optimize the codebase for performance. The app seems to consume a lot of CPU.
+(none)
 
 ## Recently Completed
 
+- [x] Optimize backend CPU usage with shared SysInfoState
+  - Created state.rs with cached System instance (avoids recreating on every call)
+  - Updated CPU/memory/process commands to use shared state
+  - Increased frontend polling intervals from 1s to 2s
+  - Reduced 50ms blocking sleeps by caching refresh timestamps
 - [x] Add option to kill process on the process details dialog
 
 ## Remaining Tasks
@@ -54,7 +59,7 @@ The following tasks were deferred for future work:
 - Complete system information dashboard with real-time monitoring
 - CPU, memory, GPU, storage, network, and process monitoring
 - Internet-enhanced device lookup with Claude AI integration
-- 103 tests (56 Rust + 47 Angular)
+- 112 tests (65 Rust + 47 Angular)
 - Windows installer builds tested (NSIS + MSI)
 - Professional branding with logo and style guide
 - Comprehensive documentation

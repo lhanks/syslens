@@ -1,21 +1,91 @@
 //! Process-related Tauri commands
 
-use crate::collectors::ProcessCollector;
 use crate::models::{ProcessInfo, ProcessSummary};
-use sysinfo::{Pid, System};
+use crate::state::SysInfoState;
+use sysinfo::{Pid, Process, ProcessStatus, System, Users};
+use tauri::State;
 
-/// Get list of all running processes
+/// Get list of all running processes using shared state for efficiency
 #[tauri::command]
-pub fn get_processes() -> Vec<ProcessInfo> {
-    log::debug!("Command: get_processes");
-    ProcessCollector::get_processes()
+pub fn get_processes(state: State<SysInfoState>) -> Vec<ProcessInfo> {
+    log::debug!("Command: get_processes (optimized)");
+
+    state.with_processes(|sys, users, cpu_count| {
+        sys.processes()
+            .iter()
+            .map(|(pid, process)| process_to_info(*pid, process, users, cpu_count))
+            .collect()
+    })
 }
 
-/// Get process summary statistics
+/// Get process summary statistics using shared state for efficiency
 #[tauri::command]
-pub fn get_process_summary() -> ProcessSummary {
-    log::debug!("Command: get_process_summary");
-    ProcessCollector::get_process_summary()
+pub fn get_process_summary(state: State<SysInfoState>) -> ProcessSummary {
+    log::debug!("Command: get_process_summary (optimized)");
+
+    state.with_processes(|sys, _users, cpu_count| {
+        let processes: Vec<&Process> = sys.processes().values().collect();
+
+        let running_count = processes
+            .iter()
+            .filter(|p| matches!(p.status(), ProcessStatus::Run))
+            .count();
+
+        let sleeping_count = processes
+            .iter()
+            .filter(|p| matches!(p.status(), ProcessStatus::Sleep))
+            .count();
+
+        // Normalize CPU usage by dividing by core count
+        let total_cpu_usage: f32 =
+            processes.iter().map(|p| p.cpu_usage()).sum::<f32>() / cpu_count.max(1.0);
+
+        let total_memory_bytes: u64 = processes.iter().map(|p| p.memory()).sum();
+
+        ProcessSummary {
+            total_count: processes.len(),
+            running_count,
+            sleeping_count,
+            total_cpu_usage,
+            total_memory_bytes,
+        }
+    })
+}
+
+fn process_to_info(
+    pid: sysinfo::Pid,
+    process: &Process,
+    users: &Users,
+    cpu_count: f32,
+) -> ProcessInfo {
+    let user = process
+        .user_id()
+        .and_then(|uid| users.get_user_by_id(uid).map(|u| u.name().to_string()));
+
+    let disk_usage = process.disk_usage();
+
+    // Normalize CPU usage by dividing by core count
+    let normalized_cpu = process.cpu_usage() / cpu_count.max(1.0);
+
+    ProcessInfo {
+        pid: pid.as_u32(),
+        parent_pid: process.parent().map(|p| p.as_u32()),
+        name: process.name().to_string_lossy().to_string(),
+        cpu_usage: normalized_cpu,
+        memory_bytes: process.memory(),
+        virtual_memory_bytes: process.virtual_memory(),
+        status: format!("{:?}", process.status()),
+        user,
+        command: process
+            .cmd()
+            .iter()
+            .map(|s| s.to_string_lossy())
+            .collect::<Vec<_>>()
+            .join(" "),
+        start_time: process.start_time(),
+        disk_read_bytes: disk_usage.read_bytes,
+        disk_write_bytes: disk_usage.written_bytes,
+    }
 }
 
 /// Kill a process by PID
@@ -46,17 +116,7 @@ pub fn kill_process(pid: u32) -> Result<bool, String> {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-
-    #[test]
-    fn test_get_processes() {
-        let processes = get_processes();
-        assert!(!processes.is_empty());
-    }
-
-    #[test]
-    fn test_get_process_summary() {
-        let summary = get_process_summary();
-        assert!(summary.total_count > 0);
-    }
+    // Note: get_processes and get_process_summary tests moved to state module
+    // since they now require Tauri State which cannot be easily instantiated in unit tests
+    // The state module has comprehensive tests for process functionality
 }

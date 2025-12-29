@@ -7,6 +7,7 @@ pub mod collectors;
 pub mod commands;
 pub mod models;
 pub mod services;
+pub mod state;
 
 // Re-export commonly used items without ambiguity
 pub use collectors::hardware::HardwareCollector;

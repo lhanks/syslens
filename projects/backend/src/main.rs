@@ -8,6 +8,7 @@
 )]
 
 use syslens::commands;
+use syslens::state::SysInfoState;
 
 fn main() {
     // Initialize logging
@@ -17,8 +18,12 @@ fn main() {
 
     log::info!("Starting Syslens v{}", env!("CARGO_PKG_VERSION"));
 
+    // Create shared system state for efficient sysinfo operations
+    let sysinfo_state = SysInfoState::new();
+
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
+        .manage(sysinfo_state)
         .invoke_handler(tauri::generate_handler![
             // Network commands
             commands::get_network_adapters,
