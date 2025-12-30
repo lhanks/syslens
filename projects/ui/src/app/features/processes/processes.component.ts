@@ -352,19 +352,25 @@ interface ProcessGroup {
                   </tr>
                   <!-- Expanded Child Processes -->
                   @if (group.expanded) {
-                    @for (process of group.processes; track process.pid) {
-                      <tr class="border-b border-syslens-border-primary hover:bg-syslens-bg-hover transition-colors cursor-pointer bg-syslens-bg-primary/50"
+                    @for (process of group.processes; track process.pid; let last = $last; let i = $index) {
+                      <tr class="border-b border-syslens-border-primary hover:bg-syslens-bg-hover transition-colors cursor-pointer"
                           (click)="openProcessDetails(process); $event.stopPropagation()">
-                        <td class="table-cell pl-10">
-                          <div class="flex flex-col">
-                            <span class="text-syslens-text-primary font-medium truncate max-w-[180px]" [title]="process.name">
-                              {{ process.name }}
-                            </span>
-                            @if (process.command && process.command !== process.name) {
-                              <span class="text-xs text-syslens-text-muted truncate max-w-[180px]" [title]="process.command">
-                                {{ process.command }}
+                        <td class="table-cell">
+                          <div class="flex items-start gap-0">
+                            <!-- Tree connector -->
+                            <div class="flex-shrink-0 w-8 flex items-center justify-center text-syslens-text-muted select-none">
+                              <span class="font-mono text-sm">{{ last ? '└' : '├' }}</span>
+                            </div>
+                            <div class="flex flex-col">
+                              <span class="text-syslens-text-secondary truncate max-w-[180px]" [title]="process.name">
+                                {{ process.name }}
                               </span>
-                            }
+                              @if (process.command && process.command !== process.name) {
+                                <span class="text-xs text-syslens-text-muted truncate max-w-[180px]" [title]="process.command">
+                                  {{ process.command }}
+                                </span>
+                              }
+                            </div>
                           </div>
                         </td>
                         <td class="table-cell font-mono text-syslens-text-secondary">{{ process.pid }}</td>
