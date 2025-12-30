@@ -1,15 +1,18 @@
 import { Component, OnInit, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet } from '@angular/router';
-import { SidebarComponent, RightSidebarComponent, StatusBarComponent, AboutDialogComponent } from './shared/components';
+import { SidebarComponent, RightSidebarComponent, StatusBarComponent, TopBarComponent, AboutDialogComponent } from './shared/components';
 import { PreloadService, StateService, MetricsHistoryService, MenuService, ViewSettingsService } from '@core/services';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, SidebarComponent, RightSidebarComponent, StatusBarComponent, AboutDialogComponent],
+  imports: [CommonModule, RouterOutlet, SidebarComponent, RightSidebarComponent, StatusBarComponent, TopBarComponent, AboutDialogComponent],
   template: `
     <div class="flex flex-col h-screen bg-syslens-bg-primary">
+      <!-- Top navigation bar -->
+      <app-top-bar />
+
       <div class="flex flex-1 overflow-hidden">
         <app-sidebar />
 
