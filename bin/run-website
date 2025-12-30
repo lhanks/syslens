@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+WEBSITE_DIR="$PROJECT_ROOT/projects/website"
+
+cd "$WEBSITE_DIR"
+
+# Install dependencies if needed
+if [[ ! -d "node_modules" ]]; then
+    echo "Installing website dependencies..."
+    npm install
+fi
+
+echo "Starting Syslens website..."
+echo "Open http://localhost:3000 in your browser"
+echo ""
+npm run dev

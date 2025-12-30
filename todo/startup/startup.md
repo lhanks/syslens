@@ -5,8 +5,7 @@
 ** IMPORTANT ** Process the tasks below (in this section). Expand them if needed and put them in the appropriate sections below.
 ** IMPORTANT ** Do not remove this section. Just clear out the tasks once processed.
 
-- Create a script to start the website (bin/run-website).
-- create a bin/win folder that contains batch files to launch the scripts in the bin folder. There should be one bat file per script. It should just launch the script in bash.
+(No new tasks)
 
 <!-- Per-adapter network graphs now displayed in Dashboard, Processes, and Sidebar -->
 <!-- Process file paths now display with ellipsis in middle: C:\Windows\...\process.exe -->
