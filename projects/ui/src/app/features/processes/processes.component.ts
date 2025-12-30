@@ -4,10 +4,10 @@ import { FormsModule } from '@angular/forms';
 import { Subject, takeUntil } from 'rxjs';
 import { invoke } from '@tauri-apps/api/core';
 
-import { ProcessService, StatusService, MetricsHistoryService } from '@core/services';
+import { ProcessService, StatusService } from '@core/services';
 import { ProcessInfo, ProcessSummary } from '@core/models';
 import { BytesPipe } from '@shared/pipes';
-import { LineGraphComponent, ProcessDetailModalComponent } from '@shared/components';
+import { ProcessDetailModalComponent } from '@shared/components';
 
 type SortColumn = 'name' | 'pid' | 'cpuUsage' | 'memoryBytes' | 'status';
 type SortDirection = 'asc' | 'desc';
@@ -24,7 +24,7 @@ interface ProcessGroup {
 @Component({
   selector: 'app-processes',
   standalone: true,
-  imports: [CommonModule, FormsModule, BytesPipe, LineGraphComponent, ProcessDetailModalComponent],
+  imports: [CommonModule, FormsModule, BytesPipe, ProcessDetailModalComponent],
   template: `
     <div class="p-6 space-y-6">
       <!-- Header -->
@@ -51,127 +51,6 @@ interface ProcessGroup {
             </div>
           </div>
         }
-      </div>
-
-      <!-- System Resource Summary -->
-      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <!-- CPU -->
-        <div class="card">
-          <div class="flex items-center gap-3 mb-2">
-            <div class="w-8 h-8 rounded-lg bg-syslens-accent-blue/20 flex items-center justify-center">
-              <svg class="w-4 h-4 text-syslens-accent-blue" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
-              </svg>
-            </div>
-            <div class="flex-1">
-              <p class="text-xs text-syslens-text-muted">CPU</p>
-              <p class="text-lg font-bold font-mono text-syslens-text-primary" style="min-width: 5ch;">{{ cpuUsage().toFixed(1) }}%</p>
-            </div>
-          </div>
-          <app-line-graph
-            [series1]="cpuHistory()"
-            [maxValue]="100"
-            [height]="40"
-            series1Color="syslens-accent-blue"
-            [showYAxis]="true"
-            yAxisFormat="percent"
-            [yAxisWidth]="40"
-          />
-        </div>
-
-        <!-- Memory -->
-        <div class="card">
-          <div class="flex items-center gap-3 mb-2">
-            <div class="w-8 h-8 rounded-lg bg-syslens-accent-purple/20 flex items-center justify-center">
-              <svg class="w-4 h-4 text-syslens-accent-purple" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-              </svg>
-            </div>
-            <div class="flex-1">
-              <p class="text-xs text-syslens-text-muted">Memory</p>
-              <p class="text-sm font-bold font-mono text-syslens-text-primary"><span style="min-width: 6ch; display: inline-block; text-align: right;">{{ memoryUsedBytes() | bytes }}</span> / {{ memoryTotalBytes() | bytes }}</p>
-            </div>
-          </div>
-          <app-line-graph
-            [series1]="memoryHistory()"
-            [maxValue]="memoryTotalBytes()"
-            [height]="40"
-            series1Color="syslens-accent-purple"
-            [showYAxis]="true"
-            yAxisFormat="bytes"
-            [yAxisWidth]="40"
-          />
-        </div>
-
-        <!-- Disk -->
-        <div class="card">
-          <div class="flex items-center gap-3 mb-2">
-            <div class="w-8 h-8 rounded-lg bg-syslens-accent-cyan/20 flex items-center justify-center">
-              <svg class="w-4 h-4 text-syslens-accent-cyan" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4" />
-              </svg>
-            </div>
-            <div class="flex-1">
-              <p class="text-xs text-syslens-text-muted">Disk</p>
-              <p class="text-lg font-bold font-mono text-syslens-text-primary" style="min-width: 4ch;">{{ diskActivity().toFixed(0) }}%</p>
-            </div>
-          </div>
-          <app-line-graph
-            [series1]="diskHistory()"
-            [maxValue]="100"
-            [height]="40"
-            series1Color="syslens-accent-cyan"
-            [showYAxis]="true"
-            yAxisFormat="percent"
-            [yAxisWidth]="40"
-          />
-        </div>
-
-        <!-- Network - Per Adapter -->
-        <div class="card">
-          <div class="flex items-center gap-3 mb-2">
-            <div class="w-8 h-8 rounded-lg bg-syslens-accent-green/20 flex items-center justify-center">
-              <svg class="w-4 h-4 text-syslens-accent-green" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M8 16l2.879-2.879m0 0a3 3 0 104.243-4.242 3 3 0 00-4.243 4.242zM21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <div class="flex-1">
-              <p class="text-xs text-syslens-text-muted">Network</p>
-            </div>
-          </div>
-          @if (adapterHistoryArray().length > 0) {
-            <div class="space-y-2 max-h-[120px] overflow-y-auto">
-              @for (adapter of adapterHistoryArray(); track adapter.adapterId) {
-                <div>
-                  <div class="flex items-center justify-between mb-1">
-                    <span class="text-xs text-syslens-text-muted truncate max-w-[80px]" [title]="adapter.adapterName">{{ adapter.adapterName }}</span>
-                    <div class="flex gap-2 text-xs font-mono">
-                      <span class="text-syslens-accent-green">↓{{ adapter.downloadSpeed | bytes }}/s</span>
-                      <span class="text-syslens-accent-blue">↑{{ adapter.uploadSpeed | bytes }}/s</span>
-                    </div>
-                  </div>
-                  <app-line-graph
-                    [series1]="adapter.downloadHistory"
-                    [series2]="adapter.uploadHistory"
-                    [maxValue]="adapter.maxSpeed"
-                    [height]="30"
-                    series1Color="syslens-accent-green"
-                    series2Color="syslens-accent-blue"
-                    [showYAxis]="false"
-                  />
-                </div>
-              }
-            </div>
-          } @else {
-            <div class="h-[40px] flex items-center justify-center text-syslens-text-muted text-xs">
-              No active adapters
-            </div>
-          }
-        </div>
       </div>
 
       <!-- Search and Filters -->
@@ -491,7 +370,6 @@ interface ProcessGroup {
 export class ProcessesComponent implements OnInit, OnDestroy {
   private processService = inject(ProcessService);
   private statusService = inject(StatusService);
-  metricsService = inject(MetricsHistoryService);
   private destroy$ = new Subject<void>();
 
   Math = Math;
@@ -544,27 +422,6 @@ export class ProcessesComponent implements OnInit, OnDestroy {
   // Modal state
   modalOpen = signal(false);
   selectedProcess = signal<ProcessInfo | null>(null);
-
-  // Computed values from shared metrics service
-  cpuUsage = computed(() => this.metricsService.cpuUsage());
-  cpuHistory = computed(() => this.metricsService.cpuHistory());
-  memoryUsage = computed(() => this.metricsService.memoryUsage());
-  memoryHistory = computed(() => this.metricsService.memoryHistory());
-  memoryUsedBytes = computed(() => this.metricsService.memoryUsedBytes());
-  memoryTotalBytes = computed(() => this.metricsService.memoryTotalBytes());
-  diskActivity = computed(() => this.metricsService.diskActivity());
-  diskHistory = computed(() => this.metricsService.diskHistory());
-  networkDown = computed(() => this.metricsService.networkDownSpeed());
-  networkUp = computed(() => this.metricsService.networkUpSpeed());
-  networkDownloadHistory = computed(() => this.metricsService.networkDownHistory());
-  networkUploadHistory = computed(() => this.metricsService.networkUpHistory());
-  networkMaxSpeed = computed(() => this.metricsService.networkMaxSpeed());
-
-  // Per-adapter traffic history
-  adapterHistoryArray = computed(() => {
-    const historyMap = this.metricsService.adapterTrafficHistory();
-    return Array.from(historyMap.values());
-  });
 
   filteredProcesses = computed(() => {
     const term = this.searchTerm().toLowerCase();

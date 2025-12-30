@@ -7,6 +7,7 @@
 
 (No new tasks)
 
+<!-- Resource summary (CPU/MEM/DISK/NETWORK) removed from Processes page -->
 <!-- Network adapters now poll every 10 seconds to detect enable/disable changes -->
 <!-- Active network adapters are sorted to the top of the list -->
 <!-- Per-adapter network graphs now displayed in Dashboard, Processes, and Sidebar -->
