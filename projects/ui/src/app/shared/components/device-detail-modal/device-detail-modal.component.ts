@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output, OnChanges, SimpleChanges, inject } from '@angular/core';
+import { Component, EventEmitter, Input, Output, OnChanges, SimpleChanges, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DeviceInfoService } from '@core/services/device-info.service';
 import {
@@ -7,14 +7,16 @@ import {
   SpecCategory,
   DriverInfo,
   DocumentationLinks,
+  ImageEntry,
 } from '@core/models/device-info.model';
+import { DeviceImageComponent } from '../device-image/device-image.component';
 
 type TabType = 'specs' | 'drivers' | 'docs' | 'images';
 
 @Component({
   selector: 'app-device-detail-modal',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, DeviceImageComponent],
   template: `
     @if (isOpen) {
       <div class="fixed inset-0 z-50 flex items-center justify-center">
@@ -386,23 +388,43 @@ type TabType = 'specs' | 'drivers' | 'docs' | 'images';
                     <!-- Primary Image -->
                     @if (deviceInfo.images!.primaryImage) {
                       <div class="bg-syslens-bg-tertiary rounded-lg p-4 flex items-center justify-center">
-                        <img
+                        <app-device-image
                           [src]="deviceInfo.images!.primaryImage"
+                          [cachedPath]="deviceInfo.images!.primaryImageCached"
                           [alt]="deviceInfo.identifier.model"
-                          class="max-w-full max-h-96 object-contain rounded"
+                          containerClass="max-w-full max-h-96 rounded"
+                          imageClass="max-w-full max-h-96 object-contain"
                         />
+                      </div>
+                    }
+
+                    <!-- Image metadata -->
+                    @if (deviceInfo.images!.metadata) {
+                      <div class="text-xs text-syslens-text-muted flex items-center gap-4">
+                        <span>Source: {{ deviceInfo.images!.metadata.source }}</span>
+                        <span>Fetched: {{ formatFetchedAt(deviceInfo.images!.metadata.fetchedAt) }}</span>
+                        @if (deviceInfo.images!.metadata.aiGenerated) {
+                          <span class="px-1.5 py-0.5 bg-purple-500/20 text-purple-400 rounded">AI Generated</span>
+                        }
                       </div>
                     }
 
                     <!-- Gallery -->
                     @if (deviceInfo.images!.gallery.length) {
+                      <h4 class="text-sm font-medium text-syslens-text-muted mt-4">Gallery</h4>
                       <div class="grid grid-cols-3 gap-4">
-                        @for (imageUrl of deviceInfo.images!.gallery; track imageUrl) {
-                          <div class="bg-syslens-bg-tertiary rounded-lg p-2">
-                            <img
-                              [src]="imageUrl"
+                        @for (image of deviceInfo.images!.gallery; track getImageTrackKey(image, $index)) {
+                          <div
+                            class="bg-syslens-bg-tertiary rounded-lg p-2 cursor-pointer hover:ring-2 hover:ring-syslens-accent-blue transition-all"
+                            (click)="openGalleryImage(image)"
+                          >
+                            <app-device-image
+                              [imageEntry]="isImageEntry(image) ? image : undefined"
+                              [src]="isImageEntry(image) ? undefined : image"
                               [alt]="deviceInfo.identifier.model"
-                              class="w-full h-32 object-contain rounded"
+                              containerClass="w-full h-32 rounded"
+                              imageClass="w-full h-full object-contain"
+                              [showTypeBadge]="true"
                             />
                           </div>
                         }
@@ -410,7 +432,13 @@ type TabType = 'specs' | 'drivers' | 'docs' | 'images';
                     }
                   } @else {
                     <div class="text-center text-syslens-text-muted py-8">
-                      No images available
+                      <svg class="w-16 h-16 mx-auto mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                          d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                        />
+                      </svg>
+                      <p>No images available</p>
+                      <p class="text-xs mt-2">Images will be fetched from product databases when available</p>
                     </div>
                   }
                 </div>
@@ -507,5 +535,45 @@ export class DeviceDetailModalComponent implements OnChanges {
       key,
       value,
     }));
+  }
+
+  /**
+   * Check if a gallery item is an ImageEntry object or a string URL.
+   */
+  isImageEntry(image: ImageEntry | string): image is ImageEntry {
+    return typeof image === 'object' && 'url' in image;
+  }
+
+  /**
+   * Get a tracking key for gallery images.
+   */
+  getImageTrackKey(image: ImageEntry | string, index: number): string {
+    if (this.isImageEntry(image)) {
+      return image.url || `image-${index}`;
+    }
+    return image || `image-${index}`;
+  }
+
+  /**
+   * Format the fetched-at timestamp for display.
+   */
+  formatFetchedAt(fetchedAt: string): string {
+    try {
+      const date = new Date(fetchedAt);
+      return date.toLocaleDateString();
+    } catch {
+      return fetchedAt;
+    }
+  }
+
+  /**
+   * Open a gallery image in a lightbox/expanded view.
+   */
+  openGalleryImage(image: ImageEntry | string): void {
+    const url = this.isImageEntry(image) ? image.url : image;
+    // For now, open in a new tab. Could be replaced with a lightbox later.
+    if (url) {
+      window.open(url, '_blank');
+    }
   }
 }

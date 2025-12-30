@@ -92,8 +92,40 @@ export interface FirmwareLink {
   releaseDate?: string;
 }
 
-/** Product images */
+/** Image type for categorizing product images */
+export type ImageType = 'Product' | 'Packaging' | 'Installation' | 'Diagram' | 'DieShot' | 'Other';
+
+/** A single image entry with metadata */
+export interface ImageEntry {
+  url: string;
+  cachedPath?: string;
+  imageType: ImageType;
+  description?: string;
+  width?: number;
+  height?: number;
+}
+
+/** Image metadata for tracking source and freshness */
+export interface ImageMetadata {
+  fetchedAt: string;
+  source: string;
+  aiGenerated: boolean;
+  cacheKey: string;
+  fileSize?: number;
+}
+
+/** Product images with comprehensive metadata */
 export interface ProductImages {
+  primaryImage?: string;
+  primaryImageCached?: string;
+  gallery: ImageEntry[];
+  thumbnail?: string;
+  thumbnailCached?: string;
+  metadata?: ImageMetadata;
+}
+
+/** Legacy product images for backwards compatibility */
+export interface LegacyProductImages {
   primaryImage?: string;
   gallery: string[];
   thumbnail?: string;
@@ -120,4 +152,58 @@ export interface DatabaseStats {
   cacheTotalEntries: number;
   cacheValidEntries: number;
   cacheExpiredEntries: number;
+}
+
+// =============================================================================
+// Device Enrichment Types (Phase 4)
+// =============================================================================
+
+/** Enriched device information with all available data from multiple sources */
+export interface EnrichedDeviceInfo {
+  identifier: DeviceIdentifier;
+  deviceType: DeviceType;
+  images?: ProductImages;
+  specs: Record<string, string>;
+  categories: SpecCategory[];
+  description?: string;
+  releaseDate?: string;
+  productPage?: string;
+  supportPage?: string;
+  documentation?: DocumentationLinks;
+  drivers?: DriverInfo;
+  sources: string[];
+  confidence: number;
+  fetchedAt?: string;
+  fromCache: boolean;
+}
+
+/** Information about a data source */
+export interface EnrichmentSource {
+  name: string;
+  priority: number;
+}
+
+/** Image cache response */
+export interface ImageCacheResponse {
+  cacheKey: string;
+  filePath: string;
+  isCached: boolean;
+  thumbnailPath?: string;
+}
+
+/** Image cache statistics */
+export interface ImageCacheStats {
+  hits: number;
+  misses: number;
+  downloads: number;
+  downloadFailures: number;
+  totalBytesCached: number;
+  cachedCount: number;
+  totalSizeBytes: number;
+  cacheDir: string;
+}
+
+/** Cleanup response */
+export interface CleanupResponse {
+  imagesRemoved: number;
 }

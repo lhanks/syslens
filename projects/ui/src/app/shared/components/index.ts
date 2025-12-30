@@ -9,4 +9,5 @@ export { StatusBarComponent } from './status-bar/status-bar.component';
 export { TopBarComponent } from './top-bar/top-bar.component';
 export { LineGraphComponent } from './line-graph/line-graph.component';
 export { DeviceDetailModalComponent } from './device-detail-modal/device-detail-modal.component';
+export { DeviceImageComponent } from './device-image/device-image.component';
 export { ProcessDetailModalComponent } from './process-detail-modal/process-detail-modal.component';

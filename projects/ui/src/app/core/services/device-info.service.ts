@@ -5,6 +5,11 @@ import {
   DeviceDeepInfo,
   DeviceType,
   DatabaseStats,
+  EnrichedDeviceInfo,
+  EnrichmentSource,
+  ImageCacheResponse,
+  ImageCacheStats,
+  CleanupResponse,
 } from '../models/device-info.model';
 
 /**
@@ -175,5 +180,150 @@ export class DeviceInfoService {
     if (diffDays < 7) return `${diffDays} days ago`;
     if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
     return `${Math.floor(diffDays / 30)} months ago`;
+  }
+
+  // ===========================================================================
+  // Device Enrichment API (Phase 4)
+  // ===========================================================================
+
+  // Cache for enriched device requests
+  private enrichmentCache = new Map<string, Observable<EnrichedDeviceInfo>>();
+
+  /**
+   * Enrich a device with comprehensive information from multiple sources.
+   * This fetches product images, specifications, documentation, and driver info.
+   * @param deviceType The type of device
+   * @param manufacturer Device manufacturer
+   * @param model Device model
+   * @param forceRefresh Force refresh from sources (bypass cache)
+   */
+  enrichDevice(
+    deviceType: DeviceType,
+    manufacturer: string,
+    model: string,
+    forceRefresh = false
+  ): Observable<EnrichedDeviceInfo> {
+    const cacheKey = `enriched-${deviceType}-${manufacturer}-${model}`;
+
+    // Return cached observable if available and not forcing refresh
+    if (!forceRefresh && this.enrichmentCache.has(cacheKey)) {
+      return this.enrichmentCache.get(cacheKey)!;
+    }
+
+    const request$ = this.tauri
+      .invoke<EnrichedDeviceInfo>('enrich_device', {
+        deviceType,
+        manufacturer,
+        model,
+        forceRefresh,
+      })
+      .pipe(shareReplay(1));
+
+    // Cache the observable
+    this.enrichmentCache.set(cacheKey, request$);
+
+    return request$;
+  }
+
+  /**
+   * List available enrichment sources with their priorities.
+   */
+  listEnrichmentSources(): Observable<EnrichmentSource[]> {
+    return this.tauri.invoke<EnrichmentSource[]>('list_enrichment_sources');
+  }
+
+  /**
+   * Cleanup enrichment cache (images and metadata).
+   * @param maxAgeDays Remove items older than this many days
+   */
+  cleanupEnrichmentCache(maxAgeDays: number): Observable<CleanupResponse> {
+    return this.tauri.invoke<CleanupResponse>('cleanup_enrichment_cache', {
+      maxAgeDays,
+    });
+  }
+
+  // ===========================================================================
+  // Image Cache API
+  // ===========================================================================
+
+  /**
+   * Fetch and cache a device image from URL.
+   * @param url The image URL to fetch
+   */
+  fetchDeviceImage(url: string): Observable<ImageCacheResponse> {
+    return this.tauri.invoke<ImageCacheResponse>('fetch_device_image', { url });
+  }
+
+  /**
+   * Fetch and cache a device image with a custom cache key.
+   * @param url The image URL to fetch
+   * @param cacheKey Custom cache key for the image
+   */
+  fetchDeviceImageWithKey(
+    url: string,
+    cacheKey: string
+  ): Observable<ImageCacheResponse> {
+    return this.tauri.invoke<ImageCacheResponse>('fetch_device_image_with_key', {
+      url,
+      cacheKey,
+    });
+  }
+
+  /**
+   * Get the cached path for an image by cache key.
+   * @param cacheKey The cache key to look up
+   */
+  getCachedImagePath(cacheKey: string): Observable<string | null> {
+    return this.tauri.invoke<string | null>('get_cached_image_path', {
+      cacheKey,
+    });
+  }
+
+  /**
+   * Check if an image is cached.
+   * @param cacheKey The cache key to check
+   */
+  isImageCached(cacheKey: string): Observable<boolean> {
+    return this.tauri.invoke<boolean>('is_image_cached', { cacheKey });
+  }
+
+  /**
+   * Generate a cache key for a device image.
+   * @param deviceType Device type
+   * @param manufacturer Manufacturer name
+   * @param model Model name
+   */
+  generateDeviceImageCacheKey(
+    deviceType: string,
+    manufacturer: string,
+    model: string
+  ): Observable<string> {
+    return this.tauri.invoke<string>('generate_device_image_cache_key', {
+      deviceType,
+      manufacturer,
+      model,
+    });
+  }
+
+  /**
+   * Get image cache statistics.
+   */
+  getImageCacheStats(): Observable<ImageCacheStats> {
+    return this.tauri.invoke<ImageCacheStats>('get_image_cache_stats');
+  }
+
+  /**
+   * Cleanup old cached images.
+   * @param maxAgeDays Remove images older than this many days
+   */
+  cleanupImageCache(maxAgeDays: number): Observable<number> {
+    return this.tauri.invoke<number>('cleanup_image_cache', { maxAgeDays });
+  }
+
+  /**
+   * Clear the local enrichment cache.
+   */
+  clearEnrichmentCache(): void {
+    this.enrichmentCache.clear();
   }
 }
