@@ -2,6 +2,7 @@
 
 use sysinfo::{System, Process, ProcessStatus, Users};
 use crate::models::process::{ProcessInfo, ProcessSummary};
+use crate::services::ICON_CACHE;
 
 /// Collector for process information
 pub struct ProcessCollector;
@@ -71,6 +72,13 @@ impl ProcessCollector {
         // Normalize CPU usage by dividing by core count (sysinfo reports per-core %)
         let normalized_cpu = process.cpu_usage() / cpu_count.max(1.0);
 
+        // Get executable path and icon
+        let exe_path = process.exe().map(|p| p.to_string_lossy().to_string());
+        let icon_base64 = ICON_CACHE.get_icon_for_process(
+            &process.name().to_string_lossy(),
+            exe_path.as_deref(),
+        );
+
         ProcessInfo {
             pid: pid.as_u32(),
             parent_pid: process.parent().map(|p| p.as_u32()),
@@ -84,6 +92,8 @@ impl ProcessCollector {
             start_time: process.start_time(),
             disk_read_bytes: disk_usage.read_bytes,
             disk_write_bytes: disk_usage.written_bytes,
+            exe_path,
+            icon_base64,
         }
     }
 }
@@ -142,6 +152,8 @@ mod tests {
             start_time: 1704067200, // 2024-01-01 00:00:00 UTC
             disk_read_bytes: 1024 * 1024,
             disk_write_bytes: 512 * 1024,
+            exe_path: Some("C:\\test\\test_process.exe".to_string()),
+            icon_base64: None,
         };
 
         let json = serde_json::to_string(&process_info).unwrap();
@@ -150,6 +162,7 @@ mod tests {
         assert!(json.contains("\"name\":\"test_process\""));
         assert!(json.contains("\"cpuUsage\":5.5"));
         assert!(json.contains("\"status\":\"Run\""));
+        assert!(json.contains("\"exePath\":"));
     }
 
     #[test]

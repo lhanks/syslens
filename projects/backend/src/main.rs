@@ -40,9 +40,35 @@ fn main() {
                 .quit()
                 .build()?;
 
-            // View submenu
+            // View submenu - Show resources submenu
+            let toggle_cpu = MenuItemBuilder::new("CPU")
+                .id("toggle_cpu")
+                .build(app)?;
+            let toggle_memory = MenuItemBuilder::new("Memory")
+                .id("toggle_memory")
+                .build(app)?;
+            let toggle_disk = MenuItemBuilder::new("Disk")
+                .id("toggle_disk")
+                .build(app)?;
+            let toggle_gpu = MenuItemBuilder::new("GPU")
+                .id("toggle_gpu")
+                .build(app)?;
+            let toggle_network = MenuItemBuilder::new("Network")
+                .id("toggle_network")
+                .build(app)?;
+
+            let show_submenu = SubmenuBuilder::new(app, "Show")
+                .item(&toggle_cpu)
+                .item(&toggle_memory)
+                .item(&toggle_disk)
+                .item(&toggle_gpu)
+                .item(&toggle_network)
+                .build()?;
+
             let view_submenu = SubmenuBuilder::new(app, "View")
                 .item(&toggle_sidebar)
+                .separator()
+                .item(&show_submenu)
                 .separator()
                 .item(&MenuItemBuilder::new("Refresh").id("refresh").accelerator("F5").build(app)?)
                 .build()?;
@@ -86,6 +112,21 @@ fn main() {
                 match id {
                     "toggle_sidebar" => {
                         let _ = handle.emit("menu:toggle-sidebar", ());
+                    }
+                    "toggle_cpu" => {
+                        let _ = handle.emit("menu:toggle-cpu", ());
+                    }
+                    "toggle_memory" => {
+                        let _ = handle.emit("menu:toggle-memory", ());
+                    }
+                    "toggle_disk" => {
+                        let _ = handle.emit("menu:toggle-disk", ());
+                    }
+                    "toggle_gpu" => {
+                        let _ = handle.emit("menu:toggle-gpu", ());
+                    }
+                    "toggle_network" => {
+                        let _ = handle.emit("menu:toggle-network", ());
                     }
                     "refresh" => {
                         let _ = handle.emit("menu:refresh", ());

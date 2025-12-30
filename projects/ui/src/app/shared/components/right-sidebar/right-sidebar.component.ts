@@ -1,9 +1,9 @@
-import { Component, inject, signal, OnInit, OnDestroy } from '@angular/core';
+import { Component, inject, signal, OnInit, OnDestroy, Input, HostListener, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subject, forkJoin } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 
-import { HardwareService, StorageService, NetworkService } from '@core/services';
+import { HardwareService, StorageService, NetworkService, ViewSettingsService, SidebarPosition } from '@core/services';
 import { SystemService } from '@core/services/system.service';
 import { BytesPipe } from '@shared/pipes';
 import { DeviceDetailModalComponent } from '@shared/components/device-detail-modal/device-detail-modal.component';
@@ -25,10 +25,48 @@ import {
   standalone: true,
   imports: [CommonModule, BytesPipe, DeviceDetailModalComponent],
   template: `
-    <aside class="w-72 h-full bg-syslens-bg-secondary border-l border-syslens-border-primary flex flex-col overflow-y-auto">
-      <!-- Header -->
-      <div class="p-3 border-b border-syslens-border-primary">
+    <aside
+      class="h-full bg-syslens-bg-secondary flex flex-col overflow-y-auto relative"
+      [class.border-l]="dockPosition === 'right'"
+      [class.border-r]="dockPosition === 'left'"
+      [class.border-syslens-border-primary]="true"
+      [style.width.px]="sidebarWidth()">
+
+      <!-- Resize handle -->
+      <div
+        class="absolute top-0 bottom-0 w-1 cursor-col-resize hover:bg-syslens-accent-blue/50 transition-colors z-10"
+        [class.left-0]="dockPosition === 'right'"
+        [class.right-0]="dockPosition === 'left'"
+        (mousedown)="startResize($event)">
+      </div>
+
+      <!-- Header with dock controls -->
+      <div class="p-3 border-b border-syslens-border-primary flex items-center justify-between">
         <h2 class="text-sm font-semibold text-syslens-text-primary">System Info</h2>
+        <div class="flex items-center gap-1">
+          <!-- Dock position toggle -->
+          <button
+            class="p-1 rounded hover:bg-syslens-bg-tertiary transition-colors"
+            [title]="dockPosition === 'right' ? 'Dock to left' : 'Dock to right'"
+            (click)="toggleDockPosition()">
+            <svg class="w-4 h-4 text-syslens-text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              @if (dockPosition === 'right') {
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+              } @else {
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+              }
+            </svg>
+          </button>
+          <!-- Close button -->
+          <button
+            class="p-1 rounded hover:bg-syslens-bg-tertiary transition-colors"
+            title="Close sidebar (Ctrl+B)"
+            (click)="closeSidebar()">
+            <svg class="w-4 h-4 text-syslens-text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
       </div>
 
       <div class="p-3 space-y-4 text-xs">
@@ -240,7 +278,20 @@ export class RightSidebarComponent implements OnInit, OnDestroy {
   private hardwareService = inject(HardwareService);
   private storageService = inject(StorageService);
   private networkService = inject(NetworkService);
+  private viewSettings = inject(ViewSettingsService);
+  private elementRef = inject(ElementRef);
   private destroy$ = new Subject<void>();
+
+  // Input for dock position
+  @Input() dockPosition: SidebarPosition = 'right';
+
+  // Sidebar width from settings
+  sidebarWidth = this.viewSettings.rightSidebarWidth;
+
+  // Resize state
+  private isResizing = false;
+  private resizeStartX = 0;
+  private resizeStartWidth = 0;
 
   // Data signals
   osInfo = signal<OsInfo | null>(null);
@@ -430,5 +481,57 @@ export class RightSidebarComponent implements OnInit, OnDestroy {
     }
     const vendor = this.getMemoryVendor();
     return vendor ? `${vendor} ${info.memoryType}` : `${info.memoryType} Memory`;
+  }
+
+  /**
+   * Start resizing the sidebar
+   */
+  startResize(event: MouseEvent): void {
+    event.preventDefault();
+    this.isResizing = true;
+    this.resizeStartX = event.clientX;
+    this.resizeStartWidth = this.sidebarWidth();
+
+    // Add listeners to document for mouse move/up
+    document.addEventListener('mousemove', this.onMouseMove);
+    document.addEventListener('mouseup', this.onMouseUp);
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+  }
+
+  private onMouseMove = (event: MouseEvent): void => {
+    if (!this.isResizing) return;
+
+    const deltaX = event.clientX - this.resizeStartX;
+    // When docked right, dragging left increases width
+    // When docked left, dragging right increases width
+    const newWidth = this.dockPosition === 'right'
+      ? this.resizeStartWidth - deltaX
+      : this.resizeStartWidth + deltaX;
+
+    this.viewSettings.setRightSidebarWidth(newWidth);
+  };
+
+  private onMouseUp = (): void => {
+    this.isResizing = false;
+    document.removeEventListener('mousemove', this.onMouseMove);
+    document.removeEventListener('mouseup', this.onMouseUp);
+    document.body.style.cursor = '';
+    document.body.style.userSelect = '';
+  };
+
+  /**
+   * Toggle dock position between left and right
+   */
+  toggleDockPosition(): void {
+    const newPosition: SidebarPosition = this.dockPosition === 'right' ? 'left' : 'right';
+    this.viewSettings.setRightSidebarPosition(newPosition);
+  }
+
+  /**
+   * Close the sidebar
+   */
+  closeSidebar(): void {
+    this.viewSettings.setRightSidebarVisible(false);
   }
 }

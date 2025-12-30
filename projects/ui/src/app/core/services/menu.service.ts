@@ -1,5 +1,6 @@
-import { Injectable, inject, signal } from '@angular/core';
+import { Injectable, inject, signal, computed } from '@angular/core';
 import { listen } from '@tauri-apps/api/event';
+import { ViewSettingsService } from './view-settings.service';
 
 /**
  * Service for handling native application menu events from Tauri.
@@ -9,9 +10,10 @@ import { listen } from '@tauri-apps/api/event';
   providedIn: 'root'
 })
 export class MenuService {
-  // Sidebar visibility state
-  private _sidebarVisible = signal(true);
-  sidebarVisible = this._sidebarVisible.asReadonly();
+  private viewSettings = inject(ViewSettingsService);
+
+  // Sidebar visibility - now delegates to ViewSettingsService
+  sidebarVisible = computed(() => this.viewSettings.rightSidebarVisible());
 
   // About dialog state
   private _aboutDialogOpen = signal(false);
@@ -33,7 +35,24 @@ export class MenuService {
 
     // Listen for toggle sidebar event
     await listen('menu:toggle-sidebar', () => {
-      this._sidebarVisible.set(!this._sidebarVisible());
+      this.viewSettings.toggleRightSidebar();
+    });
+
+    // Listen for mini graph visibility toggles
+    await listen('menu:toggle-cpu', () => {
+      this.viewSettings.toggleMiniGraph('cpu');
+    });
+    await listen('menu:toggle-memory', () => {
+      this.viewSettings.toggleMiniGraph('memory');
+    });
+    await listen('menu:toggle-disk', () => {
+      this.viewSettings.toggleMiniGraph('disk');
+    });
+    await listen('menu:toggle-gpu', () => {
+      this.viewSettings.toggleMiniGraph('gpu');
+    });
+    await listen('menu:toggle-network', () => {
+      this.viewSettings.toggleMiniGraph('network');
     });
 
     // Listen for refresh event
@@ -51,21 +70,21 @@ export class MenuService {
    * Toggle sidebar visibility programmatically.
    */
   toggleSidebar(): void {
-    this._sidebarVisible.set(!this._sidebarVisible());
+    this.viewSettings.toggleRightSidebar();
   }
 
   /**
    * Show sidebar.
    */
   showSidebar(): void {
-    this._sidebarVisible.set(true);
+    this.viewSettings.setRightSidebarVisible(true);
   }
 
   /**
    * Hide sidebar.
    */
   hideSidebar(): void {
-    this._sidebarVisible.set(false);
+    this.viewSettings.setRightSidebarVisible(false);
   }
 
   /**

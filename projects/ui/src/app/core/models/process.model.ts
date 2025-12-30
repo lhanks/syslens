@@ -12,6 +12,8 @@ export interface ProcessInfo {
   startTime: number;
   diskReadBytes: number;
   diskWriteBytes: number;
+  exePath: string | null;
+  iconBase64: string | null;
 }
 
 /** Summary of system processes */

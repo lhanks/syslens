@@ -30,6 +30,10 @@ pub struct ProcessInfo {
     pub disk_read_bytes: u64,
     /// Disk write bytes
     pub disk_write_bytes: u64,
+    /// Process executable path
+    pub exe_path: Option<String>,
+    /// Base64-encoded PNG icon (16x16)
+    pub icon_base64: Option<String>,
 }
 
 /// Summary of system processes

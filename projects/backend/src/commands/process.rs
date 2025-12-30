@@ -1,6 +1,7 @@
 //! Process-related Tauri commands
 
 use crate::models::{ProcessInfo, ProcessSummary};
+use crate::services::ICON_CACHE;
 use crate::state::SysInfoState;
 use sysinfo::{Pid, Process, ProcessStatus, System, Users};
 use tauri::State;
@@ -67,6 +68,13 @@ fn process_to_info(
     // Normalize CPU usage by dividing by core count
     let normalized_cpu = process.cpu_usage() / cpu_count.max(1.0);
 
+    // Get executable path and icon
+    let exe_path = process.exe().map(|p| p.to_string_lossy().to_string());
+    let icon_base64 = ICON_CACHE.get_icon_for_process(
+        &process.name().to_string_lossy(),
+        exe_path.as_deref(),
+    );
+
     ProcessInfo {
         pid: pid.as_u32(),
         parent_pid: process.parent().map(|p| p.as_u32()),
@@ -85,6 +93,8 @@ fn process_to_info(
         start_time: process.start_time(),
         disk_read_bytes: disk_usage.read_bytes,
         disk_write_bytes: disk_usage.written_bytes,
+        exe_path,
+        icon_base64,
     }
 }
 

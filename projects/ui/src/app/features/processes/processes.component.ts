@@ -149,15 +149,31 @@ interface ProcessGroup {
                   <tr class="border-b border-syslens-border-primary hover:bg-syslens-bg-hover transition-colors cursor-pointer"
                       (click)="openProcessDetails(process)">
                     <td class="table-cell">
-                      <div class="flex flex-col">
-                        <span class="text-syslens-text-primary font-medium truncate max-w-[200px]" [title]="process.name">
-                          {{ process.name }}
-                        </span>
-                        @if (process.command && process.command !== process.name) {
-                          <span class="text-xs text-syslens-text-muted" [title]="process.command">
-                            {{ truncatePath(process.command, 45) }}
+                      <div class="flex items-start gap-2">
+                        <!-- Process Icon -->
+                        <div class="flex-shrink-0 w-4 h-4 mt-0.5">
+                          @if (process.iconBase64) {
+                            <img [src]="'data:image/png;base64,' + process.iconBase64"
+                                 class="w-4 h-4"
+                                 alt=""
+                                 loading="lazy" />
+                          } @else {
+                            <svg class="w-4 h-4 text-syslens-text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                    d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                            </svg>
+                          }
+                        </div>
+                        <div class="flex flex-col min-w-0">
+                          <span class="text-syslens-text-primary font-medium truncate max-w-[200px]" [title]="process.name">
+                            {{ process.name }}
                           </span>
-                        }
+                          @if (process.command && process.command !== process.name) {
+                            <span class="text-xs text-syslens-text-muted" [title]="process.command">
+                              {{ truncatePath(process.command, 45) }}
+                            </span>
+                          }
+                        </div>
                       </div>
                     </td>
                     <td class="table-cell font-mono text-syslens-text-secondary">{{ process.pid }}</td>
@@ -253,7 +269,21 @@ interface ProcessGroup {
                             <div class="flex-shrink-0 w-8 flex items-center justify-center text-syslens-text-muted select-none">
                               <span class="font-mono text-sm">{{ last ? '└' : '├' }}</span>
                             </div>
-                            <div class="flex flex-col">
+                            <!-- Process Icon -->
+                            <div class="flex-shrink-0 w-4 h-4 mr-2 mt-0.5">
+                              @if (process.iconBase64) {
+                                <img [src]="'data:image/png;base64,' + process.iconBase64"
+                                     class="w-4 h-4"
+                                     alt=""
+                                     loading="lazy" />
+                              } @else {
+                                <svg class="w-4 h-4 text-syslens-text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                        d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                </svg>
+                              }
+                            </div>
+                            <div class="flex flex-col min-w-0">
                               <span class="text-syslens-text-primary font-medium truncate max-w-[180px]" [title]="process.name">
                                 {{ process.name }}
                               </span>

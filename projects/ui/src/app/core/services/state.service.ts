@@ -23,13 +23,13 @@ export class StateService {
   }
 
   /**
-   * Get the last saved route, or default to 'dashboard'.
+   * Get the last saved route, or default to 'system'.
    */
   getLastRoute(): string {
     try {
-      return localStorage.getItem(STORAGE_KEY) || 'dashboard';
+      return localStorage.getItem(STORAGE_KEY) || 'system';
     } catch {
-      return 'dashboard';
+      return 'system';
     }
   }
 
@@ -39,7 +39,7 @@ export class StateService {
    */
   restoreLastRoute(): boolean {
     const lastRoute = this.getLastRoute();
-    if (lastRoute && lastRoute !== 'dashboard') {
+    if (lastRoute && lastRoute !== 'system') {
       this.router.navigate([lastRoute]);
       return true;
     }

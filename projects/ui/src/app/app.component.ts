@@ -2,7 +2,7 @@ import { Component, OnInit, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet } from '@angular/router';
 import { SidebarComponent, RightSidebarComponent, StatusBarComponent, AboutDialogComponent } from './shared/components';
-import { PreloadService, StateService, MetricsHistoryService, MenuService } from '@core/services';
+import { PreloadService, StateService, MetricsHistoryService, MenuService, ViewSettingsService } from '@core/services';
 
 @Component({
   selector: 'app-root',
@@ -12,11 +12,19 @@ import { PreloadService, StateService, MetricsHistoryService, MenuService } from
     <div class="flex flex-col h-screen bg-syslens-bg-primary">
       <div class="flex flex-1 overflow-hidden">
         <app-sidebar />
+
+        <!-- Right sidebar docked to left side -->
+        @if (sidebarVisible() && sidebarPosition() === 'left') {
+          <app-right-sidebar [dockPosition]="'left'" />
+        }
+
         <main class="flex-1 overflow-auto">
           <router-outlet />
         </main>
-        @if (sidebarVisible()) {
-          <app-right-sidebar />
+
+        <!-- Right sidebar docked to right side (default) -->
+        @if (sidebarVisible() && sidebarPosition() === 'right') {
+          <app-right-sidebar [dockPosition]="'right'" />
         }
       </div>
       <app-status-bar />
@@ -41,10 +49,12 @@ export class AppComponent implements OnInit {
   private preloadService = inject(PreloadService);
   private stateService = inject(StateService);
   private metricsHistoryService = inject(MetricsHistoryService);
+  private viewSettings = inject(ViewSettingsService);
   menuService = inject(MenuService);
 
-  // Expose menu service signals to template
-  sidebarVisible = computed(() => this.menuService.sidebarVisible());
+  // Expose service signals to template
+  sidebarVisible = computed(() => this.viewSettings.rightSidebarVisible());
+  sidebarPosition = computed(() => this.viewSettings.rightSidebarPosition());
   aboutDialogOpen = computed(() => this.menuService.aboutDialogOpen());
 
   ngOnInit(): void {

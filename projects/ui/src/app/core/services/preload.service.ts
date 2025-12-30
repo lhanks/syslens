@@ -69,7 +69,7 @@ export class PreloadService {
    */
   private extractViewName(url: string): string {
     const match = url.match(/^\/?([^?#/]+)/);
-    return match?.[1] || 'dashboard';
+    return match?.[1] || 'system';
   }
 
   /**
@@ -109,18 +109,18 @@ export class PreloadService {
    * Get list of views to preload based on priority.
    */
   private getViewsToPreload(currentView: string): string[] {
-    const allViews = ['dashboard', 'hardware', 'storage', 'network', 'system'];
+    const allViews = ['system', 'hardware', 'storage', 'network', 'processes'];
 
     // Filter out already preloaded views
     const notPreloaded = allViews.filter(v => !this.preloadedViews.has(v));
 
     // Prioritize related views
     const priority: Record<string, string[]> = {
-      'dashboard': ['hardware', 'storage', 'network', 'system'],
-      'hardware': ['dashboard', 'system', 'storage', 'network'],
-      'storage': ['dashboard', 'hardware', 'system', 'network'],
-      'network': ['dashboard', 'system', 'hardware', 'storage'],
-      'system': ['dashboard', 'hardware', 'network', 'storage']
+      'system': ['hardware', 'network', 'storage', 'processes'],
+      'hardware': ['system', 'storage', 'network', 'processes'],
+      'storage': ['hardware', 'system', 'network', 'processes'],
+      'network': ['system', 'hardware', 'storage', 'processes'],
+      'processes': ['system', 'hardware', 'network', 'storage']
     };
 
     const orderedViews = priority[currentView] || allViews;
@@ -166,14 +166,6 @@ export class PreloadService {
    */
   private getPreloadObservable(view: string): Observable<unknown> | null {
     switch (view) {
-      case 'dashboard':
-        return forkJoin([
-          this.hardwareService.getCpuInfo(),
-          this.hardwareService.getMemoryInfo(),
-          this.systemService.getDeviceInfo(),
-          this.systemService.getOsInfo()
-        ]);
-
       case 'hardware':
         return forkJoin([
           this.hardwareService.getCpuInfo(),

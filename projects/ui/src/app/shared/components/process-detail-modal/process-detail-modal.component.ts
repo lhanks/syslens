@@ -92,7 +92,19 @@ type TabType = 'overview' | 'resources' | 'hierarchy';
                   <div class="grid grid-cols-2 gap-4">
                     <div>
                       <p class="text-xs text-syslens-text-muted">Name</p>
-                      <p class="text-sm text-syslens-text-primary font-medium">{{ process.name }}</p>
+                      <div class="flex items-center gap-2">
+                        @if (process.iconBase64) {
+                          <img [src]="'data:image/png;base64,' + process.iconBase64"
+                               class="w-5 h-5"
+                               alt="" />
+                        } @else {
+                          <svg class="w-5 h-5 text-syslens-text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                  d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                          </svg>
+                        }
+                        <p class="text-sm text-syslens-text-primary font-medium">{{ process.name }}</p>
+                      </div>
                     </div>
                     <div>
                       <p class="text-xs text-syslens-text-muted">PID</p>

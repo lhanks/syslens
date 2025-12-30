@@ -13,3 +13,5 @@ export { StatusService } from './status.service';
 export { StorageService } from './storage.service';
 export { SystemService } from './system.service';
 export { TauriService } from './tauri.service';
+export { ViewSettingsService } from './view-settings.service';
+export type { ViewSettings, SidebarPosition } from './view-settings.service';
