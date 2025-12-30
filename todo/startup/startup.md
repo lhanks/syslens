@@ -5,7 +5,6 @@
 
 ## Pending
 
-- [ ] Make left sidebar detachable (pop out to floating window)
 - [ ] Add docking regions (left, right, top, bottom) - all resizable
   - [ ] Draggable dock sections between locations
   - [ ] Stackable sections with reorderable stack order
@@ -13,6 +12,7 @@
 
 ## Completed (Phase 3)
 
+- [x] Left sidebar detachable to floating window (pop-out button, Tauri WebviewWindow)
 - [x] Navigation tabs moved to top bar (sidebar shows only mini graphs)
 - [x] Left sidebar resizable (drag handle, 180-400px) and toggleable (Ctrl+N menu)
 - [x] Fix Services tab hang (optimized WMI query from N+1 to single query)
