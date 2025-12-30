@@ -6,6 +6,10 @@
 pub mod amdproduct;
 pub mod intelark;
 pub mod manufacturer;
+pub mod memory;
+pub mod monitor;
+pub mod motherboard;
+pub mod storage;
 pub mod techpowerup;
 pub mod wikichip;
 pub mod wikipedia;
@@ -159,6 +163,10 @@ pub fn merge_results(results: Vec<SourceResult>) -> Option<PartialDeviceInfo> {
 pub use amdproduct::AMDProductSource;
 pub use intelark::IntelArkSource;
 pub use manufacturer::ManufacturerSource;
+pub use memory::MemorySource;
+pub use monitor::MonitorSource;
+pub use motherboard::MotherboardSource;
+pub use storage::StorageSource;
 pub use techpowerup::TechPowerUpSource;
 pub use wikichip::WikiChipSource;
 pub use wikipedia::WikipediaSource;

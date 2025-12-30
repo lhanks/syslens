@@ -219,6 +219,7 @@ Guidelines:
             DeviceType::Motherboard => "Motherboard",
             DeviceType::Memory => "RAM/Memory Module",
             DeviceType::Storage => "Storage Device (SSD/HDD)",
+            DeviceType::Monitor => "Monitor/Display",
         };
 
         format!(
@@ -273,6 +274,7 @@ Respond with JSON only, no additional text."#,
                 DeviceType::Motherboard => "Motherboard Specifications",
                 DeviceType::Memory => "Memory Specifications",
                 DeviceType::Storage => "Storage Specifications",
+                DeviceType::Monitor => "Monitor Specifications",
             };
 
             DeviceSpecifications {
@@ -316,6 +318,7 @@ Respond with JSON only, no additional text."#,
                 DeviceType::Motherboard => "mb",
                 DeviceType::Memory => "mem",
                 DeviceType::Storage => "stor",
+                DeviceType::Monitor => "mon",
             },
             identifier.manufacturer.to_lowercase().replace(' ', "-"),
             identifier.model.to_lowercase().replace(' ', "-")

@@ -203,6 +203,7 @@ impl AiAgent {
             DeviceType::Motherboard => "motherboard",
             DeviceType::Memory => "RAM memory",
             DeviceType::Storage => "SSD HDD storage",
+            DeviceType::Monitor => "monitor display",
         };
 
         vec![
@@ -609,6 +610,11 @@ impl AiAgent {
                 "capacity", "interface", "read", "write", "iops", "tbw",
                 "nand", "controller", "cache", "form factor", "nvme", "sata",
             ],
+            DeviceType::Monitor => vec![
+                "resolution", "refresh", "hz", "panel", "ips", "va", "oled",
+                "response", "contrast", "brightness", "nits", "hdr", "freesync",
+                "gsync", "size", "inch", "aspect", "ports", "hdmi", "displayport",
+            ],
         }
     }
 
@@ -693,6 +699,7 @@ impl AiAgent {
             DeviceType::Motherboard => "Motherboard Specifications",
             DeviceType::Memory => "Memory Specifications",
             DeviceType::Storage => "Storage Specifications",
+            DeviceType::Monitor => "Monitor Specifications",
         };
 
         let spec_items: Vec<SpecItem> = specs
@@ -771,6 +778,7 @@ impl AiAgent {
             DeviceType::Motherboard => "mb",
             DeviceType::Memory => "mem",
             DeviceType::Storage => "stor",
+            DeviceType::Monitor => "mon",
         };
 
         let mfr = identifier.manufacturer.to_lowercase().replace(' ', "-");

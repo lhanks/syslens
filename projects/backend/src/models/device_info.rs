@@ -13,6 +13,7 @@ pub enum DeviceType {
     Motherboard,
     Memory,
     Storage,
+    Monitor,
 }
 
 impl std::fmt::Display for DeviceType {
@@ -23,6 +24,7 @@ impl std::fmt::Display for DeviceType {
             DeviceType::Motherboard => write!(f, "Motherboard"),
             DeviceType::Memory => write!(f, "Memory"),
             DeviceType::Storage => write!(f, "Storage"),
+            DeviceType::Monitor => write!(f, "Monitor"),
         }
     }
 }
@@ -355,6 +357,8 @@ pub struct DeviceCategories {
     pub memory: Vec<DeviceDeepInfo>,
     #[serde(default)]
     pub storage: Vec<DeviceDeepInfo>,
+    #[serde(default)]
+    pub monitor: Vec<DeviceDeepInfo>,
 }
 
 impl DeviceCategories {
@@ -366,6 +370,7 @@ impl DeviceCategories {
             DeviceType::Motherboard => &self.motherboard,
             DeviceType::Memory => &self.memory,
             DeviceType::Storage => &self.storage,
+            DeviceType::Monitor => &self.monitor,
         }
     }
 
@@ -377,6 +382,7 @@ impl DeviceCategories {
             DeviceType::Motherboard => &mut self.motherboard,
             DeviceType::Memory => &mut self.memory,
             DeviceType::Storage => &mut self.storage,
+            DeviceType::Monitor => &mut self.monitor,
         }
     }
 }

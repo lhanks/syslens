@@ -7,6 +7,7 @@ use crate::models::{DeviceIdentifier, DeviceType, ProductImages, ImageEntry, Ima
 use crate::services::device_sources::{
     fetch_from_all_sources, merge_results, DeviceSource, ManufacturerSource,
     TechPowerUpSource, WikipediaSource, IntelArkSource, AMDProductSource, WikiChipSource,
+    MemorySource, MonitorSource, MotherboardSource, StorageSource,
 };
 use crate::services::{ImageCache, KnowledgeStore, PartialDeviceInfo};
 use anyhow::Result;
@@ -111,6 +112,30 @@ impl DeviceEnrichmentService {
         // Add Wikipedia as fallback
         if let Ok(source) = WikipediaSource::new() {
             log::info!("Registered Wikipedia source (priority {})", source.priority());
+            sources.push(Box::new(source));
+        }
+
+        // Add motherboard source
+        if let Ok(source) = MotherboardSource::new() {
+            log::info!("Registered Motherboard source (priority {})", source.priority());
+            sources.push(Box::new(source));
+        }
+
+        // Add storage source
+        if let Ok(source) = StorageSource::new() {
+            log::info!("Registered Storage source (priority {})", source.priority());
+            sources.push(Box::new(source));
+        }
+
+        // Add memory source
+        if let Ok(source) = MemorySource::new() {
+            log::info!("Registered Memory source (priority {})", source.priority());
+            sources.push(Box::new(source));
+        }
+
+        // Add monitor source
+        if let Ok(source) = MonitorSource::new() {
+            log::info!("Registered Monitor source (priority {})", source.priority());
             sources.push(Box::new(source));
         }
 
