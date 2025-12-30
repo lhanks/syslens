@@ -19,7 +19,7 @@ pub struct PhysicalDisk {
 }
 
 /// Storage media type
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum MediaType {
     HDD,
     SSD,
@@ -133,6 +133,9 @@ pub struct NetworkDrive {
     pub server: String,
     pub share_name: String,
     pub status: NetworkDriveStatus,
+    pub total_bytes: Option<u64>,
+    pub free_bytes: Option<u64>,
+    pub used_bytes: Option<u64>,
 }
 
 /// Network drive connection status

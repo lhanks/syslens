@@ -126,3 +126,27 @@ pub struct UserInfo {
     pub is_admin: bool,
     pub login_time: String,
 }
+
+/// System restore point information
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct RestorePoint {
+    pub sequence_number: u32,
+    pub description: String,
+    pub restore_point_type: RestorePointType,
+    pub creation_time: String,
+}
+
+/// Type of restore point
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum RestorePointType {
+    ApplicationInstall,
+    ApplicationUninstall,
+    ModifySettings,
+    CancelledOperation,
+    BackupRecovery,
+    DeviceDriverInstall,
+    ManualCheckpoint,
+    WindowsUpdate,
+    Unknown,
+}

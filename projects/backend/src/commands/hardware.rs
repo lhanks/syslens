@@ -106,6 +106,38 @@ pub fn get_monitors() -> Vec<Monitor> {
     HardwareCollector::get_monitors()
 }
 
+/// Response for hardware ID database update
+#[derive(serde::Serialize)]
+pub struct HwIdUpdateResponse {
+    pub usb_updated: bool,
+    pub pci_updated: bool,
+    pub usb_vendors: usize,
+    pub usb_products: usize,
+    pub pci_vendors: usize,
+    pub pci_devices: usize,
+    pub error: Option<String>,
+}
+
+/// Update hardware ID databases from official sources.
+/// Downloads the latest USB and PCI ID databases if they are outdated.
+#[tauri::command]
+pub async fn update_hardware_ids() -> HwIdUpdateResponse {
+    log::info!("Command: update_hardware_ids");
+
+    let data_dir = crate::hwids::get_data_dir();
+    let result = crate::hwids::update_databases(&data_dir).await;
+
+    HwIdUpdateResponse {
+        usb_updated: result.usb_updated,
+        pci_updated: result.pci_updated,
+        usb_vendors: result.usb_vendors,
+        usb_products: result.usb_products,
+        pci_vendors: result.pci_vendors,
+        pci_devices: result.pci_devices,
+        error: result.error,
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

@@ -75,3 +75,21 @@ export interface UserInfo {
   isAdmin: boolean;
   loginTime: string;
 }
+
+export interface RestorePoint {
+  sequenceNumber: number;
+  description: string;
+  restorePointType: RestorePointType;
+  creationTime: string;
+}
+
+export type RestorePointType =
+  | 'ApplicationInstall'
+  | 'ApplicationUninstall'
+  | 'ModifySettings'
+  | 'CancelledOperation'
+  | 'BackupRecovery'
+  | 'DeviceDriverInstall'
+  | 'ManualCheckpoint'
+  | 'WindowsUpdate'
+  | 'Unknown';

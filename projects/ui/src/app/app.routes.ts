@@ -43,6 +43,12 @@ export const routes: Routes = [
     title: 'Processes - Syslens'
   },
   {
+    path: 'restore-points',
+    loadComponent: () => import('./features/restore-points/restore-points.component')
+      .then(m => m.RestorePointsComponent),
+    title: 'Restore Points - Syslens'
+  },
+  {
     path: '**',
     redirectTo: 'dashboard'
   }

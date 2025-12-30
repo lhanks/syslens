@@ -3,7 +3,7 @@
  */
 
 /** Device category */
-export type DeviceType = 'Cpu' | 'Gpu' | 'Motherboard' | 'Memory' | 'Storage';
+export type DeviceType = 'Cpu' | 'Gpu' | 'Motherboard' | 'Memory' | 'Storage' | 'Monitor';
 
 /** Data source for device information */
 export type DataSource =

@@ -11,6 +11,15 @@ import { LineGraphComponent, ProcessDetailModalComponent } from '@shared/compone
 
 type SortColumn = 'name' | 'pid' | 'cpuUsage' | 'memoryBytes' | 'status';
 type SortDirection = 'asc' | 'desc';
+type ViewMode = 'flat' | 'grouped';
+
+interface ProcessGroup {
+  name: string;
+  processes: ProcessInfo[];
+  totalCpu: number;
+  totalMemory: number;
+  expanded: boolean;
+}
 
 @Component({
   selector: 'app-processes',
@@ -166,8 +175,29 @@ type SortDirection = 'asc' | 'desc';
                      focus:outline-none focus:border-syslens-accent-blue"
             />
           </div>
+          <button
+            (click)="toggleViewMode()"
+            class="px-3 py-2 rounded-lg border border-syslens-border-primary
+                   hover:bg-syslens-bg-hover transition-colors flex items-center gap-2"
+            [class.bg-syslens-accent-blue]="viewMode() === 'grouped'"
+            [class.bg-syslens-bg-tertiary]="viewMode() === 'flat'"
+            [class.text-white]="viewMode() === 'grouped'"
+            [class.text-syslens-text-secondary]="viewMode() === 'flat'"
+          >
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              @if (viewMode() === 'flat') {
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+              } @else {
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7h3m0 0V4m0 3v3m0 7h3m0 0v-3m0 3v3m8-10h5m-5 4h5m-5 4h5" />
+              }
+            </svg>
+            <span class="text-sm">{{ viewMode() === 'flat' ? 'Group' : 'Flat' }}</span>
+          </button>
           <div class="flex items-center gap-2 text-sm text-syslens-text-muted">
             <span>{{ filteredProcesses().length }} processes</span>
+            @if (viewMode() === 'grouped') {
+              <span class="text-syslens-text-muted">({{ groupedProcesses().length }} groups)</span>
+            }
           </div>
         </div>
       </div>
@@ -222,68 +252,171 @@ type SortDirection = 'asc' | 'desc';
               </tr>
             </thead>
             <tbody>
-              @for (process of paginatedProcesses(); track process.pid) {
-                <tr class="border-b border-syslens-border-primary hover:bg-syslens-bg-hover transition-colors cursor-pointer"
-                    (click)="openProcessDetails(process)">
-                  <td class="table-cell">
-                    <div class="flex flex-col">
-                      <span class="text-syslens-text-primary font-medium truncate max-w-[200px]" [title]="process.name">
-                        {{ process.name }}
-                      </span>
-                      @if (process.command && process.command !== process.name) {
-                        <span class="text-xs text-syslens-text-muted truncate max-w-[200px]" [title]="process.command">
-                          {{ process.command }}
+              @if (viewMode() === 'flat') {
+                @for (process of paginatedProcesses(); track process.pid) {
+                  <tr class="border-b border-syslens-border-primary hover:bg-syslens-bg-hover transition-colors cursor-pointer"
+                      (click)="openProcessDetails(process)">
+                    <td class="table-cell">
+                      <div class="flex flex-col">
+                        <span class="text-syslens-text-primary font-medium truncate max-w-[200px]" [title]="process.name">
+                          {{ process.name }}
                         </span>
-                      }
-                    </div>
-                  </td>
-                  <td class="table-cell font-mono text-syslens-text-secondary">{{ process.pid }}</td>
-                  <td class="table-cell">
-                    <div class="flex items-center gap-2">
-                      <div class="w-12 h-1.5 bg-syslens-bg-tertiary rounded-full overflow-hidden">
-                        <div class="h-full rounded-full transition-all"
-                             [style.width.%]="Math.min(process.cpuUsage, 100)"
-                             [class.bg-syslens-accent-green]="process.cpuUsage < 25"
-                             [class.bg-syslens-accent-yellow]="process.cpuUsage >= 25 && process.cpuUsage < 75"
-                             [class.bg-syslens-accent-red]="process.cpuUsage >= 75">
-                        </div>
+                        @if (process.command && process.command !== process.name) {
+                          <span class="text-xs text-syslens-text-muted truncate max-w-[200px]" [title]="process.command">
+                            {{ process.command }}
+                          </span>
+                        }
                       </div>
-                      <span class="font-mono text-xs text-syslens-text-secondary w-12 text-right">
-                        {{ process.cpuUsage.toFixed(1) }}%
+                    </td>
+                    <td class="table-cell font-mono text-syslens-text-secondary">{{ process.pid }}</td>
+                    <td class="table-cell">
+                      <div class="flex items-center gap-2">
+                        <div class="w-12 h-1.5 bg-syslens-bg-tertiary rounded-full overflow-hidden">
+                          <div class="h-full rounded-full transition-all"
+                               [style.width.%]="Math.min(process.cpuUsage, 100)"
+                               [class.bg-syslens-accent-green]="process.cpuUsage < 25"
+                               [class.bg-syslens-accent-yellow]="process.cpuUsage >= 25 && process.cpuUsage < 75"
+                               [class.bg-syslens-accent-red]="process.cpuUsage >= 75">
+                          </div>
+                        </div>
+                        <span class="font-mono text-xs text-syslens-text-secondary w-12 text-right">
+                          {{ process.cpuUsage.toFixed(1) }}%
+                        </span>
+                      </div>
+                    </td>
+                    <td class="table-cell font-mono text-syslens-text-secondary">
+                      {{ process.memoryBytes | bytes }}
+                    </td>
+                    <td class="table-cell">
+                      <span class="px-2 py-0.5 text-xs rounded"
+                            [class.bg-syslens-accent-green]="process.status === 'Run'"
+                            [class.text-white]="process.status === 'Run'"
+                            [class.bg-syslens-accent-yellow]="process.status === 'Sleep'"
+                            [class.text-black]="process.status === 'Sleep'"
+                            [class.bg-syslens-bg-tertiary]="process.status !== 'Run' && process.status !== 'Sleep'"
+                            [class.text-syslens-text-secondary]="process.status !== 'Run' && process.status !== 'Sleep'">
+                        {{ process.status }}
                       </span>
-                    </div>
-                  </td>
-                  <td class="table-cell font-mono text-syslens-text-secondary">
-                    {{ process.memoryBytes | bytes }}
-                  </td>
-                  <td class="table-cell">
-                    <span class="px-2 py-0.5 text-xs rounded"
-                          [class.bg-syslens-accent-green]="process.status === 'Run'"
-                          [class.text-white]="process.status === 'Run'"
-                          [class.bg-syslens-accent-yellow]="process.status === 'Sleep'"
-                          [class.text-black]="process.status === 'Sleep'"
-                          [class.bg-syslens-bg-tertiary]="process.status !== 'Run' && process.status !== 'Sleep'"
-                          [class.text-syslens-text-secondary]="process.status !== 'Run' && process.status !== 'Sleep'">
-                      {{ process.status }}
-                    </span>
-                  </td>
-                  <td class="table-cell text-syslens-text-muted truncate max-w-[100px]" [title]="process.user || 'N/A'">
-                    {{ process.user || 'N/A' }}
-                  </td>
-                </tr>
-              } @empty {
-                <tr>
-                  <td colspan="6" class="table-cell text-center text-syslens-text-muted py-8">
-                    No processes found
-                  </td>
-                </tr>
+                    </td>
+                    <td class="table-cell text-syslens-text-muted truncate max-w-[100px]" [title]="process.user || 'N/A'">
+                      {{ process.user || 'N/A' }}
+                    </td>
+                  </tr>
+                } @empty {
+                  <tr>
+                    <td colspan="6" class="table-cell text-center text-syslens-text-muted py-8">
+                      No processes found
+                    </td>
+                  </tr>
+                }
+              } @else {
+                <!-- Grouped View -->
+                @for (group of groupedProcesses(); track group.name) {
+                  <!-- Group Header Row -->
+                  <tr class="border-b border-syslens-border-primary bg-syslens-bg-secondary hover:bg-syslens-bg-hover transition-colors cursor-pointer"
+                      (click)="toggleGroup(group.name)">
+                    <td class="table-cell">
+                      <div class="flex items-center gap-2">
+                        <svg class="w-4 h-4 text-syslens-text-muted transition-transform"
+                             [class.rotate-90]="group.expanded"
+                             fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                        </svg>
+                        <span class="text-syslens-text-primary font-medium">{{ group.name }}</span>
+                        <span class="text-xs text-syslens-text-muted bg-syslens-bg-tertiary px-2 py-0.5 rounded-full">
+                          {{ group.processes.length }}
+                        </span>
+                      </div>
+                    </td>
+                    <td class="table-cell font-mono text-syslens-text-muted">—</td>
+                    <td class="table-cell">
+                      <div class="flex items-center gap-2">
+                        <div class="w-12 h-1.5 bg-syslens-bg-tertiary rounded-full overflow-hidden">
+                          <div class="h-full rounded-full transition-all"
+                               [style.width.%]="Math.min(group.totalCpu, 100)"
+                               [class.bg-syslens-accent-green]="group.totalCpu < 25"
+                               [class.bg-syslens-accent-yellow]="group.totalCpu >= 25 && group.totalCpu < 75"
+                               [class.bg-syslens-accent-red]="group.totalCpu >= 75">
+                          </div>
+                        </div>
+                        <span class="font-mono text-xs text-syslens-text-secondary w-12 text-right">
+                          {{ group.totalCpu.toFixed(1) }}%
+                        </span>
+                      </div>
+                    </td>
+                    <td class="table-cell font-mono text-syslens-text-secondary">
+                      {{ group.totalMemory | bytes }}
+                    </td>
+                    <td class="table-cell text-syslens-text-muted">—</td>
+                    <td class="table-cell text-syslens-text-muted">—</td>
+                  </tr>
+                  <!-- Expanded Child Processes -->
+                  @if (group.expanded) {
+                    @for (process of group.processes; track process.pid) {
+                      <tr class="border-b border-syslens-border-primary hover:bg-syslens-bg-hover transition-colors cursor-pointer bg-syslens-bg-primary/50"
+                          (click)="openProcessDetails(process); $event.stopPropagation()">
+                        <td class="table-cell pl-10">
+                          <div class="flex flex-col">
+                            <span class="text-syslens-text-primary font-medium truncate max-w-[180px]" [title]="process.name">
+                              {{ process.name }}
+                            </span>
+                            @if (process.command && process.command !== process.name) {
+                              <span class="text-xs text-syslens-text-muted truncate max-w-[180px]" [title]="process.command">
+                                {{ process.command }}
+                              </span>
+                            }
+                          </div>
+                        </td>
+                        <td class="table-cell font-mono text-syslens-text-secondary">{{ process.pid }}</td>
+                        <td class="table-cell">
+                          <div class="flex items-center gap-2">
+                            <div class="w-12 h-1.5 bg-syslens-bg-tertiary rounded-full overflow-hidden">
+                              <div class="h-full rounded-full transition-all"
+                                   [style.width.%]="Math.min(process.cpuUsage, 100)"
+                                   [class.bg-syslens-accent-green]="process.cpuUsage < 25"
+                                   [class.bg-syslens-accent-yellow]="process.cpuUsage >= 25 && process.cpuUsage < 75"
+                                   [class.bg-syslens-accent-red]="process.cpuUsage >= 75">
+                              </div>
+                            </div>
+                            <span class="font-mono text-xs text-syslens-text-secondary w-12 text-right">
+                              {{ process.cpuUsage.toFixed(1) }}%
+                            </span>
+                          </div>
+                        </td>
+                        <td class="table-cell font-mono text-syslens-text-secondary">
+                          {{ process.memoryBytes | bytes }}
+                        </td>
+                        <td class="table-cell">
+                          <span class="px-2 py-0.5 text-xs rounded"
+                                [class.bg-syslens-accent-green]="process.status === 'Run'"
+                                [class.text-white]="process.status === 'Run'"
+                                [class.bg-syslens-accent-yellow]="process.status === 'Sleep'"
+                                [class.text-black]="process.status === 'Sleep'"
+                                [class.bg-syslens-bg-tertiary]="process.status !== 'Run' && process.status !== 'Sleep'"
+                                [class.text-syslens-text-secondary]="process.status !== 'Run' && process.status !== 'Sleep'">
+                            {{ process.status }}
+                          </span>
+                        </td>
+                        <td class="table-cell text-syslens-text-muted truncate max-w-[100px]" [title]="process.user || 'N/A'">
+                          {{ process.user || 'N/A' }}
+                        </td>
+                      </tr>
+                    }
+                  }
+                } @empty {
+                  <tr>
+                    <td colspan="6" class="table-cell text-center text-syslens-text-muted py-8">
+                      No processes found
+                    </td>
+                  </tr>
+                }
               }
             </tbody>
           </table>
         </div>
 
-        <!-- Pagination -->
-        @if (totalPages() > 1) {
+        <!-- Pagination (flat view only) -->
+        @if (viewMode() === 'flat' && totalPages() > 1) {
           <div class="flex items-center justify-between px-4 py-3 border-t border-syslens-border-primary">
             <div class="text-sm text-syslens-text-muted">
               Showing {{ startIndex() + 1 }}-{{ endIndex() }} of {{ filteredProcesses().length }}
@@ -353,6 +486,10 @@ export class ProcessesComponent implements OnInit, OnDestroy {
   currentPage = signal(0);
   pageSize = 50;
 
+  // View mode for grouping
+  viewMode = signal<ViewMode>('flat');
+  expandedGroups = signal<Set<string>>(new Set());
+
   // Modal state
   modalOpen = signal(false);
   selectedProcess = signal<ProcessInfo | null>(null);
@@ -411,6 +548,64 @@ export class ProcessesComponent implements OnInit, OnDestroy {
     return this.filteredProcesses().slice(this.startIndex(), this.endIndex());
   });
 
+  // Group processes by name
+  groupedProcesses = computed(() => {
+    const processes = this.filteredProcesses();
+    const groupMap = new Map<string, ProcessInfo[]>();
+
+    for (const process of processes) {
+      const name = process.name;
+      if (!groupMap.has(name)) {
+        groupMap.set(name, []);
+      }
+      groupMap.get(name)!.push(process);
+    }
+
+    const groups: ProcessGroup[] = [];
+    const expanded = this.expandedGroups();
+
+    for (const [name, procs] of groupMap) {
+      groups.push({
+        name,
+        processes: procs,
+        totalCpu: procs.reduce((sum, p) => sum + p.cpuUsage, 0),
+        totalMemory: procs.reduce((sum, p) => sum + p.memoryBytes, 0),
+        expanded: expanded.has(name)
+      });
+    }
+
+    // Sort groups by the same criteria as individual processes
+    const col = this.sortColumn();
+    const dir = this.sortDirection();
+
+    return groups.sort((a, b) => {
+      let aVal: string | number;
+      let bVal: string | number;
+
+      switch (col) {
+        case 'cpuUsage':
+          aVal = a.totalCpu;
+          bVal = b.totalCpu;
+          break;
+        case 'memoryBytes':
+          aVal = a.totalMemory;
+          bVal = b.totalMemory;
+          break;
+        case 'name':
+          aVal = a.name.toLowerCase();
+          bVal = b.name.toLowerCase();
+          break;
+        default:
+          aVal = a.name.toLowerCase();
+          bVal = b.name.toLowerCase();
+      }
+
+      if (aVal < bVal) return dir === 'asc' ? -1 : 1;
+      if (aVal > bVal) return dir === 'asc' ? 1 : -1;
+      return 0;
+    });
+  });
+
   ngOnInit(): void {
     this.loadInitialData();
     this.startPolling();
@@ -428,6 +623,20 @@ export class ProcessesComponent implements OnInit, OnDestroy {
       this.sortColumn.set(column);
       this.sortDirection.set('desc');
     }
+  }
+
+  toggleViewMode(): void {
+    this.viewMode.set(this.viewMode() === 'flat' ? 'grouped' : 'flat');
+  }
+
+  toggleGroup(groupName: string): void {
+    const expanded = new Set(this.expandedGroups());
+    if (expanded.has(groupName)) {
+      expanded.delete(groupName);
+    } else {
+      expanded.add(groupName);
+    }
+    this.expandedGroups.set(expanded);
   }
 
   prevPage(): void {

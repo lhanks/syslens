@@ -127,9 +127,13 @@ pub struct MotherboardInfo {
     pub version: String,
     pub serial_number: String,
     pub chipset: Option<String>,
+    pub form_factor: Option<String>,
     pub bios_vendor: Option<String>,
     pub bios_version: Option<String>,
     pub bios_release_date: Option<String>,
+    pub boot_mode: Option<String>,
+    pub secure_boot: Option<bool>,
+    pub tpm_version: Option<String>,
     pub support_url: Option<String>,
     pub image_url: Option<String>,
 }

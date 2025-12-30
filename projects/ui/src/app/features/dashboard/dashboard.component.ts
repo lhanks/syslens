@@ -80,7 +80,8 @@ import { BytesPipe, UptimePipe } from '@shared/pipes';
             colorClass="stroke-syslens-accent-purple"
           />
           @if (memoryTotalBytes) {
-            <p class="mt-2 text-sm font-mono text-syslens-text-secondary">
+            <p class="mt-1 text-sm text-syslens-text-secondary">{{ memoryType }}</p>
+            <p class="text-sm font-mono text-syslens-text-muted">
               <span style="min-width: 6ch; display: inline-block; text-align: right;">{{ memoryUsedBytes | bytes }}</span> / {{ memoryTotalBytes | bytes }}
             </p>
           } @else {
@@ -97,7 +98,8 @@ import { BytesPipe, UptimePipe } from '@shared/pipes';
             colorClass="stroke-syslens-accent-cyan"
           />
           @if (diskTotalBytes) {
-            <p class="mt-2 text-sm font-mono text-syslens-text-secondary">
+            <p class="mt-1 text-sm text-syslens-text-secondary truncate max-w-full" [title]="diskName">{{ diskName }}</p>
+            <p class="text-sm font-mono text-syslens-text-muted">
               <span style="min-width: 6ch; display: inline-block; text-align: right;">{{ diskUsedBytes | bytes }}</span> / {{ diskTotalBytes | bytes }}
             </p>
           } @else {
@@ -132,7 +134,7 @@ import { BytesPipe, UptimePipe } from '@shared/pipes';
             </div>
           </div>
           @if (networkLoaded) {
-            <p class="mt-2 text-xs text-syslens-text-muted">{{ networkAdapterCount }} adapter(s)</p>
+            <p class="mt-2 text-xs text-syslens-text-secondary truncate" [title]="networkAdapterName">{{ networkAdapterName }}</p>
           } @else {
             <div class="mt-2 h-3 w-20 bg-syslens-bg-tertiary rounded animate-pulse"></div>
           }
@@ -227,14 +229,17 @@ export class DashboardComponent implements OnInit, OnDestroy {
   memoryTotalBytes = 0;
   memoryUsedBytes = 0;
   memoryUsage = 0;
+  memoryType = '';
 
   // Disk
   diskTotalBytes = 0;
   diskUsedBytes = 0;
   diskUsage = 0;
+  diskName = '';
 
   // Network
   networkAdapterCount = 0;
+  networkAdapterName = '';
   networkLoaded = false;
 
   ngOnInit(): void {
@@ -279,6 +284,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe(memoryInfo => {
         this.memoryTotalBytes = memoryInfo.totalBytes;
+        // Build memory type string (e.g., "64 GB DDR5")
+        const sizeGB = Math.round(memoryInfo.totalBytes / (1024 * 1024 * 1024));
+        this.memoryType = `${sizeGB} GB ${memoryInfo.memoryType}`;
       });
 
     // Storage (lower priority - visible but not critical)
@@ -290,6 +298,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
           this.diskTotalBytes = systemVolume.totalBytes;
           this.diskUsedBytes = systemVolume.usedBytes;
           this.diskUsage = systemVolume.percentUsed;
+          // Build disk name string (e.g., "Local Disk (C:)" or just "C:")
+          const label = systemVolume.label || 'Local Disk';
+          this.diskName = `${label} (${systemVolume.driveLetter}:)`;
         }
       });
 
@@ -297,7 +308,14 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.networkService.getNetworkAdapters()
       .pipe(takeUntil(this.destroy$))
       .subscribe(adapters => {
-        this.networkAdapterCount = adapters.filter(a => a.status === 'Up').length;
+        const activeAdapters = adapters.filter(a => a.status === 'Up');
+        this.networkAdapterCount = activeAdapters.length;
+        // Get primary adapter name (first active adapter)
+        if (activeAdapters.length > 0) {
+          this.networkAdapterName = activeAdapters[0].name;
+        } else {
+          this.networkAdapterName = 'No active adapter';
+        }
         this.networkLoaded = true;
         this.statusService.endOperation('dashboard-init');
       });

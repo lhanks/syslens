@@ -107,15 +107,20 @@ import { BytesPipe, DecimalPipe } from '@shared/pipes';
                     </div>
                     <div>
                       <p class="text-xs text-syslens-text-muted">Partition Style</p>
-                      <p class="text-syslens-text-primary">{{ disk.partitionStyle }}</p>
+                      <p class="text-syslens-text-primary">{{ disk.partitionStyle || 'GPT' }}</p>
                     </div>
                     <div>
                       <p class="text-xs text-syslens-text-muted">Status</p>
-                      <p class="text-syslens-text-primary">{{ disk.status }}</p>
+                      <p class="text-syslens-text-primary"
+                         [class.text-syslens-accent-green]="disk.status === 'Healthy' || disk.status === 'OK'"
+                         [class.text-syslens-accent-yellow]="disk.status === 'Warning'"
+                         [class.text-syslens-accent-red]="disk.status === 'Unhealthy'">
+                        {{ disk.status || 'OK' }}
+                      </p>
                     </div>
                     <div>
                       <p class="text-xs text-syslens-text-muted">Firmware</p>
-                      <p class="text-syslens-text-primary font-mono text-xs">{{ disk.firmware }}</p>
+                      <p class="text-syslens-text-primary font-mono text-xs">{{ disk.firmware || 'N/A' }}</p>
                     </div>
                   </div>
                 </div>
@@ -132,17 +137,17 @@ import { BytesPipe, DecimalPipe } from '@shared/pipes';
                       </div>
                       <span class="text-sm font-medium text-syslens-text-primary">{{ health.status }}</span>
                     </div>
-                    @if (health.temperatureCelsius !== null) {
+                    @if (health.temperatureCelsius != null && health.temperatureCelsius !== undefined) {
                       <p class="text-xs text-syslens-text-muted">
-                        Temp: <span class="text-syslens-text-secondary">{{ health.temperatureCelsius }}C</span>
+                        Temp: <span class="text-syslens-text-secondary">{{ health.temperatureCelsius }}°C</span>
                       </p>
                     }
-                    @if (health.powerOnHours !== null) {
+                    @if (health.powerOnHours != null && health.powerOnHours !== undefined) {
                       <p class="text-xs text-syslens-text-muted">
                         Power On: <span class="text-syslens-text-secondary">{{ health.powerOnHours | number }} hrs</span>
                       </p>
                     }
-                    @if (health.wearLevelPercent !== null) {
+                    @if (health.wearLevelPercent != null && health.wearLevelPercent !== undefined) {
                       <p class="text-xs text-syslens-text-muted">
                         Wear: <span class="text-syslens-text-secondary">{{ health.wearLevelPercent }}%</span>
                       </p>
@@ -191,7 +196,7 @@ import { BytesPipe, DecimalPipe } from '@shared/pipes';
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             @for (drive of networkDrives; track drive.driveLetter) {
               <div class="card">
-                <div class="flex items-center gap-3">
+                <div class="flex items-center gap-3 mb-3">
                   <div class="w-10 h-10 rounded-lg bg-syslens-bg-tertiary flex items-center justify-center">
                     <span class="text-lg font-bold text-syslens-accent-blue">{{ drive.driveLetter }}</span>
                   </div>
@@ -209,6 +214,27 @@ import { BytesPipe, DecimalPipe } from '@shared/pipes';
                     {{ drive.status }}
                   </span>
                 </div>
+
+                <!-- Space information -->
+                @if (drive.totalBytes && drive.totalBytes > 0) {
+                  <div class="mb-2">
+                    <div class="progress-bar h-2">
+                      <div class="progress-fill"
+                           [style.width.%]="getNetworkDrivePercent(drive)"
+                           [class.bg-syslens-accent-blue]="getNetworkDrivePercent(drive) < 75"
+                           [class.bg-syslens-accent-yellow]="getNetworkDrivePercent(drive) >= 75 && getNetworkDrivePercent(drive) < 90"
+                           [class.bg-syslens-accent-red]="getNetworkDrivePercent(drive) >= 90">
+                      </div>
+                    </div>
+                  </div>
+                  <div class="flex justify-between text-sm">
+                    <span class="text-syslens-text-muted">{{ drive.usedBytes | bytes }} used</span>
+                    <span class="text-syslens-text-secondary">{{ drive.freeBytes | bytes }} free</span>
+                  </div>
+                  <p class="text-xs text-syslens-text-muted mt-1">{{ drive.totalBytes | bytes }} total</p>
+                } @else {
+                  <p class="text-xs text-syslens-text-muted">Space information unavailable</p>
+                }
               </div>
             }
           </div>
@@ -277,5 +303,11 @@ export class StorageComponent implements OnInit, OnDestroy {
     this.storageService.getVolumesPolling()
       .pipe(takeUntil(this.destroy$))
       .subscribe(volumes => this.volumes = volumes);
+  }
+
+  getNetworkDrivePercent(drive: NetworkDrive): number {
+    if (!drive.totalBytes || drive.totalBytes === 0) return 0;
+    const used = drive.usedBytes ?? 0;
+    return (used / drive.totalBytes) * 100;
   }
 }

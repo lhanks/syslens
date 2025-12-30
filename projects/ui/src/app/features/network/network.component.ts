@@ -52,73 +52,89 @@ interface AdapterTrafficHistory {
               </div>
 
               @if (adapter.status === 'Up') {
-                <!-- Main content: Graph left, IP info right -->
-                <div class="flex gap-6">
-                  <!-- Left: Traffic Graph with stats -->
-                  <div class="flex-1 min-w-0">
+                <!-- Main content: 3-column layout -->
+                <div class="grid grid-cols-3 gap-6">
+                  <!-- Column 1: Speed indicators and totals -->
+                  <div class="space-y-4">
                     @if (adapterTrafficHistory[adapter.id]; as traffic) {
-                      <!-- Speed indicators -->
-                      <div class="flex items-center gap-6 mb-3">
-                        <div class="flex items-center gap-2">
+                      <!-- Download -->
+                      <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-lg bg-syslens-accent-green/20 flex items-center justify-center flex-shrink-0">
                           <span class="text-syslens-accent-green text-lg">↓</span>
-                          <div>
-                            <p class="font-mono text-lg font-bold text-syslens-accent-green" style="min-width: 9ch;">{{ traffic.downloadSpeed | bytes }}/s</p>
-                            <p class="text-xs text-syslens-text-muted">Download</p>
-                          </div>
                         </div>
-                        <div class="flex items-center gap-2">
+                        <div>
+                          <p class="font-mono text-lg font-bold text-syslens-accent-green">{{ traffic.downloadSpeed | bytes }}/s</p>
+                          <p class="text-xs text-syslens-text-muted">Download</p>
+                        </div>
+                      </div>
+                      <!-- Upload -->
+                      <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-lg bg-syslens-accent-blue/20 flex items-center justify-center flex-shrink-0">
                           <span class="text-syslens-accent-blue text-lg">↑</span>
-                          <div>
-                            <p class="font-mono text-lg font-bold text-syslens-accent-blue" style="min-width: 9ch;">{{ traffic.uploadSpeed | bytes }}/s</p>
-                            <p class="text-xs text-syslens-text-muted">Upload</p>
-                          </div>
+                        </div>
+                        <div>
+                          <p class="font-mono text-lg font-bold text-syslens-accent-blue">{{ traffic.uploadSpeed | bytes }}/s</p>
+                          <p class="text-xs text-syslens-text-muted">Upload</p>
                         </div>
                       </div>
-                      <!-- Graph -->
-                      <div class="h-20 bg-syslens-bg-tertiary/30 rounded-lg p-2">
-                        <app-line-graph
-                          [series1]="traffic.downloadHistory"
-                          [series2]="traffic.uploadHistory"
-                          [maxValue]="traffic.maxSpeed"
-                          [height]="64"
-                          series1Color="syslens-accent-green"
-                          series2Color="syslens-accent-blue"
-                          [showYAxis]="true"
-                          yAxisFormat="bytes"
-                          [yAxisWidth]="48"
-                        />
-                      </div>
-                      <!-- Total stats below graph -->
+                      <!-- Totals -->
                       @if (adapterStats[adapter.id]; as stats) {
-                        <div class="flex gap-6 mt-2 text-xs text-syslens-text-muted">
-                          <span>Total Received: <span class="text-syslens-accent-green font-mono">{{ stats.bytesReceived | bytes }}</span></span>
-                          <span>Total Sent: <span class="text-syslens-accent-blue font-mono">{{ stats.bytesSent | bytes }}</span></span>
+                        <div class="pt-2 border-t border-syslens-border-primary space-y-1">
+                          <div class="flex justify-between text-xs">
+                            <span class="text-syslens-text-muted">Total Received</span>
+                            <span class="text-syslens-accent-green font-mono">{{ stats.bytesReceived | bytes }}</span>
+                          </div>
+                          <div class="flex justify-between text-xs">
+                            <span class="text-syslens-text-muted">Total Sent</span>
+                            <span class="text-syslens-accent-blue font-mono">{{ stats.bytesSent | bytes }}</span>
+                          </div>
                         </div>
                       }
                     } @else {
-                      <div class="h-20 bg-syslens-bg-tertiary/30 rounded-lg flex items-center justify-center text-syslens-text-muted text-sm">
+                      <div class="text-syslens-text-muted text-sm">Loading...</div>
+                    }
+                  </div>
+
+                  <!-- Column 2: Traffic Graph -->
+                  <div class="min-w-0">
+                    @if (adapterTrafficHistory[adapter.id]; as traffic) {
+                      <div class="h-full bg-syslens-bg-tertiary/30 rounded-lg p-2 flex flex-col">
+                        <p class="text-xs text-syslens-text-muted mb-2">Network Activity</p>
+                        <div class="flex-1 min-h-[80px]">
+                          <app-line-graph
+                            [series1]="traffic.downloadHistory"
+                            [series2]="traffic.uploadHistory"
+                            [maxValue]="traffic.maxSpeed"
+                            [height]="80"
+                            series1Color="syslens-accent-green"
+                            series2Color="syslens-accent-blue"
+                            [showYAxis]="true"
+                            yAxisFormat="bytes"
+                            [yAxisWidth]="48"
+                          />
+                        </div>
+                      </div>
+                    } @else {
+                      <div class="h-full bg-syslens-bg-tertiary/30 rounded-lg flex items-center justify-center text-syslens-text-muted text-sm">
                         Loading traffic data...
                       </div>
                     }
                   </div>
 
-                  <!-- Right: IP Configuration -->
-                  <div class="w-64 space-y-2 border-l border-syslens-border-primary pl-6">
+                  <!-- Column 3: IP Configuration -->
+                  <div class="space-y-2 border-l border-syslens-border-primary pl-6">
                     @if (adapter.ipv4Config) {
                       <div>
                         <p class="text-xs text-syslens-text-muted">IPv4 Address</p>
                         <p class="font-mono text-sm text-syslens-text-primary">{{ adapter.ipv4Config.address }}</p>
                       </div>
                       <div>
-                        <p class="text-xs text-syslens-text-muted">Subnet Mask</p>
+                        <p class="text-xs text-syslens-text-muted">Subnet / Gateway</p>
                         <p class="font-mono text-sm text-syslens-text-primary">{{ adapter.ipv4Config.subnetMask }}</p>
+                        @if (adapter.ipv4Config.defaultGateway) {
+                          <p class="font-mono text-sm text-syslens-text-secondary">{{ adapter.ipv4Config.defaultGateway }}</p>
+                        }
                       </div>
-                      @if (adapter.ipv4Config.defaultGateway) {
-                        <div>
-                          <p class="text-xs text-syslens-text-muted">Gateway</p>
-                          <p class="font-mono text-sm text-syslens-text-primary">{{ adapter.ipv4Config.defaultGateway }}</p>
-                        </div>
-                      }
                     }
                     <div>
                       <p class="text-xs text-syslens-text-muted">MAC Address</p>
@@ -135,7 +151,7 @@ interface AdapterTrafficHistory {
                     @if (adapter.dnsConfig.servers.length > 0) {
                       <div>
                         <p class="text-xs text-syslens-text-muted">DNS Servers</p>
-                        @for (dns of adapter.dnsConfig.servers; track dns) {
+                        @for (dns of adapter.dnsConfig.servers.slice(0, 2); track dns) {
                           <p class="font-mono text-sm text-syslens-text-primary">{{ dns }}</p>
                         }
                       </div>

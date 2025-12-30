@@ -1,43 +1,82 @@
-# Syslens Startup Task List
+# Syslens Task List - Phase 2
 
 ## 0 New Tasks ** IMPORTANT ** DO NOT REMOVE THIS SECTION
 
 ** IMPORTANT ** Process the tasks below (in this section). Expand them if needed and put them in the appropriate sections below.
 ** IMPORTANT ** Do not remove this section. Just clear out the tasks once processed.
 
-(none)
+(No new tasks)
 
 ## In Progress
 
-(none)
+(No tasks currently in progress)
+
+## UI/UX Improvements
+
+### Status Bar
+
+- [x] Change RAM display to show USED / TOTAL format (e.g., "100GB / 200GB")
+- [x] Use fixed width for status bar values to prevent UI shifting
+- [x] Add app version to bottom right of status bar
+
+### Sidebars
+
+- [x] Add port type summary to right sidebar (USB3, HDMI, DisplayPort counts)
+- [x] Add GPU to left sidebar with CPU/MEM/DISK/NETWORK
+- [x] Make sidebar devices clickable to open details dialog
+
+### Dashboard
+
+- [x] Show device names on Dashboard components (CPU, Memory, Disk, Network)
+- [x] Make all boxes clickable - open details dialog if no obvious action
+
+### Line Graphs
+
+- [x] Fix vertical constraints - lines should not extend below graph bounds
+
+## Storage Features
+
+- [x] Fix Physical Disks tab - currently showing nothing
+- [x] Show read/write speed and IOPS for physical disks
+- [x] Report used/available space for network storage
+
+## Network Features
+
+- [x] Update Adapters tab to show 3 columns (add second details column)
+
+## Details Dialogs
+
+- [x] Display details dialog on click: monitors (specs/drivers/documentation)
+- [x] Display details dialog on click: RAM modules (specs/drivers/documentation)
+
+## System Features
+
+- [x] Fix Restore Points tab - not showing any information
+
+## Performance
+
+- [x] Investigate 5-second startup pause that blocks UI
+  - **Finding**: Multiple WMI connections created during startup (CPU, memory, GPU, disk, network info each create separate connections)
+  - **Current mitigations**: Progressive loading, lazy SysInfoState, skeleton UI
+  - **Further optimization**: Would require shared WMI connection pool or deferring non-critical info
+
+## Hardware Database
+
+- [x] Integrate USB Hardware ID database for device identification
+- [x] Integrate PCI Hardware ID database for device identification
+- [x] Create auto-update mechanism for hardware ID databases
 
 ## Recently Completed
 
-- [x] Create new logo concepts (5 new options: Hexagonal Grid, Minimalist S, Binary Pulse, Layer Stack, Aperture)
-- [x] Setup marketing website for the app (Next.js 16 + Tailwind, landing page with branding)
-- [x] Setup Vercel deployment for marketing website (vercel.json config, README instructions)
-- [x] Update GitHub CI pipeline (added frontend tests, fixed Rust toolchain action)
+(See archived task list)
 
-## For Future Development
+## Future Development
 
-- [ ] 2.4 Set up code signing (optional, for later)
-- [ ] 7.3 Tag v1.0.0 release
-- [ ] 9.1 Get spec agent to design hardware database and AI-enhanced features
+- [ ] Set up code signing
+- [ ] Tag v1.0.0 release
+- [ ] Design hardware database and AI-enhanced features spec
+- [ ] Cross-platform support (macOS, Linux)
 
-  - Local hardware device database (JSON) with images/specs/drivers/documentation
-  - AI agent for searching device information not in database
-  - Process history database with AI-powered usage pattern analysis
-  - Settings dialog for API keys (AI agent, internet fetcher)
+---
 
-- [ ] Create a new task list for:
-
-- Post-v1.0.0 refinements and bug fixes
-- Hardware database and AI features (task 9.1)
-- Cross-platform support (macOS, Linux)
-- Code signing setup (task 2.4)
-
-**STATUS: ARCHIVED on December 29, 2025**
-
-This task list has been archived with 27/31 original tasks completed (87%), plus 3 post-archive tasks.
-
-**Full task history and details:** [startup-archived-2025-12-29.md](./startup-archived-2025-12-29.md)
+**Archive:** [startup-archived-2025-12-29.md](./startup-archived-2025-12-29.md)

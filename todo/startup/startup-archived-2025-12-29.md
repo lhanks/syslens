@@ -13,6 +13,30 @@ Tech Stack: Tauri 2.0 (Rust) + Angular 21 + Tailwind CSS
 
 This task list guided the initial development of Syslens from project setup through to release preparation. The majority of core features have been implemented, with only minor tasks remaining for code signing, final release tagging, and future enhancement specifications.
 
+## Post-Archive Completed Tasks (December 29-30, 2025)
+
+- [x] Add more motherboard details (Form Factor, Boot Mode, Secure Boot status, TPM Version)
+- [x] Add network storage (mapped drives, NAS) to the storage tab
+- [x] Fix memory vendor display in sidebar (extract from MemoryInfo.modules[].manufacturer)
+- [x] Add GPU Memory (VRAM) usage to sidebar with real-time updates
+- [x] Add new Restore Points tab showing Windows system restore points
+- [x] Update device names dynamically when network adapters change
+- [x] Make sidebar status items clickable to navigate to corresponding tabs
+- [x] Add GPU utilization to right sidebar with real-time percentage and progress bar
+- [x] Use thin lines in line graphs (reduced stroke-width from 2 to 1)
+- [x] Add right sidebar with system info (Windows version, CPU, RAM, Disk, GPU, IP addresses)
+- [x] Add CPU/Memory/Disk/Network usage to the status bar with color coding
+- [x] Add IP address to the status bar (primary IPv4 from active adapter)
+- [x] Create sidebar with system status summary (CPU, RAM, Disk, Network indicators)
+- [x] Network traffic monitored continuously in background (MetricsHistoryService)
+- [x] Group similar processes in process list with tree view
+- [x] Create new logo concepts (Hexagonal Grid, Minimalist S, Binary Pulse, Layer Stack, Aperture)
+- [x] Setup marketing website for the app (Next.js 16 + Tailwind)
+- [x] Setup Vercel deployment for marketing website
+- [x] Update GitHub CI pipeline (added frontend tests, fixed Rust toolchain action)
+
+---
+
 ## Remaining Tasks (Deferred)
 
 ### Infrastructure

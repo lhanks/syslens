@@ -448,7 +448,12 @@ export class DeviceDetailModalComponent implements OnChanges {
   activeTab: TabType = 'specs';
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['isOpen'] && this.isOpen && this.deviceId) {
+    // Reload when modal opens OR when deviceId/deviceType changes while modal is open
+    const isOpenChanged = changes['isOpen'] && this.isOpen;
+    const deviceIdChanged = changes['deviceId'] && this.isOpen;
+    const deviceTypeChanged = changes['deviceType'] && this.isOpen;
+
+    if ((isOpenChanged || deviceIdChanged || deviceTypeChanged) && this.deviceId) {
       this.loadDeviceInfo();
     }
   }

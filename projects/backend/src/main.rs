@@ -38,6 +38,7 @@ fn main() {
             commands::get_uptime,
             commands::get_domain_info,
             commands::get_user_info,
+            commands::get_restore_points,
             // Hardware commands
             commands::get_cpu_info,
             commands::get_cpu_metrics,
@@ -49,6 +50,7 @@ fn main() {
             commands::get_usb_devices,
             commands::get_audio_devices,
             commands::get_monitors,
+            commands::update_hardware_ids,
             // Storage commands
             commands::get_physical_disks,
             commands::get_partitions,

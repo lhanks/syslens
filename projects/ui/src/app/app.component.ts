@@ -1,12 +1,12 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-import { SidebarComponent, StatusBarComponent } from './shared/components';
+import { SidebarComponent, RightSidebarComponent, StatusBarComponent } from './shared/components';
 import { PreloadService, StateService, MetricsHistoryService } from '@core/services';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, SidebarComponent, StatusBarComponent],
+  imports: [RouterOutlet, SidebarComponent, RightSidebarComponent, StatusBarComponent],
   template: `
     <div class="flex flex-col h-screen bg-syslens-bg-primary">
       <div class="flex flex-1 overflow-hidden">
@@ -14,6 +14,7 @@ import { PreloadService, StateService, MetricsHistoryService } from '@core/servi
         <main class="flex-1 overflow-auto">
           <router-outlet />
         </main>
+        <app-right-sidebar />
       </div>
       <app-status-bar />
     </div>

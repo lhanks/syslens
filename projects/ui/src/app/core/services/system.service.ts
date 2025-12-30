@@ -10,6 +10,7 @@ import {
   SystemUptime,
   DomainInfo,
   UserInfo,
+  RestorePoint,
 } from '../models/system.model';
 
 /**
@@ -118,6 +119,13 @@ export class SystemService {
    */
   getUserInfo(): Observable<UserInfo> {
     return this.tauri.invoke<UserInfo>('get_user_info');
+  }
+
+  /**
+   * Get system restore points.
+   */
+  getRestorePoints(): Observable<RestorePoint[]> {
+    return this.tauri.invoke<RestorePoint[]>('get_restore_points');
   }
 
   /**

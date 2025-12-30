@@ -31,6 +31,7 @@ module.exports = {
             'red': '#ef4444',
             'purple': '#8b5cf6',
             'cyan': '#06b6d4',
+            'orange': '#f97316',
           }
         }
       },

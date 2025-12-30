@@ -91,9 +91,13 @@ export interface MotherboardInfo {
   version: string;
   serialNumber: string;
   chipset: string | null;
+  formFactor: string | null;
   biosVendor: string | null;
   biosVersion: string | null;
   biosReleaseDate: string | null;
+  bootMode: string | null;
+  secureBoot: boolean | null;
+  tpmVersion: string | null;
   supportUrl: string | null;
   imageUrl: string | null;
 }

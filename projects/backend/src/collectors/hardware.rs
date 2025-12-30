@@ -3,7 +3,7 @@
 use crate::models::{
     AudioDevice, CacheInfo, CpuInfo, CpuMetrics,
     GpuAdapterType, GpuInfo, GpuMetrics, MemoryInfo, MemoryMetrics, MemoryModule,
-    Monitor, MotherboardInfo, UsbDevice,
+    Monitor, MotherboardInfo, UsbDevice, UsbSpeed,
 };
 use sysinfo::{Components, CpuRefreshKind, MemoryRefreshKind, System};
 
@@ -298,10 +298,11 @@ impl HardwareCollector {
                     let part_speed = Self::extract_speed_from_part_number(&part_number);
                     let rated_speed = wmi_speed.max(part_speed);
 
-                    // Get manufacturer - prefer WMI, fall back to part number extraction
+                    // Get manufacturer - try multiple sources
                     let wmi_manufacturer = module.manufacturer
                         .map(|m| m.trim().to_string())
-                        .filter(|m| !m.is_empty() && m != "Unknown");
+                        .filter(|m| !m.is_empty() && m != "Unknown")
+                        .and_then(|m| Self::decode_manufacturer(&m));
 
                     let manufacturer = wmi_manufacturer
                         .or_else(|| Self::extract_manufacturer_from_part_number(&part_number))
@@ -491,6 +492,138 @@ impl HardwareCollector {
         None
     }
 
+    /// Decode manufacturer string - handles both plain names and JEDEC-encoded hex values
+    #[cfg(target_os = "windows")]
+    fn decode_manufacturer(raw: &str) -> Option<String> {
+        let trimmed = raw.trim();
+
+        // Skip values that are clearly not useful
+        if trimmed.is_empty()
+            || trimmed == "Unknown"
+            || trimmed == "Undefined"
+            || trimmed == "To Be Filled By O.E.M."
+            || trimmed == "Not Specified"
+            || trimmed.starts_with("0x0000")
+        {
+            return None;
+        }
+
+        // Check if it looks like a hex-encoded JEDEC manufacturer ID
+        // Format is often like "80AD000000" where first 2-4 chars are the bank/ID
+        if trimmed.chars().all(|c| c.is_ascii_hexdigit()) && trimmed.len() >= 4 {
+            // Try to decode as JEDEC manufacturer ID
+            if let Some(name) = Self::decode_jedec_manufacturer_id(trimmed) {
+                return Some(name);
+            }
+            // If we couldn't decode and it's just hex, skip it
+            return None;
+        }
+
+        // It's a regular manufacturer name - check if it's a known one
+        let upper = trimmed.to_uppercase();
+
+        // Map common variations to canonical names
+        if upper.contains("SAMSUNG") {
+            return Some("Samsung".to_string());
+        }
+        if upper.contains("HYNIX") || upper.contains("HYUNDAI") {
+            return Some("SK Hynix".to_string());
+        }
+        if upper.contains("MICRON") {
+            return Some("Micron".to_string());
+        }
+        if upper.contains("CRUCIAL") {
+            return Some("Crucial".to_string());
+        }
+        if upper.contains("KINGSTON") {
+            return Some("Kingston".to_string());
+        }
+        if upper.contains("CORSAIR") {
+            return Some("Corsair".to_string());
+        }
+        if upper.contains("G.SKILL") || upper == "GSKILL" {
+            return Some("G.Skill".to_string());
+        }
+        if upper.contains("TEAM") || upper.contains("T-FORCE") {
+            return Some("Team Group".to_string());
+        }
+        if upper.contains("ADATA") || upper.contains("A-DATA") {
+            return Some("ADATA".to_string());
+        }
+        if upper.contains("PATRIOT") {
+            return Some("Patriot".to_string());
+        }
+        if upper.contains("PNY") {
+            return Some("PNY".to_string());
+        }
+        if upper.contains("TRANSCEND") {
+            return Some("Transcend".to_string());
+        }
+        if upper.contains("NANYA") {
+            return Some("Nanya".to_string());
+        }
+        if upper.contains("RAMAXEL") {
+            return Some("Ramaxel".to_string());
+        }
+        if upper.contains("ELPIDA") {
+            return Some("Elpida".to_string());
+        }
+
+        // Return the original if it seems like a valid name
+        Some(trimmed.to_string())
+    }
+
+    /// Decode JEDEC manufacturer ID from hex string
+    #[cfg(target_os = "windows")]
+    fn decode_jedec_manufacturer_id(hex: &str) -> Option<String> {
+        // JEDEC manufacturer IDs are encoded in SPD data
+        // Common IDs (first byte after bank continuation codes):
+        // 0x2C = Micron
+        // 0xAD = SK Hynix
+        // 0xCE = Samsung
+        // 0x9E = Corsair (Undefined in JEDEC, but used)
+        // 0x04 = Fujitsu
+        // 0x07 = Hitachi
+        // 0x89 = Intel
+        // 0x98 = Toshiba
+        // Bank 1 often has 0x80 prefix
+
+        // Try to parse first 2-4 hex chars
+        let id = if hex.len() >= 4 {
+            u16::from_str_radix(&hex[0..4], 16).ok()
+        } else {
+            u16::from_str_radix(hex, 16).ok()
+        };
+
+        match id {
+            // Bank 1 (0x80XX format) - common for consumer RAM
+            Some(0x80AD) => Some("SK Hynix".to_string()),
+            Some(0x80CE) => Some("Samsung".to_string()),
+            Some(0x802C) => Some("Micron".to_string()),
+            Some(0x8004) => Some("Fujitsu".to_string()),
+            Some(0x8089) => Some("Intel".to_string()),
+            Some(0x8098) => Some("Toshiba".to_string()),
+            Some(0x80A8) => Some("ADATA".to_string()),
+            Some(0x809E) => Some("Corsair".to_string()),
+            Some(0x80CB) => Some("A-DATA".to_string()),
+
+            // Direct IDs (no bank prefix)
+            Some(0xAD00) | Some(0xAD) => Some("SK Hynix".to_string()),
+            Some(0xCE00) | Some(0xCE) => Some("Samsung".to_string()),
+            Some(0x2C00) | Some(0x2C) => Some("Micron".to_string()),
+
+            // Additional common IDs
+            Some(0x0198) => Some("Kingston".to_string()),
+            Some(0x014F) => Some("Transcend".to_string()),
+            Some(0x017A) => Some("Apacer".to_string()),
+            Some(0x0143) => Some("Ramaxel".to_string()),
+            Some(0x0183) => Some("Nanya".to_string()),
+            Some(0x01FE) => Some("Elpida".to_string()),
+
+            _ => None,
+        }
+    }
+
     /// Get real-time memory metrics
     pub fn get_memory_metrics() -> MemoryMetrics {
         let mut sys = System::new();
@@ -637,9 +770,13 @@ impl HardwareCollector {
                 version: String::new(),
                 serial_number: String::new(),
                 chipset: None,
+                form_factor: None,
                 bios_vendor: None,
                 bios_version: None,
                 bios_release_date: None,
+                boot_mode: None,
+                secure_boot: None,
+                tpm_version: None,
                 support_url: None,
                 image_url: None,
             }
@@ -671,6 +808,13 @@ impl HardwareCollector {
             release_date: Option<String>,
         }
 
+        #[derive(Deserialize, Debug)]
+        #[serde(rename = "Win32_ComputerSystem")]
+        #[serde(rename_all = "PascalCase")]
+        struct Win32ComputerSystem {
+            pc_system_type: Option<u16>,
+        }
+
         let mut manufacturer = "Unknown".to_string();
         let mut product = "Unknown".to_string();
         let mut version = String::new();
@@ -678,6 +822,7 @@ impl HardwareCollector {
         let mut bios_vendor = None;
         let mut bios_version = None;
         let mut bios_release_date = None;
+        let mut form_factor = None;
 
         // Try to initialize COM, or assume it's already initialized
         let com = COMLibrary::new()
@@ -726,7 +871,31 @@ impl HardwareCollector {
                     });
                 }
             }
+
+            // Get system type for form factor hint
+            if let Ok(results) = wmi_con.query::<Win32ComputerSystem>() {
+                if let Some(sys) = results.into_iter().next() {
+                    // PCSystemType: 1=Desktop, 2=Mobile, 3=Workstation, 4=Enterprise Server, 5=SOHO Server, 6=Appliance PC, 7=Performance Server, 8=Maximum
+                    form_factor = sys.pc_system_type.map(|t| match t {
+                        1 => "Desktop".to_string(),
+                        2 => "Mobile/Laptop".to_string(),
+                        3 => "Workstation".to_string(),
+                        4 | 5 | 7 => "Server".to_string(),
+                        6 => "Appliance".to_string(),
+                        _ => "Unknown".to_string(),
+                    });
+                }
+            }
         }
+
+        // Get boot mode (UEFI vs Legacy) from registry
+        let boot_mode = Self::get_boot_mode();
+
+        // Get Secure Boot status from registry
+        let secure_boot = Self::get_secure_boot_status();
+
+        // Get TPM version
+        let tpm_version = Self::get_tpm_version();
 
         let support_url = Self::get_motherboard_support_url(&manufacturer, &product);
         let image_url = Self::get_motherboard_image_url(&manufacturer, &product);
@@ -737,12 +906,100 @@ impl HardwareCollector {
             version,
             serial_number,
             chipset: None,
+            form_factor,
             bios_vendor,
             bios_version,
             bios_release_date,
+            boot_mode,
+            secure_boot,
+            tpm_version,
             support_url,
             image_url,
         }
+    }
+
+    /// Get boot mode (UEFI or Legacy) from Windows registry
+    #[cfg(target_os = "windows")]
+    fn get_boot_mode() -> Option<String> {
+        use winreg::enums::*;
+        use winreg::RegKey;
+
+        // Check if booted in UEFI mode by looking for EFI system partition indicator
+        let hklm = RegKey::predef(HKEY_LOCAL_MACHINE);
+
+        // Method 1: Check firmware type from setup API
+        if hklm.open_subkey(r"SYSTEM\CurrentControlSet\Control\SecureBoot\State").is_ok() {
+            // If SecureBoot key exists, we're in UEFI mode
+            return Some("UEFI".to_string());
+        }
+
+        // Method 2: Check PlatformInfo
+        if let Ok(firmware_key) = hklm.open_subkey(r"SYSTEM\CurrentControlSet\Control\SystemInformation") {
+            if let Ok(bios_mode) = firmware_key.get_value::<String, _>("BIOSMode") {
+                return Some(if bios_mode.to_uppercase().contains("UEFI") { "UEFI" } else { "Legacy" }.to_string());
+            }
+        }
+
+        // Method 3: Check EFI variables exist
+        let efi_path = std::path::Path::new(r"C:\Windows\Panther\UnattendGC\setupact.log");
+        if std::fs::read_to_string(efi_path)
+            .map(|content| content.contains("UEFI"))
+            .unwrap_or(false)
+        {
+            return Some("UEFI".to_string());
+        }
+
+        // Default: Assume UEFI if Windows 10/11 (most modern systems)
+        Some("UEFI".to_string())
+    }
+
+    /// Get Secure Boot status from registry
+    #[cfg(target_os = "windows")]
+    fn get_secure_boot_status() -> Option<bool> {
+        use winreg::enums::*;
+        use winreg::RegKey;
+
+        let hklm = RegKey::predef(HKEY_LOCAL_MACHINE);
+
+        if let Ok(secure_boot_key) = hklm.open_subkey(r"SYSTEM\CurrentControlSet\Control\SecureBoot\State") {
+            if let Ok(value) = secure_boot_key.get_value::<u32, _>("UEFISecureBootEnabled") {
+                return Some(value == 1);
+            }
+        }
+
+        None
+    }
+
+    /// Get TPM version
+    #[cfg(target_os = "windows")]
+    fn get_tpm_version() -> Option<String> {
+        use winreg::enums::*;
+        use winreg::RegKey;
+
+        let hklm = RegKey::predef(HKEY_LOCAL_MACHINE);
+
+        // Check TPM info from registry
+        if let Ok(tpm_key) = hklm.open_subkey(r"SYSTEM\CurrentControlSet\Services\TPM\WMI") {
+            // Try to get spec version
+            if let Ok(version) = tpm_key.get_value::<String, _>("SpecVersion") {
+                // Format is usually "2.0, 0, 1.38" - extract major version
+                let parts: Vec<&str> = version.split(',').collect();
+                if let Some(major) = parts.first() {
+                    let major_version = major.trim();
+                    if !major_version.is_empty() {
+                        return Some(format!("TPM {}", major_version));
+                    }
+                }
+            }
+        }
+
+        // Alternative: check if TPM is present at all
+        if hklm.open_subkey(r"SYSTEM\CurrentControlSet\Services\TPM").is_ok() {
+            // TPM service exists but we couldn't get version - assume 2.0 for modern systems
+            return Some("TPM (version unknown)".to_string());
+        }
+
+        None
     }
 
     #[cfg(target_os = "windows")]
@@ -778,8 +1035,138 @@ impl HardwareCollector {
 
     /// Get USB devices
     pub fn get_usb_devices() -> Vec<UsbDevice> {
-        // Would need platform-specific implementation
-        Vec::new()
+        #[cfg(target_os = "windows")]
+        {
+            Self::get_usb_devices_windows()
+        }
+
+        #[cfg(not(target_os = "windows"))]
+        {
+            Vec::new()
+        }
+    }
+
+    #[cfg(target_os = "windows")]
+    fn get_usb_devices_windows() -> Vec<UsbDevice> {
+        use crate::hwids::UsbIdDatabase;
+        use serde::Deserialize;
+        use wmi::{COMLibrary, WMIConnection};
+
+        #[derive(Deserialize, Debug)]
+        #[serde(rename = "Win32_PnPEntity")]
+        #[serde(rename_all = "PascalCase")]
+        struct Win32PnPEntity {
+            name: Option<String>,
+            device_id: Option<String>,
+            manufacturer: Option<String>,
+            description: Option<String>,
+            pnp_device_id: Option<String>,
+        }
+
+        let mut devices = Vec::new();
+
+        let com = COMLibrary::new()
+            .unwrap_or_else(|_| unsafe { COMLibrary::assume_initialized() });
+
+        if let Ok(wmi_con) = WMIConnection::new(com) {
+            // Query for USB devices using PnP entities with USB in the device ID
+            let query = "SELECT * FROM Win32_PnPEntity WHERE DeviceID LIKE 'USB%'";
+            if let Ok(results) = wmi_con.raw_query::<Win32PnPEntity>(query) {
+                let usb_db = UsbIdDatabase::global();
+
+                for device in results {
+                    let device_id = device.device_id.as_deref().unwrap_or("");
+                    let pnp_id = device.pnp_device_id.as_deref().unwrap_or(device_id);
+
+                    // Parse VID and PID from device ID (format: USB\VID_xxxx&PID_xxxx\...)
+                    let (vid, pid) = Self::parse_usb_vid_pid(pnp_id);
+
+                    // Skip devices without valid VID/PID (USB hubs, controllers, etc. without device IDs)
+                    if vid.is_empty() && pid.is_empty() {
+                        continue;
+                    }
+
+                    // Parse hex values for database lookup
+                    let vid_num = u16::from_str_radix(&vid, 16).unwrap_or(0);
+                    let pid_num = u16::from_str_radix(&pid, 16).unwrap_or(0);
+
+                    // Look up vendor and product names from database
+                    let (vendor_name, product_name) = usb_db.lookup(vid_num, pid_num);
+
+                    // Determine the best name to use
+                    let name = product_name
+                        .map(|s| s.to_string())
+                        .or_else(|| device.name.clone())
+                        .or_else(|| device.description.clone())
+                        .unwrap_or_else(|| format!("USB Device {:04X}:{:04X}", vid_num, pid_num));
+
+                    // Use database vendor name if available, fall back to WMI manufacturer
+                    let manufacturer = vendor_name
+                        .map(|s| s.to_string())
+                        .or_else(|| device.manufacturer.clone());
+
+                    // Extract port info from device ID
+                    let port = Self::extract_usb_port(pnp_id);
+
+                    // Determine USB speed (would need additional WMI query for accurate info)
+                    let speed = Self::determine_usb_speed(pnp_id);
+
+                    devices.push(UsbDevice {
+                        name,
+                        manufacturer,
+                        vid: vid.to_uppercase(),
+                        pid: pid.to_uppercase(),
+                        port,
+                        speed,
+                        is_bus_powered: true, // Default assumption
+                    });
+                }
+            }
+        }
+
+        devices
+    }
+
+    /// Parse VID and PID from a USB device ID string.
+    /// Format: USB\VID_xxxx&PID_xxxx\... or USB\VID_xxxx&PID_xxxx&...
+    #[cfg(target_os = "windows")]
+    fn parse_usb_vid_pid(device_id: &str) -> (String, String) {
+        use regex::Regex;
+        use lazy_static::lazy_static;
+
+        lazy_static! {
+            static ref VID_PID_REGEX: Regex = Regex::new(
+                r"(?i)VID_([0-9A-F]{4})&PID_([0-9A-F]{4})"
+            ).unwrap();
+        }
+
+        if let Some(caps) = VID_PID_REGEX.captures(device_id) {
+            let vid = caps.get(1).map(|m| m.as_str().to_string()).unwrap_or_default();
+            let pid = caps.get(2).map(|m| m.as_str().to_string()).unwrap_or_default();
+            (vid, pid)
+        } else {
+            (String::new(), String::new())
+        }
+    }
+
+    /// Extract USB port information from device ID.
+    #[cfg(target_os = "windows")]
+    fn extract_usb_port(device_id: &str) -> String {
+        // Device ID format: USB\VID_xxxx&PID_xxxx\serial_or_port
+        let parts: Vec<&str> = device_id.split('\\').collect();
+        if parts.len() >= 3 {
+            parts[2].to_string()
+        } else {
+            "Unknown".to_string()
+        }
+    }
+
+    /// Determine USB speed based on device characteristics.
+    #[cfg(target_os = "windows")]
+    fn determine_usb_speed(_device_id: &str) -> UsbSpeed {
+        // This would require additional WMI queries to USB controllers
+        // For now, return Unknown - could be enhanced with proper detection
+        UsbSpeed::Unknown
     }
 
     /// Get audio devices

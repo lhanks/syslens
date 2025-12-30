@@ -2,7 +2,7 @@
 
 use crate::models::{
     ActivationStatus, BiosInfo, BootConfig, BootMode, DeviceInfo, DomainInfo, DomainRole,
-    OsInfo, SystemUptime, TpmStatus, UserInfo,
+    OsInfo, RestorePoint, RestorePointType, SystemUptime, TpmStatus, UserInfo,
 };
 use sysinfo::System;
 use chrono::{DateTime, Local, Utc};
@@ -67,6 +67,16 @@ struct Win32TPM {
     spec_version: Option<String>,
     is_activated_initial_value: Option<bool>,
     is_enabled_initial_value: Option<bool>,
+}
+
+#[cfg(target_os = "windows")]
+#[derive(Deserialize, Debug)]
+#[serde(rename_all = "PascalCase")]
+struct SystemRestorePoint {
+    sequence_number: Option<u32>,
+    description: Option<String>,
+    restore_point_type: Option<u32>,
+    creation_time: Option<String>,
 }
 
 /// Collector for system configuration information
@@ -308,6 +318,72 @@ impl SystemCollector {
             user_profile,
             is_admin: Self::is_admin(),
             login_time: Local::now().to_rfc3339(),
+        }
+    }
+
+    /// Get system restore points (Windows only)
+    #[cfg(target_os = "windows")]
+    pub fn get_restore_points() -> Vec<RestorePoint> {
+        // System restore points are in root\default namespace
+        let com = COMLibrary::new()
+            .or_else(|_| COMLibrary::without_security())
+            .unwrap_or_else(|_| unsafe { COMLibrary::assume_initialized() });
+
+        if let Ok(wmi) = WMIConnection::with_namespace_path("root\\default", com) {
+            let results: Result<Vec<SystemRestorePoint>, _> = wmi.raw_query(
+                "SELECT SequenceNumber, Description, RestorePointType, CreationTime FROM SystemRestore"
+            );
+
+            if let Ok(points) = results {
+                return points
+                    .into_iter()
+                    .map(|p| RestorePoint {
+                        sequence_number: p.sequence_number.unwrap_or(0),
+                        description: p.description.unwrap_or_else(|| "Unknown".to_string()),
+                        restore_point_type: Self::parse_restore_point_type(p.restore_point_type),
+                        creation_time: p.creation_time
+                            .map(|dt| Self::parse_wmi_datetime(&dt))
+                            .unwrap_or_else(|| "Unknown".to_string()),
+                    })
+                    .collect();
+            }
+        }
+        Vec::new()
+    }
+
+    #[cfg(not(target_os = "windows"))]
+    pub fn get_restore_points() -> Vec<RestorePoint> {
+        Vec::new()
+    }
+
+    #[cfg(target_os = "windows")]
+    fn parse_restore_point_type(type_code: Option<u32>) -> RestorePointType {
+        match type_code {
+            Some(0) => RestorePointType::ApplicationInstall,
+            Some(1) => RestorePointType::ApplicationUninstall,
+            Some(10) => RestorePointType::DeviceDriverInstall,
+            Some(12) => RestorePointType::ModifySettings,
+            Some(13) => RestorePointType::CancelledOperation,
+            Some(14) => RestorePointType::BackupRecovery,
+            Some(16) => RestorePointType::ManualCheckpoint,
+            Some(17) => RestorePointType::WindowsUpdate,
+            _ => RestorePointType::Unknown,
+        }
+    }
+
+    #[cfg(target_os = "windows")]
+    fn parse_wmi_datetime(wmi_dt: &str) -> String {
+        // WMI datetime format: 20231015123456.123456+000
+        if wmi_dt.len() >= 14 {
+            let year = &wmi_dt[0..4];
+            let month = &wmi_dt[4..6];
+            let day = &wmi_dt[6..8];
+            let hour = &wmi_dt[8..10];
+            let minute = &wmi_dt[10..12];
+            let second = &wmi_dt[12..14];
+            format!("{}-{}-{} {}:{}:{}", year, month, day, hour, minute, second)
+        } else {
+            wmi_dt.to_string()
         }
     }
 

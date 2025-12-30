@@ -81,4 +81,7 @@ export interface NetworkDrive {
   server: string;
   shareName: string;
   status: 'Connected' | 'Disconnected' | 'Unknown';
+  totalBytes: number | null;
+  freeBytes: number | null;
+  usedBytes: number | null;
 }

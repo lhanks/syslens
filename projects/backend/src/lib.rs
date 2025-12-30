@@ -5,6 +5,7 @@
 
 pub mod collectors;
 pub mod commands;
+pub mod hwids;
 pub mod models;
 pub mod services;
 pub mod state;

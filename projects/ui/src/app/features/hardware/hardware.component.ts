@@ -5,7 +5,7 @@ import { Subject, takeUntil } from 'rxjs';
 import { HardwareService, StatusService } from '@core/services';
 import {
   CpuInfo, CpuMetrics,
-  MemoryInfo, MemoryMetrics,
+  MemoryInfo, MemoryMetrics, MemoryModule,
   GpuInfo, GpuMetrics,
   MotherboardInfo, Monitor
 } from '@core/models';
@@ -161,7 +161,10 @@ import { BytesPipe, DecimalPipe } from '@shared/pipes';
                   <p class="text-xs text-syslens-text-muted mb-2">Installed Modules</p>
                   <div class="space-y-3">
                     @for (module of memoryInfo.modules; track module.slot) {
-                      <div class="p-2 bg-syslens-bg-primary rounded text-sm">
+                      <div
+                        class="p-2 bg-syslens-bg-primary rounded text-sm cursor-pointer hover:bg-syslens-bg-tertiary transition-colors"
+                        (click)="openDeviceDetails(getMemoryModuleDeviceId(module), 'Memory')"
+                      >
                         <div class="flex items-center justify-between mb-1">
                           <span class="font-medium text-syslens-text-primary">{{ module.slot }}</span>
                           <span class="text-syslens-text-primary">{{ module.capacityBytes | bytes }}</span>
@@ -286,7 +289,10 @@ import { BytesPipe, DecimalPipe } from '@shared/pipes';
         <h2 class="section-title">Displays</h2>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           @for (monitor of monitors; track monitor.id) {
-            <div class="p-4 bg-syslens-bg-tertiary rounded-lg">
+            <div
+              class="p-4 bg-syslens-bg-tertiary rounded-lg cursor-pointer hover:bg-syslens-bg-secondary transition-colors"
+              (click)="openDeviceDetails(getMonitorDeviceId(monitor), 'Monitor')"
+            >
               <h3 class="font-medium text-syslens-text-primary">{{ monitor.name }}</h3>
               @if (monitor.manufacturer) {
                 <p class="text-sm text-syslens-text-muted">{{ monitor.manufacturer }}</p>
@@ -369,6 +375,12 @@ import { BytesPipe, DecimalPipe } from '@shared/pipes';
                     <p class="text-sm text-syslens-text-primary">{{ motherboardInfo.serialNumber }}</p>
                   </div>
                 }
+                @if (motherboardInfo.formFactor) {
+                  <div>
+                    <p class="text-xs text-syslens-text-muted">Form Factor</p>
+                    <p class="text-sm text-syslens-text-primary">{{ motherboardInfo.formFactor }}</p>
+                  </div>
+                }
               </div>
 
               <!-- BIOS Information -->
@@ -392,6 +404,36 @@ import { BytesPipe, DecimalPipe } from '@shared/pipes';
                       <div>
                         <p class="text-xs text-syslens-text-muted">Release Date</p>
                         <p class="text-syslens-text-primary">{{ motherboardInfo.biosReleaseDate }}</p>
+                      </div>
+                    }
+                  </div>
+                </div>
+              }
+
+              <!-- Security & Boot Information -->
+              @if (motherboardInfo.bootMode || motherboardInfo.secureBoot !== null || motherboardInfo.tpmVersion) {
+                <div class="mt-4 pt-4 border-t border-syslens-border-primary">
+                  <p class="text-xs text-syslens-text-muted mb-2">Security & Boot</p>
+                  <div class="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+                    @if (motherboardInfo.bootMode) {
+                      <div>
+                        <p class="text-xs text-syslens-text-muted">Boot Mode</p>
+                        <p class="text-syslens-text-primary">{{ motherboardInfo.bootMode }}</p>
+                      </div>
+                    }
+                    @if (motherboardInfo.secureBoot !== null) {
+                      <div>
+                        <p class="text-xs text-syslens-text-muted">Secure Boot</p>
+                        <p [class.text-syslens-accent-green]="motherboardInfo.secureBoot"
+                           [class.text-syslens-text-secondary]="!motherboardInfo.secureBoot">
+                          {{ motherboardInfo.secureBoot ? 'Enabled' : 'Disabled' }}
+                        </p>
+                      </div>
+                    }
+                    @if (motherboardInfo.tpmVersion) {
+                      <div>
+                        <p class="text-xs text-syslens-text-muted">TPM</p>
+                        <p class="text-syslens-text-primary">{{ motherboardInfo.tpmVersion }}</p>
                       </div>
                     }
                   </div>
@@ -521,6 +563,25 @@ export class HardwareComponent implements OnInit, OnDestroy {
     const manufacturer = this.normalizeManufacturer(this.motherboardInfo.manufacturer);
     const model = this.cleanModelName(this.motherboardInfo.product, manufacturer);
     return `mb-${manufacturer}-${model}`;
+  }
+
+  getMonitorDeviceId(monitor: Monitor): string {
+    const manufacturer = monitor.manufacturer
+      ? this.normalizeManufacturer(monitor.manufacturer)
+      : 'unknown';
+    const model = this.cleanModelName(monitor.name, manufacturer);
+    return `monitor-${manufacturer}-${model}`;
+  }
+
+  getMemoryModuleDeviceId(module: MemoryModule): string {
+    const manufacturer = module.manufacturer && module.manufacturer !== 'Unknown'
+      ? this.normalizeManufacturer(module.manufacturer)
+      : 'unknown';
+    // Use part number if available, otherwise use slot + capacity
+    const model = module.partNumber && module.partNumber !== 'Unknown'
+      ? module.partNumber.toLowerCase().replace(/[^a-z0-9]+/g, '-')
+      : `${module.slot}-${module.capacityBytes}`.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+    return `memory-${manufacturer}-${model}`;
   }
 
   /**

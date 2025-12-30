@@ -19,12 +19,15 @@ const COLOR_MAP: Record<string, string> = {
 // Default expected interval - will be auto-adjusted based on actual data timing
 const DEFAULT_INTERVAL_MS = 1000;
 
+// Counter for unique instance IDs
+let instanceCounter = 0;
+
 @Component({
   selector: 'app-line-graph',
   standalone: true,
   imports: [CommonModule],
   template: `
-    <div class="flex items-stretch w-full" [style.height.px]="height">
+    <div class="flex items-stretch w-full overflow-hidden" [style.height.px]="height">
       <!-- Y-axis labels -->
       @if (showYAxis) {
         <div class="flex flex-col justify-between text-right pr-1 text-[9px] font-mono text-syslens-text-muted flex-shrink-0"
@@ -38,7 +41,17 @@ const DEFAULT_INTERVAL_MS = 1000;
       <!-- Graph -->
       <svg [attr.viewBox]="'0 0 ' + graphWidth + ' ' + height"
            preserveAspectRatio="none"
-           class="overflow-visible flex-1">
+           class="flex-1 h-full"
+           [style.height.px]="height"
+           [style.max-height.px]="height"
+           style="overflow: hidden">
+        <!-- Clip path to constrain lines within graph bounds -->
+        <defs>
+          <clipPath [attr.id]="'graphClip-' + instanceId">
+            <rect x="0" y="0" [attr.width]="graphWidth" [attr.height]="height"/>
+          </clipPath>
+        </defs>
+
         <!-- Background grid lines -->
         <g class="grid-lines">
           @for (y of gridLines(); track y) {
@@ -53,47 +66,50 @@ const DEFAULT_INTERVAL_MS = 1000;
           }
         </g>
 
-        <!-- Area fill for first series -->
-        @if (series1AreaPath()) {
-          <path
-            [attr.d]="series1AreaPath()"
-            [attr.fill]="getColor(series1Color)"
-            fill-opacity="0.1"
-          />
-        }
+        <!-- Clipped group for series -->
+        <g [attr.clip-path]="'url(#graphClip-' + instanceId + ')'">
+          <!-- Area fill for first series -->
+          @if (series1AreaPath()) {
+            <path
+              [attr.d]="series1AreaPath()"
+              [attr.fill]="getColor(series1Color)"
+              fill-opacity="0.1"
+            />
+          }
 
-        <!-- Area fill for second series -->
-        @if (series2AreaPath()) {
-          <path
-            [attr.d]="series2AreaPath()"
-            [attr.fill]="getColor(series2Color)"
-            fill-opacity="0.1"
-          />
-        }
+          <!-- Area fill for second series -->
+          @if (series2AreaPath()) {
+            <path
+              [attr.d]="series2AreaPath()"
+              [attr.fill]="getColor(series2Color)"
+              fill-opacity="0.1"
+            />
+          }
 
-        <!-- Line for first series -->
-        @if (series1Path()) {
-          <path
-            [attr.d]="series1Path()"
-            fill="none"
-            [attr.stroke]="getColor(series1Color)"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          />
-        }
+          <!-- Line for first series -->
+          @if (series1Path()) {
+            <path
+              [attr.d]="series1Path()"
+              fill="none"
+              [attr.stroke]="getColor(series1Color)"
+              stroke-width="1"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          }
 
-        <!-- Line for second series -->
-        @if (series2Path()) {
-          <path
-            [attr.d]="series2Path()"
-            fill="none"
-            [attr.stroke]="getColor(series2Color)"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          />
-        }
+          <!-- Line for second series -->
+          @if (series2Path()) {
+            <path
+              [attr.d]="series2Path()"
+              fill="none"
+              [attr.stroke]="getColor(series2Color)"
+              stroke-width="1"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          }
+        </g>
       </svg>
     </div>
   `,
@@ -101,6 +117,10 @@ const DEFAULT_INTERVAL_MS = 1000;
     :host {
       display: block;
       width: 100%;
+      overflow: hidden;
+    }
+    svg {
+      display: block;
     }
   `]
 })
@@ -115,6 +135,9 @@ export class LineGraphComponent implements OnInit, OnDestroy, OnChanges {
   @Input() showYAxis = false;
   @Input() yAxisFormat: 'percent' | 'bytes' | 'number' = 'number';
   @Input() yAxisWidth = 32;
+
+  // Unique instance ID for clip-path references
+  instanceId = ++instanceCounter;
 
   // Computed graph width (total width minus y-axis space)
   get graphWidth(): number {
@@ -286,7 +309,9 @@ export class LineGraphComponent implements OnInit, OnDestroy, OnChanges {
     for (let i = 0; i < numPoints; i++) {
       // Each point shifts left by the scroll offset
       const x = (i * pointSpacing) - pixelOffset;
-      const y = padding + effectiveHeight - (data[i] / maxVal) * effectiveHeight;
+      // Clamp value to 0-maxValue range to prevent lines going outside bounds
+      const clampedValue = Math.max(0, Math.min(data[i], maxVal));
+      const y = padding + effectiveHeight - (clampedValue / maxVal) * effectiveHeight;
       points.push({ x, y });
     }
 

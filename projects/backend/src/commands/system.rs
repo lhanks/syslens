@@ -2,7 +2,7 @@
 
 use crate::collectors::SystemCollector;
 use crate::models::{
-    BiosInfo, BootConfig, DeviceInfo, DomainInfo, OsInfo, SystemUptime, UserInfo,
+    BiosInfo, BootConfig, DeviceInfo, DomainInfo, OsInfo, RestorePoint, SystemUptime, UserInfo,
 };
 
 /// Get device identification information
@@ -52,6 +52,13 @@ pub fn get_domain_info() -> DomainInfo {
 pub fn get_user_info() -> UserInfo {
     log::debug!("Command: get_user_info");
     SystemCollector::get_user_info()
+}
+
+/// Get system restore points
+#[tauri::command]
+pub fn get_restore_points() -> Vec<RestorePoint> {
+    log::debug!("Command: get_restore_points");
+    SystemCollector::get_restore_points()
 }
 
 #[cfg(test)]

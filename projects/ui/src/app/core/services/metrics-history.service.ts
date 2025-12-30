@@ -5,7 +5,7 @@ import { takeUntil, switchMap, startWith, catchError } from 'rxjs/operators';
 import { HardwareService } from './hardware.service';
 import { StorageService } from './storage.service';
 import { NetworkService } from './network.service';
-import { NetworkAdapter, AdapterStats, MemoryInfo } from '../models';
+import { NetworkAdapter, AdapterStats, MemoryInfo, GpuMetrics } from '../models';
 
 const MAX_HISTORY_POINTS = 60; // 60 seconds of history
 const NETWORK_EMA_ALPHA = 0.3; // Smoothing factor for network speeds (0-1, lower = smoother)
@@ -41,12 +41,15 @@ export class MetricsHistoryService implements OnDestroy {
   private _diskActivity = signal(0);
   private _networkDownSpeed = signal(0);
   private _networkUpSpeed = signal(0);
+  private _gpuUsage = signal(0);
+  private _gpuMetrics = signal<GpuMetrics[]>([]);
 
   // Network tracking state
   private activeAdapters: NetworkAdapter[] = [];
   private previousNetworkStats = new Map<string, { bytesReceived: number; bytesSent: number; timestamp: number }>();
   private memoryInfo: MemoryInfo | null = null;
   private isStarted = false;
+  private _primaryIpAddress = signal<string | null>(null);
 
   // Smoothed network speeds (EMA filtered)
   private smoothedDownSpeed = 0;
@@ -73,9 +76,14 @@ export class MetricsHistoryService implements OnDestroy {
   diskActivity = computed(() => this._diskActivity());
   networkDownSpeed = computed(() => this._networkDownSpeed());
   networkUpSpeed = computed(() => this._networkUpSpeed());
+  gpuUsage = computed(() => this._gpuUsage());
+  gpuMetrics = computed(() => this._gpuMetrics());
 
   // Use smoothed max for stable graph scaling (prevents jitter from scale changes)
   networkMaxSpeed = computed(() => this._smoothedNetworkMax());
+
+  // Primary IP address from the first active adapter with IPv4
+  primaryIpAddress = computed(() => this._primaryIpAddress());
 
   /**
    * Start continuous metrics polling.
@@ -103,11 +111,38 @@ export class MetricsHistoryService implements OnDestroy {
     ).subscribe(({ memoryInfo, adapters }) => {
       this.memoryInfo = memoryInfo;
       this._memoryTotalBytes.set(memoryInfo.totalBytes);
-      this.activeAdapters = adapters.filter(a => a.status === 'Up');
+      this.updateAdapters(adapters);
 
       // Start polling after initial data is loaded
       this.startPolling();
+
+      // Subscribe to adapter changes for dynamic updates
+      this.subscribeToAdapterChanges();
     });
+  }
+
+  private subscribeToAdapterChanges(): void {
+    this.networkService.onAdapterChange().pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(adapters => {
+      this.updateAdapters(adapters);
+    });
+  }
+
+  private updateAdapters(adapters: NetworkAdapter[]): void {
+    this.activeAdapters = adapters.filter(a => a.status === 'Up');
+
+    // Extract primary IP address from first active adapter with IPv4
+    const adapterWithIp = this.activeAdapters.find(a => a.ipv4Config?.address);
+    this._primaryIpAddress.set(adapterWithIp?.ipv4Config?.address ?? null);
+
+    // Clean up stats for adapters that no longer exist
+    const activeIds = new Set(this.activeAdapters.map(a => a.id));
+    for (const id of this.previousNetworkStats.keys()) {
+      if (!activeIds.has(id)) {
+        this.previousNetworkStats.delete(id);
+      }
+    }
   }
 
   private startPolling(): void {
@@ -136,6 +171,16 @@ export class MetricsHistoryService implements OnDestroy {
           this._diskActivity.set(maxActivity);
           this.pushToHistory(this._diskHistory, maxActivity);
         }
+      });
+
+    // GPU metrics - every 2 seconds (matches hardware service polling)
+    this.hardwareService.getGpuMetricsPolling()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(metrics => {
+        this._gpuMetrics.set(metrics);
+        // Use the primary (first) GPU usage for the sidebar display
+        const primaryUsage = metrics.length > 0 ? metrics[0].usagePercent : 0;
+        this._gpuUsage.set(primaryUsage);
       });
 
     // Network stats - every second
