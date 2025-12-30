@@ -5,8 +5,9 @@
 ** IMPORTANT ** Process the tasks below (in this section). Expand them if needed and put them in the appropriate sections below.
 ** IMPORTANT ** Do not remove this section. Just clear out the tasks once processed.
 
-(No new tasks)
+- When displaying the process file in the process list, display the beginning and end of the file path with an ellipsis in the middle.
 
+<!-- Network tab graphs now populate from app startup via MetricsHistoryService -->
 <!-- Process grouping with expandable tree already implemented in processes.component.ts -->
 
 ## In Progress

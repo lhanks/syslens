@@ -1,23 +1,12 @@
-import { Component, OnInit, OnDestroy, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subject, takeUntil, interval } from 'rxjs';
 import { startWith } from 'rxjs/operators';
 
-import { NetworkService, StatusService } from '@core/services';
+import { NetworkService, StatusService, MetricsHistoryService } from '@core/services';
 import { NetworkAdapter, AdapterStats, NetworkConnection, Route } from '@core/models';
 import { BytesPipe } from '@shared/pipes';
 import { LineGraphComponent } from '@shared/components';
-
-const MAX_HISTORY_POINTS = 60;
-
-interface AdapterTrafficHistory {
-  downloadHistory: number[];
-  uploadHistory: number[];
-  downloadSpeed: number;
-  uploadSpeed: number;
-  maxSpeed: number;
-  previousStats: { bytesReceived: number; bytesSent: number; timestamp: number } | null;
-}
 
 @Component({
   selector: 'app-network',
@@ -56,7 +45,7 @@ interface AdapterTrafficHistory {
                 <div class="grid grid-cols-3 gap-6">
                   <!-- Column 1: Speed indicators and totals -->
                   <div class="space-y-4">
-                    @if (adapterTrafficHistory[adapter.id]; as traffic) {
+                    @if (adapterTrafficHistory()[adapter.id]; as traffic) {
                       <!-- Download -->
                       <div class="flex items-center gap-3">
                         <div class="w-8 h-8 rounded-lg bg-syslens-accent-green/20 flex items-center justify-center flex-shrink-0">
@@ -97,7 +86,7 @@ interface AdapterTrafficHistory {
 
                   <!-- Column 2: Traffic Graph -->
                   <div class="min-w-0">
-                    @if (adapterTrafficHistory[adapter.id]; as traffic) {
+                    @if (adapterTrafficHistory()[adapter.id]; as traffic) {
                       <div class="h-full bg-syslens-bg-tertiary/30 rounded-lg p-2 flex flex-col">
                         <p class="text-xs text-syslens-text-muted mb-2">Network Activity</p>
                         <div class="flex-1 min-h-[80px]">
@@ -258,13 +247,29 @@ interface AdapterTrafficHistory {
 export class NetworkComponent implements OnInit, OnDestroy {
   private networkService = inject(NetworkService);
   private statusService = inject(StatusService);
+  private metricsHistoryService = inject(MetricsHistoryService);
   private destroy$ = new Subject<void>();
 
   adapters: NetworkAdapter[] = [];
   adapterStats: Record<string, AdapterStats> = {};
-  adapterTrafficHistory: Record<string, AdapterTrafficHistory> = {};
   connections: NetworkConnection[] = [];
   routes: Route[] = [];
+
+  // Use traffic history from the metrics service (collected from app startup)
+  adapterTrafficHistory = computed(() => {
+    const historyMap = this.metricsHistoryService.adapterTrafficHistory();
+    const record: Record<string, { downloadHistory: number[]; uploadHistory: number[]; downloadSpeed: number; uploadSpeed: number; maxSpeed: number }> = {};
+    for (const [id, history] of historyMap) {
+      record[id] = {
+        downloadHistory: history.downloadHistory,
+        uploadHistory: history.uploadHistory,
+        downloadSpeed: history.downloadSpeed,
+        uploadSpeed: history.uploadSpeed,
+        maxSpeed: history.maxSpeed
+      };
+    }
+    return record;
+  });
 
   ngOnInit(): void {
     this.loadNetworkData();
@@ -290,22 +295,7 @@ export class NetworkComponent implements OnInit, OnDestroy {
         this.adapters = adapters;
         this.statusService.endOperation('network-init');
 
-        // Initialize traffic history for each adapter with initial data points
-        adapters.filter(a => a.status === 'Up').forEach(adapter => {
-          // Pre-fill with MAX_HISTORY_POINTS zeros so array length is constant
-          // This prevents point spacing from changing as data fills in
-          const initialHistory = new Array(MAX_HISTORY_POINTS).fill(0);
-          this.adapterTrafficHistory[adapter.id] = {
-            downloadHistory: [...initialHistory],
-            uploadHistory: [...initialHistory],
-            downloadSpeed: 0,
-            uploadSpeed: 0,
-            maxSpeed: 1,
-            previousStats: null
-          };
-        });
-
-        // Start polling stats for active adapters
+        // Start polling stats for active adapters (for total bytes display)
         this.startAdapterStatsPolling(adapters.filter(a => a.status === 'Up'));
       });
 
@@ -317,7 +307,7 @@ export class NetworkComponent implements OnInit, OnDestroy {
   }
 
   private startAdapterStatsPolling(adapters: NetworkAdapter[]): void {
-    // Poll every second for smooth graphs
+    // Poll every second for total bytes display (traffic history is handled by MetricsHistoryService)
     interval(1000).pipe(
       startWith(0),
       takeUntil(this.destroy$)
@@ -327,74 +317,9 @@ export class NetworkComponent implements OnInit, OnDestroy {
           .pipe(takeUntil(this.destroy$))
           .subscribe(stats => {
             this.adapterStats[adapter.id] = stats;
-            this.updateTrafficHistory(adapter.id, stats);
           });
       });
     });
-  }
-
-  private updateTrafficHistory(adapterId: string, stats: AdapterStats): void {
-    const history = this.adapterTrafficHistory[adapterId];
-    if (!history) return;
-
-    const now = Date.now();
-
-    if (history.previousStats) {
-      const timeDeltaSeconds = (now - history.previousStats.timestamp) / 1000;
-
-      if (timeDeltaSeconds > 0) {
-        const downloadDelta = stats.bytesReceived - history.previousStats.bytesReceived;
-        const uploadDelta = stats.bytesSent - history.previousStats.bytesSent;
-
-        // Calculate speeds (handle counter resets)
-        const downloadSpeed = downloadDelta >= 0 ? downloadDelta / timeDeltaSeconds : 0;
-        const uploadSpeed = uploadDelta >= 0 ? uploadDelta / timeDeltaSeconds : 0;
-
-        const newDownloadSpeed = Math.round(downloadSpeed);
-        const newUploadSpeed = Math.round(uploadSpeed);
-
-        // Create new arrays (triggers Angular change detection)
-        const newDownloadHistory = [...history.downloadHistory, newDownloadSpeed];
-        const newUploadHistory = [...history.uploadHistory, newUploadSpeed];
-
-        // Trim to max points
-        if (newDownloadHistory.length > MAX_HISTORY_POINTS) {
-          newDownloadHistory.shift();
-        }
-        if (newUploadHistory.length > MAX_HISTORY_POINTS) {
-          newUploadHistory.shift();
-        }
-
-        // Update max speed for graph scaling
-        const maxDown = Math.max(...newDownloadHistory, 1);
-        const maxUp = Math.max(...newUploadHistory, 1);
-
-        // Create new history object to trigger change detection
-        this.adapterTrafficHistory[adapterId] = {
-          downloadHistory: newDownloadHistory,
-          uploadHistory: newUploadHistory,
-          downloadSpeed: newDownloadSpeed,
-          uploadSpeed: newUploadSpeed,
-          maxSpeed: Math.max(maxDown, maxUp),
-          previousStats: {
-            bytesReceived: stats.bytesReceived,
-            bytesSent: stats.bytesSent,
-            timestamp: now
-          }
-        };
-        return;
-      }
-    }
-
-    // Store current stats for next iteration (first poll)
-    this.adapterTrafficHistory[adapterId] = {
-      ...history,
-      previousStats: {
-        bytesReceived: stats.bytesReceived,
-        bytesSent: stats.bytesSent,
-        timestamp: now
-      }
-    };
   }
 
   private startRealtimeUpdates(): void {

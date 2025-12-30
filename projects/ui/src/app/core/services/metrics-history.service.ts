@@ -11,6 +11,16 @@ const MAX_HISTORY_POINTS = 60; // 60 seconds of history
 const NETWORK_EMA_ALPHA = 0.3; // Smoothing factor for network speeds (0-1, lower = smoother)
 const MAX_DECAY_RATE = 0.95; // How fast the smoothed max decreases (per update)
 
+export interface AdapterTrafficHistory {
+  adapterId: string;
+  adapterName: string;
+  downloadHistory: number[];
+  uploadHistory: number[];
+  downloadSpeed: number;
+  uploadSpeed: number;
+  maxSpeed: number;
+}
+
 /**
  * Service for continuous metrics collection and history tracking.
  * This service runs from app startup and records history regardless of which tab is active.
@@ -51,6 +61,9 @@ export class MetricsHistoryService implements OnDestroy {
   private isStarted = false;
   private _primaryIpAddress = signal<string | null>(null);
 
+  // Per-adapter traffic history (for Network tab graphs)
+  private _adapterTrafficHistory = signal<Map<string, AdapterTrafficHistory>>(new Map());
+
   // Smoothed network speeds (EMA filtered)
   private smoothedDownSpeed = 0;
   private smoothedUpSpeed = 0;
@@ -84,6 +97,9 @@ export class MetricsHistoryService implements OnDestroy {
 
   // Primary IP address from the first active adapter with IPv4
   primaryIpAddress = computed(() => this._primaryIpAddress());
+
+  // Per-adapter traffic history for Network tab graphs
+  adapterTrafficHistory = computed(() => this._adapterTrafficHistory());
 
   /**
    * Start continuous metrics polling.
@@ -142,6 +158,38 @@ export class MetricsHistoryService implements OnDestroy {
       if (!activeIds.has(id)) {
         this.previousNetworkStats.delete(id);
       }
+    }
+
+    // Initialize traffic history for new adapters
+    const currentHistory = this._adapterTrafficHistory();
+    const newHistory = new Map(currentHistory);
+    let changed = false;
+
+    for (const adapter of this.activeAdapters) {
+      if (!newHistory.has(adapter.id)) {
+        newHistory.set(adapter.id, {
+          adapterId: adapter.id,
+          adapterName: adapter.name,
+          downloadHistory: new Array(MAX_HISTORY_POINTS).fill(0),
+          uploadHistory: new Array(MAX_HISTORY_POINTS).fill(0),
+          downloadSpeed: 0,
+          uploadSpeed: 0,
+          maxSpeed: 1024 // Start with 1KB minimum
+        });
+        changed = true;
+      }
+    }
+
+    // Remove history for adapters that no longer exist
+    for (const id of newHistory.keys()) {
+      if (!activeIds.has(id)) {
+        newHistory.delete(id);
+        changed = true;
+      }
+    }
+
+    if (changed) {
+      this._adapterTrafficHistory.set(newHistory);
     }
   }
 
@@ -208,6 +256,9 @@ export class MetricsHistoryService implements OnDestroy {
     let totalUploadSpeed = 0;
     const now = Date.now();
 
+    // Track per-adapter speeds for updating history
+    const adapterSpeeds = new Map<string, { down: number; up: number }>();
+
     for (const stats of currentStats) {
       const previous = this.previousNetworkStats.get(stats.adapterId);
 
@@ -217,12 +268,16 @@ export class MetricsHistoryService implements OnDestroy {
           const downloadDelta = stats.bytesReceived - previous.bytesReceived;
           const uploadDelta = stats.bytesSent - previous.bytesSent;
 
-          if (downloadDelta >= 0) {
-            totalDownloadSpeed += downloadDelta / timeDeltaSeconds;
-          }
-          if (uploadDelta >= 0) {
-            totalUploadSpeed += uploadDelta / timeDeltaSeconds;
-          }
+          const adapterDownSpeed = downloadDelta >= 0 ? downloadDelta / timeDeltaSeconds : 0;
+          const adapterUpSpeed = uploadDelta >= 0 ? uploadDelta / timeDeltaSeconds : 0;
+
+          adapterSpeeds.set(stats.adapterId, {
+            down: Math.round(adapterDownSpeed),
+            up: Math.round(adapterUpSpeed)
+          });
+
+          totalDownloadSpeed += adapterDownSpeed;
+          totalUploadSpeed += adapterUpSpeed;
         }
       }
 
@@ -232,6 +287,9 @@ export class MetricsHistoryService implements OnDestroy {
         timestamp: now
       });
     }
+
+    // Update per-adapter traffic history
+    this.updateAdapterTrafficHistory(adapterSpeeds);
 
     // Apply exponential moving average (EMA) smoothing to reduce jitter
     this.smoothedDownSpeed = this.smoothedDownSpeed === 0
@@ -251,6 +309,45 @@ export class MetricsHistoryService implements OnDestroy {
 
     // Update smoothed max for stable graph scaling
     this.updateSmoothedMax(downSpeed, upSpeed);
+  }
+
+  private updateAdapterTrafficHistory(adapterSpeeds: Map<string, { down: number; up: number }>): void {
+    const currentHistory = this._adapterTrafficHistory();
+    const newHistory = new Map<string, AdapterTrafficHistory>();
+
+    for (const [adapterId, history] of currentHistory) {
+      const speeds = adapterSpeeds.get(adapterId);
+      const downSpeed = speeds?.down ?? 0;
+      const upSpeed = speeds?.up ?? 0;
+
+      // Create new history arrays
+      const newDownloadHistory = [...history.downloadHistory, downSpeed];
+      const newUploadHistory = [...history.uploadHistory, upSpeed];
+
+      // Trim to max points
+      if (newDownloadHistory.length > MAX_HISTORY_POINTS) {
+        newDownloadHistory.shift();
+      }
+      if (newUploadHistory.length > MAX_HISTORY_POINTS) {
+        newUploadHistory.shift();
+      }
+
+      // Calculate max for graph scaling
+      const maxDown = Math.max(...newDownloadHistory, 1);
+      const maxUp = Math.max(...newUploadHistory, 1);
+
+      newHistory.set(adapterId, {
+        adapterId: history.adapterId,
+        adapterName: history.adapterName,
+        downloadHistory: newDownloadHistory,
+        uploadHistory: newUploadHistory,
+        downloadSpeed: downSpeed,
+        uploadSpeed: upSpeed,
+        maxSpeed: Math.max(maxDown, maxUp, 1024) // Minimum 1KB for scale
+      });
+    }
+
+    this._adapterTrafficHistory.set(newHistory);
   }
 
   private updateSmoothedMax(downSpeed: number, upSpeed: number): void {
