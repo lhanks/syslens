@@ -55,6 +55,12 @@ export const routes: Routes = [
     title: 'Performance Monitor - Syslens'
   },
   {
+    path: 'floating-panel/:type/:id',
+    loadComponent: () => import('./features/floating-panel/floating-panel.component')
+      .then(m => m.FloatingPanelComponent),
+    title: 'Floating Panel - Syslens'
+  },
+  {
     path: '**',
     redirectTo: 'system'
   }

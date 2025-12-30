@@ -11,6 +11,16 @@ import {
 } from '../../shared/components/dock/dock.model';
 
 const STORAGE_KEY = 'syslens_dock_layout';
+const DETACHED_PANELS_KEY = 'syslens_detached_panels';
+
+/** Tracks a detached (floating) panel */
+export interface DetachedPanel {
+  panelId: string;
+  type: DockPanelType;
+  title: string;
+  originalRegion: DockRegionPosition;
+  windowLabel: string;
+}
 
 /**
  * Service for managing dock layout and drag-drop state.
@@ -31,9 +41,13 @@ export class DockService {
     currentDropZone: null,
   });
 
+  // Detached panels state
+  private _detachedPanels = signal<DetachedPanel[]>([]);
+
   // Public read-only signals
   readonly layout = this._layout.asReadonly();
   readonly dragState = this._dragState.asReadonly();
+  readonly detachedPanels = this._detachedPanels.asReadonly();
 
   // Computed signals for each region
   readonly topRegion = computed(() => this._layout().regions.top);
@@ -49,6 +63,7 @@ export class DockService {
 
   constructor() {
     this.loadLayout();
+    this.loadDetachedPanels();
 
     // Auto-save layout when it changes
     effect(() => {
@@ -308,6 +323,110 @@ export class DockService {
   }
 
   /**
+   * Detach a panel from the dock into a floating window
+   */
+  async detachPanel(position: DockRegionPosition, panelId: string): Promise<void> {
+    const region = this._layout().regions[position];
+    const panel = region.panels.find((p) => p.id === panelId);
+    if (!panel) return;
+
+    // Generate unique window label
+    const windowLabel = `floating-panel-${panelId}`;
+
+    // Check if already detached
+    if (this._detachedPanels().some((p) => p.panelId === panelId)) {
+      // Focus existing window
+      try {
+        const { WebviewWindow } = await import('@tauri-apps/api/webviewWindow');
+        const existingWindow = await WebviewWindow.getByLabel(windowLabel);
+        if (existingWindow) {
+          await existingWindow.setFocus();
+        }
+      } catch (e) {
+        console.error('Failed to focus existing window:', e);
+      }
+      return;
+    }
+
+    // Create floating window
+    try {
+      const { WebviewWindow } = await import('@tauri-apps/api/webviewWindow');
+
+      const floatingWindow = new WebviewWindow(windowLabel, {
+        url: `/floating-panel/${panel.type}/${panelId}`,
+        title: panel.title,
+        width: 300,
+        height: 400,
+        minWidth: 200,
+        minHeight: 250,
+        decorations: false,
+        transparent: false,
+        alwaysOnTop: true,
+        resizable: true,
+        x: 100,
+        y: 100,
+      });
+
+      // Track detached panel
+      const detached: DetachedPanel = {
+        panelId,
+        type: panel.type,
+        title: panel.title,
+        originalRegion: position,
+        windowLabel,
+      };
+
+      floatingWindow.once('tauri://created', () => {
+        // Add to detached panels
+        this._detachedPanels.update((panels) => [...panels, detached]);
+        // Remove from dock
+        this.removePanel(position, panelId);
+        this.saveDetachedPanels();
+      });
+
+      floatingWindow.once('tauri://error', (e) => {
+        console.error('Failed to create floating panel window:', e);
+      });
+
+      // Listen for window close to re-dock
+      floatingWindow.once('tauri://close-requested', async () => {
+        await this.reattachPanel(panelId);
+      });
+    } catch (e) {
+      console.error('Failed to create floating window:', e);
+    }
+  }
+
+  /**
+   * Reattach a detached panel back to its original dock region
+   */
+  async reattachPanel(panelId: string): Promise<void> {
+    const detached = this._detachedPanels().find((p) => p.panelId === panelId);
+    if (!detached) return;
+
+    // Add panel back to original region
+    this.addPanel(detached.originalRegion, detached.type, detached.title);
+
+    // Remove from detached list
+    this._detachedPanels.update((panels) => panels.filter((p) => p.panelId !== panelId));
+    this.saveDetachedPanels();
+  }
+
+  /**
+   * Check if a panel is detached
+   */
+  isPanelDetached(panelId: string): boolean {
+    return this._detachedPanels().some((p) => p.panelId === panelId);
+  }
+
+  /**
+   * Get detached panel by ID
+   */
+  getDetachedPanel(panelId: string): DetachedPanel | undefined {
+    return this._detachedPanels().find((p) => p.panelId === panelId);
+  }
+
+  /**
    * Load layout from localStorage
    */
   private loadLayout(): void {
@@ -338,6 +457,32 @@ export class DockService {
   private saveLayout(): void {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(this._layout()));
+    } catch {
+      // Ignore localStorage errors
+    }
+  }
+
+  /**
+   * Load detached panels from localStorage
+   */
+  private loadDetachedPanels(): void {
+    try {
+      const stored = localStorage.getItem(DETACHED_PANELS_KEY);
+      if (stored) {
+        const panels = JSON.parse(stored) as DetachedPanel[];
+        this._detachedPanels.set(panels);
+      }
+    } catch {
+      // Use empty array if localStorage fails
+    }
+  }
+
+  /**
+   * Save detached panels to localStorage
+   */
+  private saveDetachedPanels(): void {
+    try {
+      localStorage.setItem(DETACHED_PANELS_KEY, JSON.stringify(this._detachedPanels()));
     } catch {
       // Ignore localStorage errors
     }
