@@ -88,6 +88,26 @@ check_source_changes() {
     return 1
 }
 
+# Function to kill running syslens processes (Windows only)
+kill_running_syslens() {
+    if [[ "$OSTYPE" == "msys" || "$OSTYPE" == "cygwin" || "$OSTYPE" == "win32" ]]; then
+        # Check if syslens is running and kill it
+        if tasklist //FI "IMAGENAME eq syslens.exe" 2>/dev/null | grep -q "syslens.exe"; then
+            echo "Stopping running Syslens processes..."
+            taskkill //F //IM syslens.exe 2>/dev/null || true
+            # Give Windows a moment to release the file handle
+            sleep 1
+        fi
+    else
+        # Unix: kill any running syslens processes
+        if pgrep -x syslens > /dev/null 2>&1; then
+            echo "Stopping running Syslens processes..."
+            pkill -x syslens 2>/dev/null || true
+            sleep 1
+        fi
+    fi
+}
+
 # Check if we need to build
 NEEDS_BUILD=false
 
@@ -105,6 +125,9 @@ else
 fi
 
 if [[ "$NEEDS_BUILD" == "true" ]]; then
+    # Kill any running syslens processes before building
+    kill_running_syslens
+
     # Ensure UI dependencies are installed (beforeBuildCommand handles the actual build)
     if [[ "$SKIP_UI" != "true" ]]; then
         cd "$UI_DIR"
