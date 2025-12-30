@@ -1,6 +1,7 @@
 // Core services barrel export
 
 export { DeviceInfoService } from './device-info.service';
+export { DockService } from './dock.service';
 export { HardwareService } from './hardware.service';
 export { MenuService } from './menu.service';
 export { MetricsHistoryService } from './metrics-history.service';

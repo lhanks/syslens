@@ -5,12 +5,16 @@
 
 ## Pending
 
-- [ ] Add docking regions (left, right, top, bottom) - all resizable
-  - [ ] Draggable dock sections between locations
-  - [ ] Stackable sections with reorderable stack order
-- [ ] Dockable section types: System Info, System Performance (CPU/Memory/Disk/Network)
+(No pending tasks)
 
 ## Completed (Phase 3)
+
+- [x] Add docking regions (left, right, top, bottom) - all resizable
+  - [x] CSS Grid 4-region layout with DockContainerComponent
+  - [x] Draggable dock sections between locations (HTML5 drag-drop)
+  - [x] Stackable tabs with reorderable panels (DockRegionComponent)
+  - [x] DockService for layout state + localStorage persistence
+- [x] Dockable section types: System Info, System Performance (PerformancePanelComponent, SystemInfoPanelComponent)
 
 - [x] Left sidebar detachable to floating window (pop-out button, Tauri WebviewWindow)
 - [x] Navigation tabs moved to top bar (sidebar shows only mini graphs)

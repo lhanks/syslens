@@ -1,35 +1,26 @@
 import { Component, OnInit, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet } from '@angular/router';
-import { SidebarComponent, RightSidebarComponent, StatusBarComponent, TopBarComponent, AboutDialogComponent } from './shared/components';
+import { StatusBarComponent, TopBarComponent, AboutDialogComponent } from './shared/components';
+import { DockContainerComponent } from './shared/components/dock';
 import { PreloadService, StateService, MetricsHistoryService, MenuService, ViewSettingsService } from '@core/services';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, SidebarComponent, RightSidebarComponent, StatusBarComponent, TopBarComponent, AboutDialogComponent],
+  imports: [CommonModule, RouterOutlet, StatusBarComponent, TopBarComponent, AboutDialogComponent, DockContainerComponent],
   template: `
     <div class="flex flex-col h-screen bg-syslens-bg-primary">
       <!-- Top navigation bar -->
       <app-top-bar />
 
-      <div class="flex flex-1 overflow-hidden">
-        <app-sidebar />
-
-        <!-- Right sidebar docked to left side -->
-        @if (sidebarVisible() && sidebarPosition() === 'left') {
-          <app-right-sidebar [dockPosition]="'left'" />
-        }
-
-        <main class="flex-1 overflow-auto">
+      <!-- Dock container with 4-region layout -->
+      <app-dock-container class="flex-1 overflow-hidden">
+        <main class="h-full overflow-auto">
           <router-outlet />
         </main>
+      </app-dock-container>
 
-        <!-- Right sidebar docked to right side (default) -->
-        @if (sidebarVisible() && sidebarPosition() === 'right') {
-          <app-right-sidebar [dockPosition]="'right'" />
-        }
-      </div>
       <app-status-bar />
     </div>
 
