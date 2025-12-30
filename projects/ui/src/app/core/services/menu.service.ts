@@ -1,6 +1,7 @@
 import { Injectable, inject, signal, computed } from '@angular/core';
 import { listen } from '@tauri-apps/api/event';
 import { ViewSettingsService } from './view-settings.service';
+import { DockService } from './dock.service';
 
 /**
  * Service for handling native application menu events from Tauri.
@@ -11,9 +12,10 @@ import { ViewSettingsService } from './view-settings.service';
 })
 export class MenuService {
   private viewSettings = inject(ViewSettingsService);
+  private dockService = inject(DockService);
 
-  // Sidebar visibility - now delegates to ViewSettingsService
-  sidebarVisible = computed(() => this.viewSettings.rightSidebarVisible());
+  // Sidebar visibility - now delegates to DockService (inverted: collapsed = not visible)
+  sidebarVisible = computed(() => !this.dockService.rightRegion().isCollapsed);
 
   // About dialog state
   private _aboutDialogOpen = signal(false);
@@ -33,12 +35,12 @@ export class MenuService {
     if (this.isInitialized) return;
     this.isInitialized = true;
 
-    // Listen for toggle sidebar events
+    // Listen for toggle sidebar events - now uses DockService
     await listen('menu:toggle-sidebar', () => {
-      this.viewSettings.toggleRightSidebar();
+      this.dockService.toggleRegionCollapsed('right');
     });
     await listen('menu:toggle-left-sidebar', () => {
-      this.viewSettings.toggleLeftSidebar();
+      this.dockService.toggleRegionCollapsed('left');
     });
 
     // Listen for mini graph visibility toggles
@@ -73,21 +75,21 @@ export class MenuService {
    * Toggle sidebar visibility programmatically.
    */
   toggleSidebar(): void {
-    this.viewSettings.toggleRightSidebar();
+    this.dockService.toggleRegionCollapsed('right');
   }
 
   /**
    * Show sidebar.
    */
   showSidebar(): void {
-    this.viewSettings.setRightSidebarVisible(true);
+    this.dockService.setRegionCollapsed('right', false);
   }
 
   /**
    * Hide sidebar.
    */
   hideSidebar(): void {
-    this.viewSettings.setRightSidebarVisible(false);
+    this.dockService.setRegionCollapsed('right', true);
   }
 
   /**

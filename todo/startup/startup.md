@@ -3,9 +3,12 @@
 ** IMPORTANT ** Process the tasks below (in this section). Expand them if needed and put them in the appropriate sections below.
 ** IMPORTANT ** Do not remove this section. Just clear out the tasks once processed.
 
+(none)
+
 ## Pending
 
-(No pending tasks)
+- [ ] Fix View menu items not working
+- [ ] Make dock panels detachable as floating windows with edge-snap docking
 
 ## Completed (Phase 3)
 
