@@ -13,6 +13,7 @@ use std::collections::HashMap;
 
 /// Monitor device source.
 pub struct MonitorSource {
+    #[allow(dead_code)] // Reserved for future web scraping
     client: Client,
 }
 

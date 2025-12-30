@@ -13,6 +13,7 @@ use std::collections::HashMap;
 
 /// Memory device source.
 pub struct MemorySource {
+    #[allow(dead_code)] // Reserved for future web scraping
     client: Client,
 }
 

@@ -13,6 +13,7 @@ use std::collections::HashMap;
 
 /// Motherboard device source.
 pub struct MotherboardSource {
+    #[allow(dead_code)] // Reserved for future web scraping
     client: Client,
 }
 
@@ -197,7 +198,7 @@ impl MotherboardSource {
 
         // Extract chipset
         if let Some(chipset) = Self::extract_chipset(model) {
-            let platform = if chipset.starts_with('X') || chipset.starts_with('B') && chipset.chars().nth(1).map_or(false, |c| c.is_ascii_digit() && c >= '4') || chipset.starts_with('A') {
+            let platform = if chipset.starts_with('X') || chipset.starts_with('B') && chipset.chars().nth(1).is_some_and(|c| c.is_ascii_digit() && c >= '4') || chipset.starts_with('A') {
                 if chipset.contains("TRX") || chipset.contains("WRX") {
                     "AMD HEDT"
                 } else {
@@ -257,6 +258,7 @@ enum Manufacturer {
 
 /// Data extracted from motherboard product pages.
 #[derive(Debug, Default)]
+#[allow(dead_code)] // Reserved for future web scraping
 struct MotherboardData {
     name: Option<String>,
     image_url: Option<String>,
