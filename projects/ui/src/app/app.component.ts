@@ -1,12 +1,13 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, computed } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { RouterOutlet } from '@angular/router';
-import { SidebarComponent, RightSidebarComponent, StatusBarComponent } from './shared/components';
-import { PreloadService, StateService, MetricsHistoryService } from '@core/services';
+import { SidebarComponent, RightSidebarComponent, StatusBarComponent, AboutDialogComponent } from './shared/components';
+import { PreloadService, StateService, MetricsHistoryService, MenuService } from '@core/services';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, SidebarComponent, RightSidebarComponent, StatusBarComponent],
+  imports: [CommonModule, RouterOutlet, SidebarComponent, RightSidebarComponent, StatusBarComponent, AboutDialogComponent],
   template: `
     <div class="flex flex-col h-screen bg-syslens-bg-primary">
       <div class="flex flex-1 overflow-hidden">
@@ -14,10 +15,18 @@ import { PreloadService, StateService, MetricsHistoryService } from '@core/servi
         <main class="flex-1 overflow-auto">
           <router-outlet />
         </main>
-        <app-right-sidebar />
+        @if (sidebarVisible()) {
+          <app-right-sidebar />
+        }
       </div>
       <app-status-bar />
     </div>
+
+    <!-- About Dialog -->
+    <app-about-dialog
+      [isOpen]="aboutDialogOpen()"
+      (closed)="menuService.closeAboutDialog()"
+    />
   `,
   styles: [`
     :host {
@@ -32,6 +41,11 @@ export class AppComponent implements OnInit {
   private preloadService = inject(PreloadService);
   private stateService = inject(StateService);
   private metricsHistoryService = inject(MetricsHistoryService);
+  menuService = inject(MenuService);
+
+  // Expose menu service signals to template
+  sidebarVisible = computed(() => this.menuService.sidebarVisible());
+  aboutDialogOpen = computed(() => this.menuService.aboutDialogOpen());
 
   ngOnInit(): void {
     // Initialize state persistence and restore last route
@@ -40,5 +54,8 @@ export class AppComponent implements OnInit {
 
     // Start continuous metrics collection
     this.metricsHistoryService.start();
+
+    // Initialize menu event listeners
+    this.menuService.init();
   }
 }

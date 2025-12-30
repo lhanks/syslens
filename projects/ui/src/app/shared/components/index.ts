@@ -1,5 +1,6 @@
 // Shared components barrel export
 
+export { AboutDialogComponent } from './about-dialog/about-dialog.component';
 export { SidebarComponent } from './sidebar/sidebar.component';
 export { RightSidebarComponent } from './right-sidebar/right-sidebar.component';
 export { StatCardComponent } from './stat-card/stat-card.component';

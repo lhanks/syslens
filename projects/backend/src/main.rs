@@ -9,6 +9,10 @@
 
 use syslens::commands;
 use syslens::state::SysInfoState;
+use tauri::{
+    menu::{MenuBuilder, MenuItemBuilder, SubmenuBuilder},
+    Emitter, Manager,
+};
 
 fn main() {
     // Initialize logging
@@ -24,6 +28,83 @@ fn main() {
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
         .manage(sysinfo_state)
+        .setup(|app| {
+            // Build the application menu
+            let toggle_sidebar = MenuItemBuilder::new("Toggle Sidebar")
+                .id("toggle_sidebar")
+                .accelerator("CmdOrCtrl+B")
+                .build(app)?;
+
+            // File submenu
+            let file_submenu = SubmenuBuilder::new(app, "File")
+                .quit()
+                .build()?;
+
+            // View submenu
+            let view_submenu = SubmenuBuilder::new(app, "View")
+                .item(&toggle_sidebar)
+                .separator()
+                .item(&MenuItemBuilder::new("Refresh").id("refresh").accelerator("F5").build(app)?)
+                .build()?;
+
+            // Help submenu
+            let about_syslens = MenuItemBuilder::new("About Syslens")
+                .id("about")
+                .build(app)?;
+            let github = MenuItemBuilder::new("GitHub Repository")
+                .id("github")
+                .build(app)?;
+            let report_issue = MenuItemBuilder::new("Report Issue")
+                .id("report_issue")
+                .build(app)?;
+
+            let help_submenu = SubmenuBuilder::new(app, "Help")
+                .item(&about_syslens)
+                .separator()
+                .item(&github)
+                .item(&report_issue)
+                .build()?;
+
+            // Build the full menu
+            let menu = MenuBuilder::new(app)
+                .items(&[&file_submenu, &view_submenu, &help_submenu])
+                .build()?;
+
+            // Set the menu on the main window
+            if let Some(window) = app.get_webview_window("main") {
+                window.set_menu(menu)?;
+            } else {
+                app.set_menu(menu)?;
+            }
+
+            // Listen for menu events
+            let handle = app.handle().clone();
+            app.on_menu_event(move |_app, event| {
+                let id = event.id().as_ref();
+                log::info!("Menu item clicked: {}", id);
+
+                match id {
+                    "toggle_sidebar" => {
+                        let _ = handle.emit("menu:toggle-sidebar", ());
+                    }
+                    "refresh" => {
+                        let _ = handle.emit("menu:refresh", ());
+                    }
+                    "about" => {
+                        let _ = handle.emit("menu:about", ());
+                    }
+                    "github" => {
+                        let _ = open::that("https://github.com/syslens/syslens");
+                    }
+                    "report_issue" => {
+                        let _ = open::that("https://github.com/syslens/syslens/issues/new");
+                    }
+                    _ => {}
+                }
+            });
+
+            Ok(())
+        })
         .invoke_handler(tauri::generate_handler![
             // Network commands
             commands::get_network_adapters,

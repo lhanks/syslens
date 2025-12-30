@@ -76,6 +76,9 @@ url = "2"
 # Directory paths
 dirs = "5"
 
+# Open URLs in browser
+open = "5"
+
 [features]
 default = ["custom-protocol"]
 custom-protocol = ["tauri/custom-protocol"]

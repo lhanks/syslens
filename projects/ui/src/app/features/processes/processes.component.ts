@@ -254,7 +254,7 @@ interface ProcessGroup {
                               <span class="font-mono text-sm">{{ last ? '└' : '├' }}</span>
                             </div>
                             <div class="flex flex-col">
-                              <span class="text-syslens-text-secondary truncate max-w-[180px]" [title]="process.name">
+                              <span class="text-syslens-text-primary font-medium truncate max-w-[180px]" [title]="process.name">
                                 {{ process.name }}
                               </span>
                               @if (process.command && process.command !== process.name) {

@@ -2,6 +2,7 @@
 
 export { DeviceInfoService } from './device-info.service';
 export { HardwareService } from './hardware.service';
+export { MenuService } from './menu.service';
 export { MetricsHistoryService } from './metrics-history.service';
 export { NetworkHistoryService } from './network-history.service';
 export { NetworkService } from './network.service';
