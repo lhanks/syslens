@@ -12,6 +12,7 @@ export interface ViewSettings {
   // Left sidebar settings
   leftSidebarVisible: boolean;
   leftSidebarWidth: number;
+  leftSidebarDetached: boolean;
 
   // Right sidebar settings
   rightSidebarVisible: boolean;
@@ -31,6 +32,7 @@ const STORAGE_KEY = 'syslens_view_settings';
 const DEFAULT_SETTINGS: ViewSettings = {
   leftSidebarVisible: true,
   leftSidebarWidth: 256, // 16rem = 256px (w-64)
+  leftSidebarDetached: false,
 
   rightSidebarVisible: true,
   rightSidebarPosition: 'right',
@@ -54,6 +56,7 @@ export class ViewSettingsService {
   // Reactive signals for each setting
   private _leftSidebarVisible = signal(DEFAULT_SETTINGS.leftSidebarVisible);
   private _leftSidebarWidth = signal(DEFAULT_SETTINGS.leftSidebarWidth);
+  private _leftSidebarDetached = signal(DEFAULT_SETTINGS.leftSidebarDetached);
 
   private _rightSidebarVisible = signal(DEFAULT_SETTINGS.rightSidebarVisible);
   private _rightSidebarPosition = signal<SidebarPosition>(DEFAULT_SETTINGS.rightSidebarPosition);
@@ -68,6 +71,7 @@ export class ViewSettingsService {
   // Public read-only signals
   leftSidebarVisible = this._leftSidebarVisible.asReadonly();
   leftSidebarWidth = this._leftSidebarWidth.asReadonly();
+  leftSidebarDetached = this._leftSidebarDetached.asReadonly();
 
   rightSidebarVisible = this._rightSidebarVisible.asReadonly();
   rightSidebarPosition = this._rightSidebarPosition.asReadonly();
@@ -108,6 +112,58 @@ export class ViewSettingsService {
   setLeftSidebarWidth(width: number): void {
     // Clamp width between 180 and 400
     this._leftSidebarWidth.set(Math.max(180, Math.min(400, width)));
+  }
+
+  /**
+   * Set left sidebar detached state
+   */
+  setLeftSidebarDetached(detached: boolean): void {
+    this._leftSidebarDetached.set(detached);
+  }
+
+  /**
+   * Detach left sidebar to floating window
+   */
+  async detachLeftSidebar(): Promise<void> {
+    // Import dynamically to avoid issues in browser-only mode
+    const { WebviewWindow } = await import('@tauri-apps/api/webviewWindow');
+
+    // Check if window already exists
+    const existingWindow = await WebviewWindow.getByLabel('sidebar-float');
+    if (existingWindow) {
+      await existingWindow.setFocus();
+      return;
+    }
+
+    // Create new floating window
+    const floatingWindow = new WebviewWindow('sidebar-float', {
+      url: '/floating-sidebar',
+      title: 'Performance Monitor',
+      width: 280,
+      height: 400,
+      minWidth: 200,
+      minHeight: 300,
+      decorations: false,
+      transparent: false,
+      alwaysOnTop: true,
+      resizable: true,
+      x: 100,
+      y: 100,
+    });
+
+    // Listen for window creation
+    floatingWindow.once('tauri://created', () => {
+      this._leftSidebarDetached.set(true);
+    });
+
+    floatingWindow.once('tauri://error', (e) => {
+      console.error('Failed to create floating sidebar window:', e);
+    });
+
+    // Listen for window close to re-dock
+    floatingWindow.once('tauri://close-requested', () => {
+      this._leftSidebarDetached.set(false);
+    });
   }
 
   /**
@@ -200,6 +256,9 @@ export class ViewSettingsService {
         if (settings.leftSidebarWidth !== undefined) {
           this._leftSidebarWidth.set(settings.leftSidebarWidth);
         }
+        if (settings.leftSidebarDetached !== undefined) {
+          this._leftSidebarDetached.set(settings.leftSidebarDetached);
+        }
         if (settings.rightSidebarVisible !== undefined) {
           this._rightSidebarVisible.set(settings.rightSidebarVisible);
         }
@@ -238,6 +297,7 @@ export class ViewSettingsService {
       const settings: ViewSettings = {
         leftSidebarVisible: this._leftSidebarVisible(),
         leftSidebarWidth: this._leftSidebarWidth(),
+        leftSidebarDetached: this._leftSidebarDetached(),
         rightSidebarVisible: this._rightSidebarVisible(),
         rightSidebarPosition: this._rightSidebarPosition(),
         rightSidebarWidth: this._rightSidebarWidth(),

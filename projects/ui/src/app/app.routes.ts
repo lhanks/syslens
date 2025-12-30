@@ -49,6 +49,12 @@ export const routes: Routes = [
     title: 'Restore Points - Syslens'
   },
   {
+    path: 'floating-sidebar',
+    loadComponent: () => import('./features/floating-sidebar/floating-sidebar.component')
+      .then(m => m.FloatingSidebarComponent),
+    title: 'Performance Monitor - Syslens'
+  },
+  {
     path: '**',
     redirectTo: 'system'
   }

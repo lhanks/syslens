@@ -1,44 +1,39 @@
-import { Component, inject, computed, OnInit, OnDestroy, HostListener, signal } from '@angular/core';
-import { Router } from '@angular/router';
+import { Component, inject, computed, OnInit, OnDestroy } from '@angular/core';
 import { Subject, takeUntil } from 'rxjs';
 import { MetricsHistoryService, SystemService, ViewSettingsService, HardwareService, StorageService } from '@core/services';
 import { BytesPipe, UptimePipe } from '@shared/pipes';
+import { Window } from '@tauri-apps/api/window';
 
 @Component({
-  selector: 'app-sidebar',
+  selector: 'app-floating-sidebar',
   standalone: true,
   imports: [BytesPipe, UptimePipe],
   template: `
-    @if (isVisible() && !isDetached()) {
-    <aside class="h-screen bg-syslens-bg-secondary border-r border-syslens-border-primary flex flex-col relative" [style.width.px]="sidebarWidth()">
-      <!-- Header -->
-      <div class="p-4 border-b border-syslens-border-primary flex items-start justify-between">
-        <div class="flex-1 min-w-0">
-          @if (deviceName) {
-            <h1 class="text-base font-semibold text-syslens-text-primary truncate" [title]="deviceName">{{ deviceName }}</h1>
+    <div class="floating-container bg-syslens-bg-secondary flex flex-col h-screen">
+      <!-- Drag Region / Header -->
+      <div class="drag-region p-3 border-b border-syslens-border-primary flex items-center justify-between">
+        @if (deviceName) {
+          <div>
+            <h1 class="text-sm font-semibold text-syslens-text-primary truncate">{{ deviceName }}</h1>
             <p class="text-xs text-syslens-text-muted">Up {{ uptimeSeconds | uptime }}</p>
-          } @else {
-            <div class="h-5 w-32 bg-syslens-bg-tertiary rounded animate-pulse mb-1"></div>
-            <div class="h-3 w-20 bg-syslens-bg-tertiary rounded animate-pulse"></div>
-          }
-        </div>
+          </div>
+        }
         <button
-          class="p-1.5 rounded hover:bg-syslens-bg-hover text-syslens-text-muted hover:text-syslens-text-primary transition-colors"
-          title="Pop out to floating window"
-          (click)="detachSidebar()">
+          class="p-1.5 rounded hover:bg-syslens-bg-hover text-syslens-text-secondary hover:text-syslens-text-primary transition-colors"
+          title="Dock sidebar"
+          (click)="dockSidebar()">
           <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+              d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
           </svg>
         </button>
       </div>
 
-      <!-- System Status Summary -->
-      <div class="p-3 border-b border-syslens-border-primary space-y-2">
+      <!-- Mini Graphs -->
+      <div class="p-3 space-y-2 flex-1 overflow-y-auto">
         <!-- CPU -->
         @if (showCpu()) {
-          <div class="flex items-center gap-2 cursor-pointer rounded-md px-1 py-0.5 -mx-1 hover:bg-syslens-bg-hover transition-colors"
-               (click)="navigateTo('/system')">
+          <div class="flex items-center gap-2 rounded-md px-1 py-0.5">
             <div class="w-6 h-6 rounded bg-syslens-accent-blue/20 flex items-center justify-center flex-shrink-0">
               <svg class="w-3.5 h-3.5 text-syslens-accent-blue" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -67,8 +62,7 @@ import { BytesPipe, UptimePipe } from '@shared/pipes';
 
         <!-- Memory -->
         @if (showMemory()) {
-          <div class="flex items-center gap-2 cursor-pointer rounded-md px-1 py-0.5 -mx-1 hover:bg-syslens-bg-hover transition-colors"
-               (click)="navigateTo('/system')">
+          <div class="flex items-center gap-2 rounded-md px-1 py-0.5">
             <div class="w-6 h-6 rounded bg-syslens-accent-purple/20 flex items-center justify-center flex-shrink-0">
               <svg class="w-3.5 h-3.5 text-syslens-accent-purple" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -97,8 +91,7 @@ import { BytesPipe, UptimePipe } from '@shared/pipes';
 
         <!-- Disk -->
         @if (showDisk()) {
-          <div class="flex items-center gap-2 cursor-pointer rounded-md px-1 py-0.5 -mx-1 hover:bg-syslens-bg-hover transition-colors"
-               (click)="navigateTo('/storage')">
+          <div class="flex items-center gap-2 rounded-md px-1 py-0.5">
             <div class="w-6 h-6 rounded bg-syslens-accent-cyan/20 flex items-center justify-center flex-shrink-0">
               <svg class="w-3.5 h-3.5 text-syslens-accent-cyan" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -127,8 +120,7 @@ import { BytesPipe, UptimePipe } from '@shared/pipes';
 
         <!-- GPU -->
         @if (showGpu()) {
-          <div class="flex items-center gap-2 cursor-pointer rounded-md px-1 py-0.5 -mx-1 hover:bg-syslens-bg-hover transition-colors"
-               (click)="navigateTo('/hardware')">
+          <div class="flex items-center gap-2 rounded-md px-1 py-0.5">
             <div class="w-6 h-6 rounded bg-syslens-accent-orange/20 flex items-center justify-center flex-shrink-0">
               <svg class="w-3.5 h-3.5 text-syslens-accent-orange" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -158,8 +150,7 @@ import { BytesPipe, UptimePipe } from '@shared/pipes';
         <!-- Network - Per Adapter -->
         @if (showNetwork()) {
           @for (adapter of adapterHistoryArray(); track adapter.adapterId) {
-            <div class="flex items-center gap-2 cursor-pointer rounded-md px-1 py-0.5 -mx-1 hover:bg-syslens-bg-hover transition-colors"
-                 (click)="navigateTo('/network')">
+            <div class="flex items-center gap-2 rounded-md px-1 py-0.5">
               <div class="w-6 h-6 rounded bg-syslens-accent-green/20 flex items-center justify-center flex-shrink-0">
                 <svg class="w-3.5 h-3.5 text-syslens-accent-green" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -168,17 +159,16 @@ import { BytesPipe, UptimePipe } from '@shared/pipes';
               </div>
               <div class="flex-1 min-w-0">
                 <div class="flex items-center justify-between text-xs mb-0.5">
-                  <span class="text-syslens-text-muted truncate max-w-[60px]" [title]="adapter.adapterName">{{ adapter.adapterName }}</span>
+                  <span class="text-syslens-text-muted truncate max-w-[80px]" [title]="adapter.adapterName">{{ adapter.adapterName }}</span>
                 </div>
                 <div class="font-mono text-[11px] text-syslens-text-secondary flex gap-1.5">
-                  <span class="text-syslens-accent-green w-[63px] text-right">↓{{ adapter.downloadSpeed | bytes }}/s</span>
-                  <span class="text-syslens-accent-blue w-[63px] text-right">↑{{ adapter.uploadSpeed | bytes }}/s</span>
+                  <span class="text-syslens-accent-green w-[63px] text-right">{{ adapter.downloadSpeed | bytes }}/s</span>
+                  <span class="text-syslens-accent-blue w-[63px] text-right">{{ adapter.uploadSpeed | bytes }}/s</span>
                 </div>
               </div>
             </div>
           } @empty {
-            <div class="flex items-center gap-2 cursor-pointer rounded-md px-1 py-0.5 -mx-1 hover:bg-syslens-bg-hover transition-colors"
-                 (click)="navigateTo('/network')">
+            <div class="flex items-center gap-2 rounded-md px-1 py-0.5">
               <div class="w-6 h-6 rounded bg-syslens-accent-green/20 flex items-center justify-center flex-shrink-0">
                 <svg class="w-3.5 h-3.5 text-syslens-accent-green" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -193,41 +183,30 @@ import { BytesPipe, UptimePipe } from '@shared/pipes';
         }
       </div>
 
-      <!-- Spacer to push footer to bottom -->
-      <div class="flex-1"></div>
-
       <!-- Footer -->
-      <div class="p-4 border-t border-syslens-border-primary">
+      <div class="p-3 border-t border-syslens-border-primary">
         <div class="text-xs text-syslens-text-muted">
           <p>Syslens v0.1.0</p>
         </div>
       </div>
-
-      <!-- Resize Handle -->
-      <div class="resize-handle" (mousedown)="startResize($event)" [class.resizing]="isResizing()"></div>
-    </aside>
-    }
+    </div>
   `,
   styles: [`
     :host {
       display: block;
+      height: 100vh;
     }
 
-    .resize-handle {
-      position: absolute;
-      top: 0;
-      right: 0;
-      width: 4px;
-      height: 100%;
-      cursor: ew-resize;
-      background: transparent;
-      transition: background-color 0.15s;
-      z-index: 10;
+    .floating-container {
+      -webkit-app-region: no-drag;
     }
 
-    .resize-handle:hover,
-    .resize-handle.resizing {
-      background: rgba(59, 130, 246, 0.5);
+    .drag-region {
+      -webkit-app-region: drag;
+    }
+
+    .drag-region button {
+      -webkit-app-region: no-drag;
     }
 
     .vendor-badge {
@@ -238,75 +217,20 @@ import { BytesPipe, UptimePipe } from '@shared/pipes';
       letter-spacing: 0.02em;
     }
 
-    /* Intel - Blue */
-    .vendor-intel {
-      background: rgba(0, 113, 197, 0.2);
-      color: #0071c5;
-    }
-
-    /* AMD - Red */
-    .vendor-amd {
-      background: rgba(237, 28, 36, 0.2);
-      color: #ed1c24;
-    }
-
-    /* NVIDIA - Green */
-    .vendor-nvidia {
-      background: rgba(118, 185, 0, 0.2);
-      color: #76b900;
-    }
-
-    /* Samsung - Blue */
-    .vendor-samsung {
-      background: rgba(20, 40, 160, 0.2);
-      color: #6b99d5;
-    }
-
-    /* Western Digital - Gray */
-    .vendor-wd {
-      background: rgba(100, 100, 100, 0.2);
-      color: #888;
-    }
-
-    /* Seagate - Teal */
-    .vendor-seagate {
-      background: rgba(0, 150, 136, 0.2);
-      color: #00bfa5;
-    }
-
-    /* Crucial - Orange */
-    .vendor-crucial {
-      background: rgba(255, 87, 34, 0.2);
-      color: #ff7043;
-    }
-
-    /* Kingston - Red-Orange */
-    .vendor-kingston {
-      background: rgba(255, 69, 0, 0.2);
-      color: #ff6347;
-    }
-
-    /* Corsair - Yellow */
-    .vendor-corsair {
-      background: rgba(255, 193, 7, 0.2);
-      color: #ffc107;
-    }
-
-    /* Memory Types (DDR4, DDR5) - Purple */
-    .vendor-memory {
-      background: rgba(156, 39, 176, 0.2);
-      color: #ab47bc;
-    }
-
-    /* Default - Muted */
-    .vendor-default {
-      background: rgba(255, 255, 255, 0.1);
-      color: rgba(255, 255, 255, 0.5);
-    }
+    .vendor-intel { background: rgba(0, 113, 197, 0.2); color: #0071c5; }
+    .vendor-amd { background: rgba(237, 28, 36, 0.2); color: #ed1c24; }
+    .vendor-nvidia { background: rgba(118, 185, 0, 0.2); color: #76b900; }
+    .vendor-samsung { background: rgba(20, 40, 160, 0.2); color: #6b99d5; }
+    .vendor-wd { background: rgba(100, 100, 100, 0.2); color: #888; }
+    .vendor-seagate { background: rgba(0, 150, 136, 0.2); color: #00bfa5; }
+    .vendor-crucial { background: rgba(255, 87, 34, 0.2); color: #ff7043; }
+    .vendor-kingston { background: rgba(255, 69, 0, 0.2); color: #ff6347; }
+    .vendor-corsair { background: rgba(255, 193, 7, 0.2); color: #ffc107; }
+    .vendor-memory { background: rgba(156, 39, 176, 0.2); color: #ab47bc; }
+    .vendor-default { background: rgba(255, 255, 255, 0.1); color: rgba(255, 255, 255, 0.5); }
   `]
 })
-export class SidebarComponent implements OnInit, OnDestroy {
-  private router = inject(Router);
+export class FloatingSidebarComponent implements OnInit, OnDestroy {
   private metricsService = inject(MetricsHistoryService);
   private systemService = inject(SystemService);
   private viewSettings = inject(ViewSettingsService);
@@ -318,59 +242,43 @@ export class SidebarComponent implements OnInit, OnDestroy {
   deviceName = '';
   uptimeSeconds = 0;
 
-  // Vendor info for mini graphs
+  // Vendor info
   cpuVendor = '';
   gpuVendor = '';
   memoryType = '';
   diskVendor = '';
 
-  // Sidebar visibility and width from settings
-  isVisible = this.viewSettings.leftSidebarVisible;
-  sidebarWidth = this.viewSettings.leftSidebarWidth;
-  isDetached = this.viewSettings.leftSidebarDetached;
-
-  // Resize state
-  isResizing = signal(false);
-  private resizeStartX = 0;
-  private resizeStartWidth = 0;
-
-  // Mini graph visibility from settings
+  // Mini graph visibility
   showCpu = this.viewSettings.showCpuMiniGraph;
   showMemory = this.viewSettings.showMemoryMiniGraph;
   showDisk = this.viewSettings.showDiskMiniGraph;
   showGpu = this.viewSettings.showGpuMiniGraph;
   showNetwork = this.viewSettings.showNetworkMiniGraph;
 
-  // System status from metrics service
+  // Metrics
   cpuUsage = computed(() => this.metricsService.cpuUsage());
   memoryUsage = computed(() => this.metricsService.memoryUsage());
   diskActivity = computed(() => this.metricsService.diskActivity());
-  networkDown = computed(() => this.metricsService.networkDownSpeed());
-  networkUp = computed(() => this.metricsService.networkUpSpeed());
   gpuUsage = computed(() => this.metricsService.gpuUsage());
 
-  // Per-adapter traffic history
   adapterHistoryArray = computed(() => {
     const historyMap = this.metricsService.adapterTrafficHistory();
     return Array.from(historyMap.values());
   });
 
   ngOnInit(): void {
-    // Load device name
     this.systemService.getDeviceInfo()
       .pipe(takeUntil(this.destroy$))
       .subscribe(deviceInfo => {
         this.deviceName = deviceInfo.computerName;
       });
 
-    // Start uptime polling
     this.systemService.getUptime()
       .pipe(takeUntil(this.destroy$))
       .subscribe(uptime => {
         this.uptimeSeconds = uptime.uptimeSeconds;
       });
 
-    // Load vendor info for mini graphs
     this.hardwareService.getCpuInfo()
       .pipe(takeUntil(this.destroy$))
       .subscribe(cpu => {
@@ -405,37 +313,27 @@ export class SidebarComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  navigateTo(route: string): void {
-    this.router.navigate([route]);
+  async dockSidebar(): Promise<void> {
+    // Signal to main window that sidebar is being re-docked
+    this.viewSettings.setLeftSidebarDetached(false);
+    // Close this floating window
+    const currentWindow = Window.getCurrent();
+    await currentWindow.close();
   }
 
-  async detachSidebar(): Promise<void> {
-    await this.viewSettings.detachLeftSidebar();
-  }
-
-  /**
-   * Shorten vendor names to a clean display format.
-   * E.g., "Intel(R) Corporation" -> "Intel", "NVIDIA Corporation" -> "NVIDIA"
-   */
   private shortenVendorName(name: string): string {
     if (!name) return '';
-    // Remove common suffixes and clean up
     let clean = name
-      .replace(/\(R\)|\(TM\)|\(C\)/gi, '')  // Remove trademark symbols
-      .replace(/Corporation|Corp\.?|Inc\.?|Ltd\.?|LLC/gi, '')  // Remove company suffixes
-      .replace(/Advanced Micro Devices/gi, 'AMD')  // Standardize AMD
-      .replace(/Western Digital/gi, 'WD')  // Standardize WD
-      .replace(/Samsung Electronics/gi, 'Samsung')  // Standardize Samsung
+      .replace(/\(R\)|\(TM\)|\(C\)/gi, '')
+      .replace(/Corporation|Corp\.?|Inc\.?|Ltd\.?|LLC/gi, '')
+      .replace(/Advanced Micro Devices/gi, 'AMD')
+      .replace(/Western Digital/gi, 'WD')
+      .replace(/Samsung Electronics/gi, 'Samsung')
       .trim();
-    // Take first word if still too long
     const words = clean.split(/\s+/);
     return words[0] || '';
   }
 
-  /**
-   * Get vendor logo badge styling.
-   * Returns a CSS class based on vendor name for distinctive styling.
-   */
   getVendorBadgeClass(vendor: string): string {
     const v = vendor.toLowerCase();
     if (v.includes('intel')) return 'vendor-intel';
@@ -449,37 +347,5 @@ export class SidebarComponent implements OnInit, OnDestroy {
     if (v.includes('corsair')) return 'vendor-corsair';
     if (v.includes('ddr')) return 'vendor-memory';
     return 'vendor-default';
-  }
-
-  /**
-   * Start resize operation
-   */
-  startResize(event: MouseEvent): void {
-    event.preventDefault();
-    this.isResizing.set(true);
-    this.resizeStartX = event.clientX;
-    this.resizeStartWidth = this.sidebarWidth();
-  }
-
-  /**
-   * Handle mouse move during resize
-   */
-  @HostListener('document:mousemove', ['$event'])
-  onMouseMove(event: MouseEvent): void {
-    if (!this.isResizing()) return;
-
-    const delta = event.clientX - this.resizeStartX;
-    const newWidth = this.resizeStartWidth + delta;
-    this.viewSettings.setLeftSidebarWidth(newWidth);
-  }
-
-  /**
-   * Stop resize operation
-   */
-  @HostListener('document:mouseup')
-  stopResize(): void {
-    if (this.isResizing()) {
-      this.isResizing.set(false);
-    }
   }
 }

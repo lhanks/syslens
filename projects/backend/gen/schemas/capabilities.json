@@ -1,1 +1,1 @@
-{"default":{"identifier":"default","description":"Default capabilities for Syslens","local":true,"windows":["main"],"permissions":["core:default","shell:allow-open"]}}
+{"default":{"identifier":"default","description":"Default capabilities for Syslens","local":true,"windows":["main","sidebar-float"],"permissions":["core:default","shell:allow-open","core:webview:allow-create-webview-window"]}}
