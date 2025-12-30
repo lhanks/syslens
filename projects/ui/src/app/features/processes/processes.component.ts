@@ -214,9 +214,9 @@ interface ProcessGroup {
                              fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                         </svg>
-                        <span class="text-syslens-text-primary font-medium">{{ group.name }}</span>
-                        <span class="text-sm font-medium text-syslens-accent-blue bg-syslens-accent-blue/20 px-2 py-0.5 rounded-full">
-                          {{ group.processes.length }}
+                        <span class="text-syslens-text-primary font-medium flex-1">{{ group.name }}</span>
+                        <span class="text-sm text-syslens-text-secondary font-mono">
+                          ({{ group.processes.length }})
                         </span>
                       </div>
                     </td>

@@ -5,19 +5,20 @@
 ** IMPORTANT ** Process the tasks below (in this section). Expand them if needed and put them in the appropriate sections below.
 ** IMPORTANT ** Do not remove this section. Just clear out the tasks once processed.
 
-- Add a menu (File,View,Help) to the app.
+- Replace logo with machine name component (from dashboard).
 - Make the right sidebar a window that can be dragged and dropped to the side of the screen. It can be turned off and on (via the view menu).
 - Add app icon to the process list. Make sure apps have a default.
-- Make the process name in the process list more readable. It is too dim.
-- In the process list, make the process could right aligned/remove background color.
-- Change the network traffic mini graphs. Fix the width of all labels so that the screen doesn't shift around when the values change.
-- Remove SysLens logo from the top left of the screen.
 - Add option to hide/show the different items: CPU/MEM/DISK/NETWORK on the left sidebar in the view menu.
-- add ability to enable/disable network adapters.
-- make dockaable sidebar resizeable.
-- Be s ure to remember all the view settings
+- Add ability to enable/disable network adapters.
+- Make dockable sidebar resizable.
+- Be sure to remember all view settings.
+- In the sidebar details, show the vendor logo to the left of the name.
 
+<!-- Native menu (File/View/Help) added with Tauri - toggle sidebar Ctrl+B, refresh F5, About dialog -->
 <!-- Process name in process list now uses text-syslens-text-primary font-medium (was too dim) -->
+<!-- Process count in grouped view is now right-aligned with no background color -->
+<!-- Network traffic labels now have fixed width (70px) to prevent layout shift -->
+<!-- Logo removed from sidebar header -->
 <!-- Resource summary (CPU/MEM/DISK/NETWORK) removed from Processes page -->
 <!-- Hardware documentation research completed - hybrid approach recommended -->
 <!-- Network adapters now poll every 10 seconds to detect enable/disable changes -->

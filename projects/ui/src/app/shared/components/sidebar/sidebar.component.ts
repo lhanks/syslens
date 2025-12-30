@@ -15,15 +15,10 @@ interface NavItem {
   imports: [RouterLink, RouterLinkActive, BytesPipe],
   template: `
     <aside class="w-64 h-screen bg-syslens-bg-secondary border-r border-syslens-border-primary flex flex-col">
-      <!-- Logo / Header -->
+      <!-- Header -->
       <div class="p-4 border-b border-syslens-border-primary">
-        <div class="flex items-center gap-3">
-          <img src="assets/logo-icon.svg" alt="Syslens" class="w-10 h-10">
-          <div>
-            <h1 class="text-lg font-semibold text-syslens-text-primary">Syslens</h1>
-            <p class="text-xs text-syslens-text-muted">System Monitor</p>
-          </div>
-        </div>
+        <h1 class="text-lg font-semibold text-syslens-text-primary">Syslens</h1>
+        <p class="text-xs text-syslens-text-muted">System Monitor</p>
       </div>
 
       <!-- System Status Summary -->
@@ -143,8 +138,8 @@ interface NavItem {
                 <span class="text-syslens-text-muted truncate max-w-[60px]" [title]="adapter.adapterName">{{ adapter.adapterName }}</span>
               </div>
               <div class="font-mono text-xs text-syslens-text-secondary flex gap-1.5">
-                <span class="text-syslens-accent-green">↓{{ adapter.downloadSpeed | bytes }}/s</span>
-                <span class="text-syslens-accent-blue">↑{{ adapter.uploadSpeed | bytes }}/s</span>
+                <span class="text-syslens-accent-green w-[70px] text-right">↓{{ adapter.downloadSpeed | bytes }}/s</span>
+                <span class="text-syslens-accent-blue w-[70px] text-right">↑{{ adapter.uploadSpeed | bytes }}/s</span>
               </div>
             </div>
           </div>
