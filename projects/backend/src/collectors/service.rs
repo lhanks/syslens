@@ -9,24 +9,22 @@ pub struct ServiceCollector;
 impl ServiceCollector {
     /// Get all Windows services
     pub fn get_services() -> Vec<ServiceInfo> {
-        // Use PowerShell to get comprehensive service info
+        // Use PowerShell with a single WMI query (much faster than per-service queries)
         let output = Command::new("powershell")
             .args([
                 "-NoProfile",
                 "-NonInteractive",
                 "-Command",
-                r#"Get-Service | ForEach-Object {
-                    $svc = $_
-                    $wmiSvc = Get-WmiObject Win32_Service -Filter "Name='$($svc.Name)'" -ErrorAction SilentlyContinue
+                r#"Get-WmiObject Win32_Service | Select-Object Name, DisplayName, State, StartMode, Description, PathName, StartName, ProcessId | ForEach-Object {
                     [PSCustomObject]@{
-                        Name = $svc.Name
-                        DisplayName = $svc.DisplayName
-                        Status = $svc.Status.ToString()
-                        StartType = $svc.StartType.ToString()
-                        Description = if($wmiSvc) { $wmiSvc.Description } else { $null }
-                        PathName = if($wmiSvc) { $wmiSvc.PathName } else { $null }
-                        StartName = if($wmiSvc) { $wmiSvc.StartName } else { $null }
-                        ProcessId = if($wmiSvc -and $wmiSvc.ProcessId -gt 0) { $wmiSvc.ProcessId } else { $null }
+                        Name = $_.Name
+                        DisplayName = $_.DisplayName
+                        Status = $_.State
+                        StartType = $_.StartMode
+                        Description = $_.Description
+                        PathName = $_.PathName
+                        StartName = $_.StartName
+                        ProcessId = if($_.ProcessId -gt 0) { $_.ProcessId } else { $null }
                     }
                 } | ConvertTo-Json -Compress"#,
             ])

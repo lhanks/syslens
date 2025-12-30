@@ -3,8 +3,6 @@
 ** IMPORTANT ** Process the tasks below (in this section). Expand them if needed and put them in the appropriate sections below.
 ** IMPORTANT ** Do not remove this section. Just clear out the tasks once processed.
 
-- Clicking serivices tab hangs the app.
-
 ## Pending
 
 - [ ] Make left sidebar detachable/resizable/dockable
@@ -16,6 +14,7 @@
 
 ## Completed (Phase 3)
 
+- [x] Fix Services tab hang (optimized WMI query from N+1 to single query)
 - [x] Add Services tab (list Windows services with status, startup type, filtering, search)
 - [x] Enable/disable network adapters via UI (netsh command)
 - [x] Vendor badges with brand colors in sidebar details
