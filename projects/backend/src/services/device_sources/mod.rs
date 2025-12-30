@@ -3,6 +3,11 @@
 //! This module provides a trait-based architecture for fetching device information
 //! from multiple sources (Wikipedia, manufacturer sites, etc.) and merging results.
 
+pub mod amdproduct;
+pub mod intelark;
+pub mod manufacturer;
+pub mod techpowerup;
+pub mod wikichip;
 pub mod wikipedia;
 
 use crate::models::{DeviceIdentifier, DeviceType};
@@ -150,5 +155,10 @@ pub fn merge_results(results: Vec<SourceResult>) -> Option<PartialDeviceInfo> {
     Some(merged)
 }
 
-// Re-export Wikipedia source
+// Re-export sources
+pub use amdproduct::AMDProductSource;
+pub use intelark::IntelArkSource;
+pub use manufacturer::ManufacturerSource;
+pub use techpowerup::TechPowerUpSource;
+pub use wikichip::WikiChipSource;
 pub use wikipedia::WikipediaSource;

@@ -82,6 +82,9 @@ url = "2"
 # Directory paths
 dirs = "5"
 
+# Hashing for cache keys
+sha2 = "0.10"
+
 # Open URLs in browser
 open = "5"
 

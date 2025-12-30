@@ -283,8 +283,11 @@ impl AiAgent {
             } else {
                 Some(ProductImages {
                     primary_image: images.first().cloned(),
-                    gallery: images.into_iter().skip(1).collect(),
+                    primary_image_cached: None,
+                    gallery: vec![], // Images converted on-demand
                     thumbnail: None,
+                    thumbnail_cached: None,
+                    metadata: None,
                 })
             },
             metadata: DataMetadata {

@@ -3,14 +3,40 @@
 ** IMPORTANT ** Process the tasks below (in this section). Expand them if needed and put them in the appropriate sections below.
 ** IMPORTANT ** Do not remove this section. Just clear out the tasks once processed.
 
-(none)
+
 
 ## Pending
 
-- [ ] Fix View menu items not working
-- [ ] Make dock panels detachable as floating windows with edge-snap docking
+
+
+- [ ] Hardware Device Images & Documentation System - [Spec](./../___ai_files/specs/_spec-hardware-images.md)
+  - [x] Phase 1: Core infrastructure (ImageCache, data models, custom DB schema)
+  - [x] Phase 2: GPU sources (TechPowerUp, ManufacturerSource, enhanced WikipediaSource)
+  - [x] Phase 3: CPU sources (IntelArkSource, AMDProductSource, WikiChipSource)
+  - Phase 4: Frontend integration (image gallery, docs, drivers)
+  - Phase 5: Additional devices (motherboard, storage, memory, monitors)
+  - Phase 6: Polish & optimization
+  - Phase 7: AI image generation fallback (future)
 
 ## Completed (Phase 3)
+
+- [x] Hardware Device Images - Phase 3: CPU Sources
+  - [x] IntelArkSource - Intel ARK database for Intel CPU specs (priority 5)
+  - [x] AMDProductSource - AMD product database for AMD CPUs/GPUs (priority 5)
+  - [x] WikiChipSource - WikiChip for detailed CPU architecture info (priority 15)
+  - [x] Registered all sources in DeviceEnrichmentService
+  - [x] Code passes cargo check and clippy
+
+- [x] Marketing Website Screenshots
+
+  - [x] Take screenshots of the running app using Chrome DevTools MCP
+  - [x] Create creative screenshot presentation (angled, fading into distance)
+  - [x] Update website with app screenshots
+
+- [x] Add process icons to group headers in grouped view
+- [x] Investigate process icons - verified working (482/664 processes have icons)
+- [x] Fix View menu items - connected MenuService to DockService instead of ViewSettingsService
+- [x] Make dock panels detachable as floating windows (pop-out button, Tauri WebviewWindow)
 
 - [x] Add docking regions (left, right, top, bottom) - all resizable
   - [x] CSS Grid 4-region layout with DockContainerComponent

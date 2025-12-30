@@ -270,8 +270,11 @@ impl InternetFetcher {
             }),
             images: Some(ProductImages {
                 primary_image,
+                primary_image_cached: None,
                 gallery: vec![],
                 thumbnail: None,
+                thumbnail_cached: None,
+                metadata: None,
             }),
             metadata: DataMetadata {
                 source: DataSource::ManufacturerWebsite,

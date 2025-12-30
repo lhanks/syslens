@@ -12,6 +12,7 @@ export default function Home() {
           </div>
           <div className="flex items-center gap-6">
             <a href="#features" className="text-[#94A3B8] hover:text-white transition-colors">Features</a>
+            <a href="#gallery" className="text-[#94A3B8] hover:text-white transition-colors">Gallery</a>
             <a href="https://github.com/syslens/syslens" className="text-[#94A3B8] hover:text-white transition-colors">GitHub</a>
             <a
               href="#download"
@@ -39,8 +40,8 @@ export default function Home() {
             <span className="gradient-text">Clarity</span> for your system
           </h1>
           <p className="text-xl text-[#94A3B8] mb-10 max-w-2xl mx-auto">
-            A modern desktop system information dashboard. Real-time monitoring
-            for CPU, memory, GPU, storage, network, and processes.
+            A modern, customizable desktop system dashboard. Real-time monitoring
+            with dockable panels, hardware enrichment, and a fully flexible layout.
           </p>
           <div className="flex justify-center gap-4">
             <a
@@ -60,13 +61,72 @@ export default function Home() {
       </section>
 
       {/* Screenshot/Preview Section */}
-      <section className="py-16 px-6">
-        <div className="max-w-5xl mx-auto">
-          <div className="card p-2 glow">
-            <div className="bg-[#020617] rounded-lg aspect-video flex items-center justify-center">
-              <p className="text-[#94A3B8]">App Screenshot Preview</p>
+      <section className="py-16 px-6 overflow-hidden">
+        <div className="max-w-6xl mx-auto">
+          {/* Main Screenshot with perspective effect */}
+          <div className="relative" style={{ perspective: '1500px' }}>
+            <div
+              className="relative mx-auto max-w-4xl"
+              style={{
+                transform: 'rotateX(5deg) rotateY(-5deg)',
+                transformStyle: 'preserve-3d'
+              }}
+            >
+              {/* Main screenshot */}
+              <div className="card p-2 glow shadow-2xl">
+                <Image
+                  src="/screenshots/hardware-page.png"
+                  alt="Syslens Hardware Dashboard"
+                  width={1280}
+                  height={800}
+                  className="rounded-lg"
+                  priority
+                />
+              </div>
+
+              {/* Secondary screenshots fading into distance */}
+              <div
+                className="absolute -right-32 top-16 w-72 opacity-40 blur-[1px]"
+                style={{
+                  transform: 'translateZ(-100px) rotateY(15deg)',
+                  transformStyle: 'preserve-3d'
+                }}
+              >
+                <div className="card p-1 shadow-xl">
+                  <Image
+                    src="/screenshots/processes-page.png"
+                    alt="Syslens Processes"
+                    width={640}
+                    height={400}
+                    className="rounded"
+                  />
+                </div>
+              </div>
+
+              <div
+                className="absolute -left-24 top-24 w-64 opacity-30 blur-[2px]"
+                style={{
+                  transform: 'translateZ(-150px) rotateY(-20deg)',
+                  transformStyle: 'preserve-3d'
+                }}
+              >
+                <div className="card p-1 shadow-xl">
+                  <Image
+                    src="/screenshots/services-page.png"
+                    alt="Syslens Services"
+                    width={640}
+                    height={400}
+                    className="rounded"
+                  />
+                </div>
+              </div>
             </div>
           </div>
+
+          {/* Caption */}
+          <p className="text-center text-[#64748B] mt-8 text-sm">
+            Hardware dashboard showing CPU, GPU, memory, and system details
+          </p>
         </div>
       </section>
 
@@ -75,7 +135,7 @@ export default function Home() {
         <div className="max-w-6xl mx-auto">
           <h2 className="text-3xl font-bold text-center mb-4">Everything at a glance</h2>
           <p className="text-[#94A3B8] text-center mb-12 max-w-2xl mx-auto">
-            Syslens provides comprehensive system monitoring with a clean, modern interface.
+            Comprehensive system monitoring with a clean, modern interface and fully customizable layout.
           </p>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -112,9 +172,9 @@ export default function Home() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                 </svg>
               </div>
-              <h3 className="text-xl font-semibold mb-2">GPU Information</h3>
+              <h3 className="text-xl font-semibold mb-2">GPU &amp; Hardware Enrichment</h3>
               <p className="text-[#94A3B8]">
-                Graphics card details, VRAM, driver version with links to latest drivers.
+                Auto-fetched specs, images, and documentation from TechPowerUp, Wikipedia, and manufacturer sites.
               </p>
             </div>
 
@@ -138,9 +198,9 @@ export default function Home() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
                 </svg>
               </div>
-              <h3 className="text-xl font-semibold mb-2">Network Stats</h3>
+              <h3 className="text-xl font-semibold mb-2">Network Control</h3>
               <p className="text-[#94A3B8]">
-                Real-time bandwidth graphs, adapter details, IP configuration, and DNS settings.
+                Per-adapter bandwidth graphs, enable/disable adapters, IP configuration, and DNS settings.
               </p>
             </div>
 
@@ -153,15 +213,157 @@ export default function Home() {
               </div>
               <h3 className="text-xl font-semibold mb-2">Process Manager</h3>
               <p className="text-[#94A3B8]">
-                View running processes, CPU/memory usage, and manage applications.
+                Running processes with icons, groupable tree view, CPU/memory graphs, and application management.
+              </p>
+            </div>
+
+            {/* Services */}
+            <div className="card p-6 transition-all">
+              <div className="w-12 h-12 rounded-xl bg-[#A855F7]/20 flex items-center justify-center mb-4">
+                <svg className="w-6 h-6 text-[#A855F7]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-semibold mb-2">Services Manager</h3>
+              <p className="text-[#94A3B8]">
+                View Windows services with status indicators, startup types, search, and filtering by state.
+              </p>
+            </div>
+
+            {/* Docking Layout */}
+            <div className="card p-6 transition-all">
+              <div className="w-12 h-12 rounded-xl bg-[#EC4899]/20 flex items-center justify-center mb-4">
+                <svg className="w-6 h-6 text-[#EC4899]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-semibold mb-2">Dockable Panels</h3>
+              <p className="text-[#94A3B8]">
+                Fully customizable layout with resizable dock regions, stackable tabs, and floating windows.
+              </p>
+            </div>
+
+            {/* Vendor Badges */}
+            <div className="card p-6 transition-all">
+              <div className="w-12 h-12 rounded-xl bg-[#14B8A6]/20 flex items-center justify-center mb-4">
+                <svg className="w-6 h-6 text-[#14B8A6]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-semibold mb-2">Vendor Recognition</h3>
+              <p className="text-[#94A3B8]">
+                Beautiful brand-colored badges for hardware vendors with quick links to support pages.
               </p>
             </div>
           </div>
         </div>
       </section>
 
+      {/* Screenshot Gallery */}
+      <section id="gallery" className="py-20 px-6 bg-[#020617]">
+        <div className="max-w-6xl mx-auto">
+          <h2 className="text-3xl font-bold text-center mb-4">See it in action</h2>
+          <p className="text-[#94A3B8] text-center mb-12 max-w-2xl mx-auto">
+            Explore every corner of the application with these feature screenshots.
+          </p>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {/* Hardware */}
+            <div className="group">
+              <div className="card p-2 transition-all group-hover:border-[#3B82F6]/50">
+                <Image
+                  src="/screenshots/hardware-page.png"
+                  alt="Hardware Dashboard"
+                  width={640}
+                  height={400}
+                  className="rounded-lg"
+                />
+              </div>
+              <h3 className="text-lg font-semibold mt-3 text-center">Hardware Dashboard</h3>
+              <p className="text-sm text-[#64748B] text-center">CPU, GPU, memory specs with vendor badges</p>
+            </div>
+
+            {/* System */}
+            <div className="group">
+              <div className="card p-2 transition-all group-hover:border-[#8B5CF6]/50">
+                <Image
+                  src="/screenshots/system-page.png"
+                  alt="System Overview"
+                  width={640}
+                  height={400}
+                  className="rounded-lg"
+                />
+              </div>
+              <h3 className="text-lg font-semibold mt-3 text-center">System Overview</h3>
+              <p className="text-sm text-[#64748B] text-center">OS info, uptime, and resource graphs</p>
+            </div>
+
+            {/* Processes */}
+            <div className="group">
+              <div className="card p-2 transition-all group-hover:border-[#10B981]/50">
+                <Image
+                  src="/screenshots/processes-page.png"
+                  alt="Process Manager"
+                  width={640}
+                  height={400}
+                  className="rounded-lg"
+                />
+              </div>
+              <h3 className="text-lg font-semibold mt-3 text-center">Process Manager</h3>
+              <p className="text-sm text-[#64748B] text-center">App icons, grouping, and resource usage</p>
+            </div>
+
+            {/* Services */}
+            <div className="group">
+              <div className="card p-2 transition-all group-hover:border-[#A855F7]/50">
+                <Image
+                  src="/screenshots/services-page.png"
+                  alt="Services Manager"
+                  width={640}
+                  height={400}
+                  className="rounded-lg"
+                />
+              </div>
+              <h3 className="text-lg font-semibold mt-3 text-center">Services Manager</h3>
+              <p className="text-sm text-[#64748B] text-center">Windows services with status and filters</p>
+            </div>
+
+            {/* Network */}
+            <div className="group">
+              <div className="card p-2 transition-all group-hover:border-[#F59E0B]/50">
+                <Image
+                  src="/screenshots/network-page.png"
+                  alt="Network Adapters"
+                  width={640}
+                  height={400}
+                  className="rounded-lg"
+                />
+              </div>
+              <h3 className="text-lg font-semibold mt-3 text-center">Network Adapters</h3>
+              <p className="text-sm text-[#64748B] text-center">Per-adapter graphs and IP configuration</p>
+            </div>
+
+            {/* Storage */}
+            <div className="group">
+              <div className="card p-2 transition-all group-hover:border-[#06B6D4]/50">
+                <Image
+                  src="/screenshots/storage-page.png"
+                  alt="Storage Health"
+                  width={640}
+                  height={400}
+                  className="rounded-lg"
+                />
+              </div>
+              <h3 className="text-lg font-semibold mt-3 text-center">Storage Health</h3>
+              <p className="text-sm text-[#64748B] text-center">Disk usage, volumes, and S.M.A.R.T. status</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Tech Stack */}
-      <section className="py-16 px-6 bg-[#020617]">
+      <section className="py-16 px-6">
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-2xl font-bold mb-8">Built with modern technology</h2>
           <div className="flex justify-center gap-8 flex-wrap">
@@ -175,6 +377,9 @@ export default function Home() {
               <span className="font-mono text-[#06B6D4]">Tailwind CSS</span>
             </div>
           </div>
+          <p className="text-[#64748B] mt-6 text-sm">
+            Native performance. Tiny footprint. No Electron bloat.
+          </p>
         </div>
       </section>
 
@@ -183,24 +388,24 @@ export default function Home() {
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-3xl font-bold mb-4">Ready to get started?</h2>
           <p className="text-[#94A3B8] mb-8">
-            Download Syslens for free. Available for Windows 10/11.
+            Download Syslens for free. Open source and available for Windows 10/11.
           </p>
           <div className="flex justify-center gap-4 flex-wrap">
             <a
-              href="#"
+              href="https://github.com/syslens/syslens/releases/latest"
               className="px-8 py-4 bg-gradient-to-r from-[#3B82F6] to-[#8B5CF6] hover:opacity-90 text-white rounded-xl font-semibold transition-opacity"
             >
-              Download .exe Installer
+              Download Latest Release
             </a>
             <a
-              href="#"
+              href="https://github.com/syslens/syslens/releases"
               className="px-8 py-4 border border-[#334155] hover:border-[#3B82F6] text-white rounded-xl font-semibold transition-colors"
             >
-              Download .msi Package
+              All Releases
             </a>
           </div>
           <p className="text-sm text-[#64748B] mt-6">
-            v1.0.0 &bull; Windows 10/11 &bull; ~15 MB
+            Windows 10/11 &bull; 64-bit &bull; ~8 MB
           </p>
         </div>
       </section>
@@ -216,10 +421,10 @@ export default function Home() {
             <a href="https://github.com/syslens/syslens" className="text-[#94A3B8] hover:text-white transition-colors">
               GitHub
             </a>
-            <a href="#" className="text-[#94A3B8] hover:text-white transition-colors">
+            <a href="https://github.com/syslens/syslens/releases" className="text-[#94A3B8] hover:text-white transition-colors">
               Releases
             </a>
-            <a href="#" className="text-[#94A3B8] hover:text-white transition-colors">
+            <a href="https://github.com/syslens/syslens#readme" className="text-[#94A3B8] hover:text-white transition-colors">
               Documentation
             </a>
           </div>

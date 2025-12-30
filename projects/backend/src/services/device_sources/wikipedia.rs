@@ -20,6 +20,15 @@ pub struct WikipediaSource {
     client: Client,
 }
 
+/// Image data extracted from Wikipedia.
+#[derive(Debug, Clone)]
+pub struct WikipediaImage {
+    pub url: String,
+    pub title: String,
+    pub width: Option<u32>,
+    pub height: Option<u32>,
+}
+
 impl WikipediaSource {
     pub fn new() -> Result<Self> {
         let client = Client::builder()
@@ -567,6 +576,203 @@ impl WikipediaSource {
         }
         None
     }
+
+    /// Fetch images from a Wikipedia page.
+    pub async fn fetch_page_images(&self, title: &str) -> Result<Vec<WikipediaImage>> {
+        #[derive(Deserialize)]
+        struct ImageResponse {
+            query: Option<ImageQuery>,
+        }
+
+        #[derive(Deserialize)]
+        struct ImageQuery {
+            pages: HashMap<String, ImagePage>,
+        }
+
+        #[derive(Deserialize)]
+        struct ImagePage {
+            images: Option<Vec<ImageInfo>>,
+        }
+
+        #[derive(Deserialize)]
+        struct ImageInfo {
+            title: String,
+        }
+
+        // First, get the list of images on the page
+        let response = self
+            .client
+            .get(WIKIPEDIA_API_URL)
+            .query(&[
+                ("action", "query"),
+                ("titles", title),
+                ("prop", "images"),
+                ("imlimit", "20"),
+                ("format", "json"),
+            ])
+            .send()
+            .await
+            .context("Failed to fetch Wikipedia images")?;
+
+        let image_resp: ImageResponse = response.json().await?;
+
+        let mut image_titles = Vec::new();
+        if let Some(query) = image_resp.query {
+            for (_, page) in query.pages {
+                if let Some(images) = page.images {
+                    for img in images {
+                        // Filter out common non-product images
+                        if self.is_relevant_image(&img.title) {
+                            image_titles.push(img.title);
+                        }
+                    }
+                }
+            }
+        }
+
+        if image_titles.is_empty() {
+            return Ok(Vec::new());
+        }
+
+        // Now get the actual image URLs
+        self.fetch_image_urls(&image_titles).await
+    }
+
+    /// Check if an image title is likely to be a product image.
+    fn is_relevant_image(&self, title: &str) -> bool {
+        let title_lower = title.to_lowercase();
+
+        // Skip common Wikipedia template images
+        let skip_patterns = [
+            "commons-logo",
+            "wiki",
+            "icon",
+            "flag",
+            "symbol",
+            "logo.svg",
+            "ambox",
+            "question book",
+            "disambig",
+            "edit-clear",
+            "folder",
+            "crystal",
+            "nuvola",
+            "gnome",
+            "padlock",
+            "red_x",
+            "check",
+            "yes_check",
+            "x_mark",
+        ];
+
+        for pattern in skip_patterns {
+            if title_lower.contains(pattern) {
+                return false;
+            }
+        }
+
+        // Prefer product-related images
+        let prefer_patterns = [
+            ".jpg", ".jpeg", ".png", "photo", "product", "chip", "die", "gpu", "cpu",
+            "geforce", "radeon", "ryzen", "core i", "nvidia", "amd", "intel",
+        ];
+
+        prefer_patterns.iter().any(|p| title_lower.contains(p))
+    }
+
+    /// Fetch actual image URLs for a list of image titles.
+    async fn fetch_image_urls(&self, titles: &[String]) -> Result<Vec<WikipediaImage>> {
+        #[derive(Deserialize)]
+        struct ImageUrlResponse {
+            query: Option<ImageUrlQuery>,
+        }
+
+        #[derive(Deserialize)]
+        struct ImageUrlQuery {
+            pages: HashMap<String, ImageUrlPage>,
+        }
+
+        #[derive(Deserialize)]
+        struct ImageUrlPage {
+            title: Option<String>,
+            imageinfo: Option<Vec<ImageUrlInfo>>,
+        }
+
+        #[derive(Deserialize)]
+        struct ImageUrlInfo {
+            url: String,
+            width: Option<u32>,
+            height: Option<u32>,
+        }
+
+        let titles_str = titles.join("|");
+
+        let response = self
+            .client
+            .get(WIKIPEDIA_API_URL)
+            .query(&[
+                ("action", "query"),
+                ("titles", &titles_str),
+                ("prop", "imageinfo"),
+                ("iiprop", "url|size"),
+                ("format", "json"),
+            ])
+            .send()
+            .await
+            .context("Failed to fetch image URLs")?;
+
+        let url_resp: ImageUrlResponse = response.json().await?;
+
+        let mut images = Vec::new();
+        if let Some(query) = url_resp.query {
+            for (_, page) in query.pages {
+                if let (Some(title), Some(imageinfo)) = (page.title, page.imageinfo) {
+                    if let Some(info) = imageinfo.into_iter().next() {
+                        images.push(WikipediaImage {
+                            url: info.url,
+                            title,
+                            width: info.width,
+                            height: info.height,
+                        });
+                    }
+                }
+            }
+        }
+
+        // Sort by size (larger images first)
+        images.sort_by(|a, b| {
+            let size_a = a.width.unwrap_or(0) * a.height.unwrap_or(0);
+            let size_b = b.width.unwrap_or(0) * b.height.unwrap_or(0);
+            size_b.cmp(&size_a)
+        });
+
+        Ok(images)
+    }
+
+    /// Extract the primary image from an infobox.
+    fn extract_infobox_image(&self, content: &str) -> Option<String> {
+        // Look for image parameter in infobox
+        let image_patterns = [
+            r"\|\s*image\s*=\s*([^\|\}\n]+)",
+            r"\|\s*logo\s*=\s*([^\|\}\n]+)",
+            r"\|\s*photo\s*=\s*([^\|\}\n]+)",
+        ];
+
+        for pattern in image_patterns {
+            if let Ok(re) = regex::Regex::new(pattern) {
+                if let Some(caps) = re.captures(content) {
+                    if let Some(m) = caps.get(1) {
+                        let image_name = m.as_str().trim();
+                        if !image_name.is_empty() && !image_name.contains("{{") {
+                            return Some(image_name.to_string());
+                        }
+                    }
+                }
+            }
+        }
+
+        None
+    }
 }
 
 #[async_trait]
@@ -623,6 +829,33 @@ impl DeviceSource for WikipediaSource {
             title.replace(' ', "_")
         );
 
+        // Try to extract infobox image first
+        let infobox_image = self.extract_infobox_image(&content);
+
+        // Fetch page images
+        let images = self.fetch_page_images(&title).await.unwrap_or_default();
+
+        // Use infobox image if found, otherwise use first page image
+        let primary_image = if let Some(img_name) = infobox_image {
+            // Need to resolve the image name to a URL
+            let img_titles = vec![format!("File:{}", img_name)];
+            if let Ok(resolved) = self.fetch_image_urls(&img_titles).await {
+                resolved.into_iter().next().map(|i| i.url)
+            } else {
+                None
+            }
+        } else {
+            images.first().map(|i| i.url.clone())
+        };
+
+        // Build gallery from remaining images
+        let image_gallery: Vec<(String, Option<String>)> = images
+            .iter()
+            .skip(if primary_image.is_some() { 1 } else { 0 })
+            .take(5) // Limit to 5 gallery images
+            .map(|img| (img.url.clone(), None))
+            .collect();
+
         Ok(PartialDeviceInfo {
             specs,
             categories,
@@ -630,10 +863,16 @@ impl DeviceSource for WikipediaSource {
             release_date,
             product_page: Some(wiki_url.clone()),
             support_page: None,
-            image_url: None,
+            image_url: primary_image,
             source_name: "Wikipedia".to_string(),
             source_url: Some(wiki_url),
             confidence: 0.7, // Wikipedia is generally reliable
+            image_cached_path: None,
+            thumbnail_url: None,
+            thumbnail_cached_path: None,
+            image_gallery,
+            documentation: None,
+            driver_info: None,
         })
     }
 }

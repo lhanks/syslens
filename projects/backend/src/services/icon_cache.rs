@@ -66,7 +66,7 @@ impl IconCache {
 
         // Log stats periodically
         let total = self.success_count.load(Ordering::Relaxed) + self.fail_count.load(Ordering::Relaxed);
-        if total > 0 && total % 50 == 0 {
+        if total > 0 && total.is_multiple_of(50) {
             debug!("Icon cache stats: {} successes, {} failures",
                    self.success_count.load(Ordering::Relaxed),
                    self.fail_count.load(Ordering::Relaxed));
@@ -191,7 +191,7 @@ impl IconCache {
                     biHeight: -height, // Negative for top-down
                     biPlanes: 1,
                     biBitCount: 32,
-                    biCompression: BI_RGB.0 as u32,
+                    biCompression: BI_RGB.0,
                     biSizeImage: 0,
                     biXPelsPerMeter: 0,
                     biYPelsPerMeter: 0,

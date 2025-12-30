@@ -55,6 +55,17 @@ pub struct LearnedDevice {
     pub created_at: DateTime<Utc>,
     /// When any source last verified/updated this entry
     pub last_verified: DateTime<Utc>,
+
+    // Extended fields for Phase 1 - Image and documentation support
+    /// Cached product images
+    #[serde(default)]
+    pub images: Option<crate::models::ProductImages>,
+    /// Documentation links
+    #[serde(default)]
+    pub documentation: Option<crate::models::DocumentationLinks>,
+    /// Driver information
+    #[serde(default)]
+    pub drivers: Option<crate::models::DriverInfo>,
 }
 
 /// The knowledge database structure.
@@ -78,6 +89,20 @@ pub struct PartialDeviceInfo {
     pub source_name: String,
     pub source_url: Option<String>,
     pub confidence: f32,
+
+    // Extended image fields for Phase 1
+    /// Local cached path to primary image
+    pub image_cached_path: Option<String>,
+    /// Thumbnail URL
+    pub thumbnail_url: Option<String>,
+    /// Cached thumbnail path
+    pub thumbnail_cached_path: Option<String>,
+    /// Additional gallery images (URL, cached_path pairs)
+    pub image_gallery: Vec<(String, Option<String>)>,
+    /// Documentation links
+    pub documentation: Option<crate::models::DocumentationLinks>,
+    /// Driver information
+    pub driver_info: Option<crate::models::DriverInfo>,
 }
 
 /// Manages learned device knowledge with persistence.
@@ -275,6 +300,10 @@ impl KnowledgeStore {
                 sources: vec![source_info],
                 created_at: now,
                 last_verified: now,
+                // Extended fields
+                images: None,
+                documentation: partial.documentation,
+                drivers: partial.driver_info,
             });
         }
 
@@ -331,9 +360,9 @@ impl KnowledgeStore {
                 release_date: learned.release_date.clone(),
                 eol_date: None,
             }),
-            drivers: None,
-            documentation: None,
-            images: None,
+            drivers: learned.drivers.clone(),
+            documentation: learned.documentation.clone(),
+            images: learned.images.clone(),
             metadata: DataMetadata {
                 source: DataSource::ThirdPartyDatabase,
                 last_updated: learned.last_verified,

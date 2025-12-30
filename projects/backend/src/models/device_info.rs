@@ -178,19 +178,93 @@ pub struct FirmwareLink {
     pub release_date: Option<String>,
 }
 
-/// Product images
+/// Image type for categorizing product images
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
+#[serde(rename_all = "camelCase")]
+pub enum ImageType {
+    /// Main product photograph
+    #[default]
+    Product,
+    /// Retail packaging
+    Packaging,
+    /// Hardware installed in system
+    Installation,
+    /// Technical diagram or schematic
+    Diagram,
+    /// Die shot or internal view
+    DieShot,
+    /// Other uncategorized image
+    Other,
+}
+
+
+/// A single image entry with metadata
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+pub struct ImageEntry {
+    /// Original URL of the image
+    pub url: String,
+
+    /// Local cached path (if downloaded)
+    pub cached_path: Option<String>,
+
+    /// Type of image
+    #[serde(default)]
+    pub image_type: ImageType,
+
+    /// Description or alt text
+    pub description: Option<String>,
+
+    /// Width in pixels (if known)
+    pub width: Option<u32>,
+
+    /// Height in pixels (if known)
+    pub height: Option<u32>,
+}
+
+/// Image metadata for tracking source and freshness
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ImageMetadata {
+    /// When image was fetched
+    pub fetched_at: DateTime<Utc>,
+
+    /// Source URL or service name
+    pub source: String,
+
+    /// Whether image is AI-generated
+    #[serde(default)]
+    pub ai_generated: bool,
+
+    /// Cache key (hash of URL or identifier)
+    pub cache_key: String,
+
+    /// File size in bytes
+    pub file_size: Option<u64>,
+}
+
+/// Product images with comprehensive metadata
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[serde(rename_all = "camelCase")]
 pub struct ProductImages {
-    /// Primary product image URL
+    /// Primary product image URL (original source)
     pub primary_image: Option<String>,
 
-    /// Additional product images
-    #[serde(default)]
-    pub gallery: Vec<String>,
+    /// Local cached path to primary image
+    pub primary_image_cached: Option<String>,
 
-    /// Thumbnail image
+    /// Additional product images with metadata
+    #[serde(default)]
+    pub gallery: Vec<ImageEntry>,
+
+    /// Thumbnail URL (256x256 or smaller)
     pub thumbnail: Option<String>,
+
+    /// Cached thumbnail path
+    pub thumbnail_cached: Option<String>,
+
+    /// Image metadata for tracking
+    pub metadata: Option<ImageMetadata>,
 }
 
 /// Data source enumeration

@@ -2,7 +2,7 @@
 
 use crate::models::{DataSource, DeviceDeepInfo, DeviceIdentifier, DeviceType};
 use crate::services::device_sources::{fetch_from_all_sources, merge_results, DeviceSource, WikipediaSource};
-use crate::services::{AiAgent, CacheManager, ClaudeClient, InternetFetcher, KnowledgeStore, LocalDatabaseManager};
+use crate::services::{AiAgent, CacheManager, ClaudeClient, ImageCache, InternetFetcher, KnowledgeStore, LocalDatabaseManager};
 use chrono::{Duration, Utc};
 use std::sync::OnceLock;
 
@@ -23,6 +23,9 @@ static CLAUDE_CLIENT: OnceLock<ClaudeClient> = OnceLock::new();
 
 /// Global knowledge store instance
 static KNOWLEDGE_STORE: OnceLock<KnowledgeStore> = OnceLock::new();
+
+/// Global image cache instance
+static IMAGE_CACHE: OnceLock<ImageCache> = OnceLock::new();
 
 /// Get or initialize the cache manager.
 fn get_cache_manager() -> &'static CacheManager {
@@ -63,6 +66,13 @@ fn get_claude_client() -> &'static ClaudeClient {
 fn get_knowledge_store() -> &'static KnowledgeStore {
     KNOWLEDGE_STORE.get_or_init(|| {
         KnowledgeStore::new().expect("Failed to initialize KnowledgeStore")
+    })
+}
+
+/// Get or initialize the image cache.
+fn get_image_cache() -> &'static ImageCache {
+    IMAGE_CACHE.get_or_init(|| {
+        ImageCache::new().expect("Failed to initialize ImageCache")
     })
 }
 
@@ -377,4 +387,243 @@ pub struct DatabaseStatsResponse {
     pub cache_total_entries: usize,
     pub cache_valid_entries: usize,
     pub cache_expired_entries: usize,
+}
+
+// =============================================================================
+// Image Cache Commands
+// =============================================================================
+
+/// Response for image fetch operations.
+#[derive(Debug, Clone, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ImageCacheResponse {
+    pub cache_key: String,
+    pub file_path: String,
+    pub is_cached: bool,
+    pub thumbnail_path: Option<String>,
+}
+
+/// Response for image cache statistics.
+#[derive(Debug, Clone, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ImageCacheStatsResponse {
+    pub hits: u64,
+    pub misses: u64,
+    pub downloads: u64,
+    pub download_failures: u64,
+    pub total_bytes_cached: u64,
+    pub cached_count: usize,
+    pub total_size_bytes: u64,
+    pub cache_dir: String,
+}
+
+/// Fetch and cache a device image from URL.
+///
+/// Returns the local file path to the cached image.
+#[tauri::command]
+pub async fn fetch_device_image(url: String) -> Result<ImageCacheResponse, String> {
+    let image_cache = get_image_cache();
+
+    match image_cache.fetch_and_cache(&url).await {
+        Ok(result) => {
+            log::info!("Image cached: {} -> {:?}", url, result.file_path);
+            Ok(ImageCacheResponse {
+                cache_key: result.cache_key,
+                file_path: result.file_path.to_string_lossy().to_string(),
+                is_cached: result.is_cached,
+                thumbnail_path: result.thumbnail_path.map(|p| p.to_string_lossy().to_string()),
+            })
+        }
+        Err(e) => {
+            log::warn!("Failed to fetch image {}: {}", url, e);
+            Err(e.to_string())
+        }
+    }
+}
+
+/// Fetch and cache a device image with a custom cache key.
+///
+/// Useful for associating images with specific device identifiers.
+#[tauri::command]
+pub async fn fetch_device_image_with_key(
+    url: String,
+    cache_key: String,
+) -> Result<ImageCacheResponse, String> {
+    let image_cache = get_image_cache();
+
+    match image_cache.fetch_and_cache_with_key(&url, &cache_key).await {
+        Ok(result) => {
+            log::info!("Image cached with key {}: {} -> {:?}", cache_key, url, result.file_path);
+            Ok(ImageCacheResponse {
+                cache_key: result.cache_key,
+                file_path: result.file_path.to_string_lossy().to_string(),
+                is_cached: result.is_cached,
+                thumbnail_path: result.thumbnail_path.map(|p| p.to_string_lossy().to_string()),
+            })
+        }
+        Err(e) => {
+            log::warn!("Failed to fetch image {} with key {}: {}", url, cache_key, e);
+            Err(e.to_string())
+        }
+    }
+}
+
+/// Get the cached path for an image by cache key.
+///
+/// Returns None if the image is not cached.
+#[tauri::command]
+pub async fn get_cached_image_path(cache_key: String) -> Result<Option<String>, String> {
+    let image_cache = get_image_cache();
+
+    Ok(image_cache
+        .get_cached_path(&cache_key)
+        .await
+        .map(|p| p.to_string_lossy().to_string()))
+}
+
+/// Check if an image is cached by cache key.
+#[tauri::command]
+pub async fn is_image_cached(cache_key: String) -> Result<bool, String> {
+    let image_cache = get_image_cache();
+    Ok(image_cache.is_cached(&cache_key).await)
+}
+
+/// Generate a cache key for a device image.
+#[tauri::command]
+pub fn generate_device_image_cache_key(
+    device_type: String,
+    manufacturer: String,
+    model: String,
+) -> String {
+    ImageCache::generate_device_cache_key(&device_type, &manufacturer, &model)
+}
+
+/// Get image cache statistics.
+#[tauri::command]
+pub async fn get_image_cache_stats() -> Result<ImageCacheStatsResponse, String> {
+    let image_cache = get_image_cache();
+    let (hits, misses, downloads, download_failures, total_bytes) = image_cache.get_stats();
+
+    Ok(ImageCacheStatsResponse {
+        hits,
+        misses,
+        downloads,
+        download_failures,
+        total_bytes_cached: total_bytes,
+        cached_count: image_cache.cached_count().await,
+        total_size_bytes: image_cache.total_size().await,
+        cache_dir: image_cache.cache_dir().to_string_lossy().to_string(),
+    })
+}
+
+/// Cleanup old cached images.
+///
+/// Removes images older than the specified number of days.
+#[tauri::command]
+pub async fn cleanup_image_cache(max_age_days: u64) -> Result<usize, String> {
+    let image_cache = get_image_cache();
+    let max_age = std::time::Duration::from_secs(max_age_days * 24 * 60 * 60);
+
+    image_cache
+        .cleanup_older_than(max_age)
+        .await
+        .map_err(|e| e.to_string())
+}
+
+// =============================================================================
+// Device Enrichment Commands
+// =============================================================================
+
+use crate::services::{DeviceEnrichmentService, EnrichedDeviceInfo};
+use std::sync::Arc;
+
+/// Global enrichment service instance
+static ENRICHMENT_SERVICE: OnceLock<DeviceEnrichmentService> = OnceLock::new();
+
+/// Get or initialize the device enrichment service.
+fn get_enrichment_service() -> &'static DeviceEnrichmentService {
+    ENRICHMENT_SERVICE.get_or_init(|| {
+        // Create dedicated instances for the enrichment service
+        let knowledge_store = Arc::new(
+            KnowledgeStore::new().expect("Failed to create KnowledgeStore for enrichment")
+        );
+        let image_cache = Arc::new(
+            ImageCache::new().expect("Failed to create ImageCache for enrichment")
+        );
+        DeviceEnrichmentService::new(knowledge_store, image_cache)
+            .expect("Failed to initialize DeviceEnrichmentService")
+    })
+}
+
+/// Enrich a device with comprehensive information from multiple sources.
+///
+/// This fetches product images, specifications, documentation, and driver info.
+#[tauri::command]
+pub async fn enrich_device(
+    device_type: DeviceType,
+    manufacturer: String,
+    model: String,
+    force_refresh: bool,
+) -> Result<EnrichedDeviceInfo, String> {
+    let enrichment_service = get_enrichment_service();
+
+    let identifier = DeviceIdentifier {
+        manufacturer,
+        model,
+        part_number: None,
+        serial_number: None,
+        hardware_ids: vec![],
+    };
+
+    enrichment_service
+        .enrich_device(device_type, identifier, force_refresh)
+        .await
+        .map_err(|e| e.to_string())
+}
+
+/// Response for enrichment source listing.
+#[derive(Debug, Clone, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct EnrichmentSourceResponse {
+    pub name: String,
+    pub priority: u8,
+}
+
+/// List available enrichment sources.
+#[tauri::command]
+pub fn list_enrichment_sources() -> Vec<EnrichmentSourceResponse> {
+    let enrichment_service = get_enrichment_service();
+
+    enrichment_service
+        .list_sources()
+        .into_iter()
+        .map(|s| EnrichmentSourceResponse {
+            name: s.name,
+            priority: s.priority,
+        })
+        .collect()
+}
+
+/// Cleanup all cached device data.
+///
+/// Removes images and metadata older than the specified number of days.
+#[tauri::command]
+pub async fn cleanup_enrichment_cache(max_age_days: u64) -> Result<CleanupResponse, String> {
+    let enrichment_service = get_enrichment_service();
+
+    let result = enrichment_service
+        .cleanup(max_age_days)
+        .await
+        .map_err(|e| e.to_string())?;
+
+    Ok(CleanupResponse {
+        images_removed: result.images_removed,
+    })
+}
+
+/// Response for cleanup operation.
+#[derive(Debug, Clone, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CleanupResponse {
+    pub images_removed: usize,
 }

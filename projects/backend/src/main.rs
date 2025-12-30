@@ -203,6 +203,18 @@ fn main() {
             commands::clear_device_cache,
             commands::cleanup_device_cache,
             commands::get_device_database_stats,
+            // Image cache commands
+            commands::fetch_device_image,
+            commands::fetch_device_image_with_key,
+            commands::get_cached_image_path,
+            commands::is_image_cached,
+            commands::generate_device_image_cache_key,
+            commands::get_image_cache_stats,
+            commands::cleanup_image_cache,
+            // Device enrichment commands
+            commands::enrich_device,
+            commands::list_enrichment_sources,
+            commands::cleanup_enrichment_cache,
         ])
         .run(tauri::generate_context!())
         .expect("Error while running Syslens application");
