@@ -7,6 +7,8 @@
 
 (No new tasks)
 
+<!-- Process grouping with expandable tree already implemented in processes.component.ts -->
+
 ## In Progress
 
 (No tasks currently in progress)
@@ -21,5 +23,6 @@
 ---
 
 **Archives:**
+
 - [Phase 2 - December 30, 2025](./startup-archived-2025-12-30.md)
 - [Phase 1 - December 29, 2025](./startup-archived-2025-12-29.md)
