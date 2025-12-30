@@ -262,8 +262,8 @@ interface ProcessGroup {
                           {{ process.name }}
                         </span>
                         @if (process.command && process.command !== process.name) {
-                          <span class="text-xs text-syslens-text-muted truncate max-w-[200px]" [title]="process.command">
-                            {{ process.command }}
+                          <span class="text-xs text-syslens-text-muted" [title]="process.command">
+                            {{ truncatePath(process.command, 45) }}
                           </span>
                         }
                       </div>
@@ -366,8 +366,8 @@ interface ProcessGroup {
                                 {{ process.name }}
                               </span>
                               @if (process.command && process.command !== process.name) {
-                                <span class="text-xs text-syslens-text-muted truncate max-w-[180px]" [title]="process.command">
-                                  {{ process.command }}
+                                <span class="text-xs text-syslens-text-muted" [title]="process.command">
+                                  {{ truncatePath(process.command, 40) }}
                                 </span>
                               }
                             </div>
@@ -482,6 +482,38 @@ export class ProcessesComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
 
   Math = Math;
+
+  /**
+   * Truncate a file path showing beginning and end with ellipsis in middle.
+   * Example: C:\Windows\System32\...\process.exe
+   */
+  truncatePath(path: string, maxLength: number = 40): string {
+    if (!path || path.length <= maxLength) return path;
+
+    // Find the last path separator for the filename
+    const lastSepIndex = Math.max(path.lastIndexOf('\\'), path.lastIndexOf('/'));
+    const filename = lastSepIndex >= 0 ? path.slice(lastSepIndex + 1) : path;
+
+    // If filename alone is too long, truncate it
+    if (filename.length >= maxLength - 5) {
+      return filename.slice(0, maxLength - 3) + '...';
+    }
+
+    // Calculate how much of the beginning we can show
+    const ellipsis = '...';
+    const beginLength = maxLength - filename.length - ellipsis.length - 1; // -1 for separator
+
+    if (beginLength <= 3) {
+      // Not enough room for meaningful beginning, just show filename
+      return ellipsis + path.slice(lastSepIndex);
+    }
+
+    // Get the beginning portion (include drive letter and start of path)
+    const separator = path.includes('\\') ? '\\' : '/';
+    const beginning = path.slice(0, beginLength);
+
+    return beginning + ellipsis + separator + filename;
+  }
 
   // Process data
   processes = signal<ProcessInfo[]>([]);
