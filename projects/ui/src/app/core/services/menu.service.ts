@@ -33,9 +33,12 @@ export class MenuService {
     if (this.isInitialized) return;
     this.isInitialized = true;
 
-    // Listen for toggle sidebar event
+    // Listen for toggle sidebar events
     await listen('menu:toggle-sidebar', () => {
       this.viewSettings.toggleRightSidebar();
+    });
+    await listen('menu:toggle-left-sidebar', () => {
+      this.viewSettings.toggleLeftSidebar();
     });
 
     // Listen for mini graph visibility toggles

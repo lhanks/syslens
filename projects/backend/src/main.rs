@@ -30,7 +30,11 @@ fn main() {
         .manage(sysinfo_state)
         .setup(|app| {
             // Build the application menu
-            let toggle_sidebar = MenuItemBuilder::new("Toggle Sidebar")
+            let toggle_left_sidebar = MenuItemBuilder::new("Toggle Navigation")
+                .id("toggle_left_sidebar")
+                .accelerator("CmdOrCtrl+N")
+                .build(app)?;
+            let toggle_sidebar = MenuItemBuilder::new("Toggle Details Panel")
                 .id("toggle_sidebar")
                 .accelerator("CmdOrCtrl+B")
                 .build(app)?;
@@ -66,6 +70,7 @@ fn main() {
                 .build()?;
 
             let view_submenu = SubmenuBuilder::new(app, "View")
+                .item(&toggle_left_sidebar)
                 .item(&toggle_sidebar)
                 .separator()
                 .item(&show_submenu)
@@ -110,6 +115,9 @@ fn main() {
                 log::info!("Menu item clicked: {}", id);
 
                 match id {
+                    "toggle_left_sidebar" => {
+                        let _ = handle.emit("menu:toggle-left-sidebar", ());
+                    }
                     "toggle_sidebar" => {
                         let _ = handle.emit("menu:toggle-sidebar", ());
                     }

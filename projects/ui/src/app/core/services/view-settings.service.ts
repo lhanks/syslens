@@ -9,6 +9,10 @@ export type SidebarPosition = 'left' | 'right';
  * View settings interface
  */
 export interface ViewSettings {
+  // Left sidebar settings
+  leftSidebarVisible: boolean;
+  leftSidebarWidth: number;
+
   // Right sidebar settings
   rightSidebarVisible: boolean;
   rightSidebarPosition: SidebarPosition;
@@ -25,6 +29,9 @@ export interface ViewSettings {
 const STORAGE_KEY = 'syslens_view_settings';
 
 const DEFAULT_SETTINGS: ViewSettings = {
+  leftSidebarVisible: true,
+  leftSidebarWidth: 256, // 16rem = 256px (w-64)
+
   rightSidebarVisible: true,
   rightSidebarPosition: 'right',
   rightSidebarWidth: 288, // 18rem = 288px
@@ -45,6 +52,9 @@ const DEFAULT_SETTINGS: ViewSettings = {
 })
 export class ViewSettingsService {
   // Reactive signals for each setting
+  private _leftSidebarVisible = signal(DEFAULT_SETTINGS.leftSidebarVisible);
+  private _leftSidebarWidth = signal(DEFAULT_SETTINGS.leftSidebarWidth);
+
   private _rightSidebarVisible = signal(DEFAULT_SETTINGS.rightSidebarVisible);
   private _rightSidebarPosition = signal<SidebarPosition>(DEFAULT_SETTINGS.rightSidebarPosition);
   private _rightSidebarWidth = signal(DEFAULT_SETTINGS.rightSidebarWidth);
@@ -56,6 +66,9 @@ export class ViewSettingsService {
   private _showNetworkMiniGraph = signal(DEFAULT_SETTINGS.showNetworkMiniGraph);
 
   // Public read-only signals
+  leftSidebarVisible = this._leftSidebarVisible.asReadonly();
+  leftSidebarWidth = this._leftSidebarWidth.asReadonly();
+
   rightSidebarVisible = this._rightSidebarVisible.asReadonly();
   rightSidebarPosition = this._rightSidebarPosition.asReadonly();
   rightSidebarWidth = this._rightSidebarWidth.asReadonly();
@@ -73,6 +86,28 @@ export class ViewSettingsService {
     effect(() => {
       this.saveSettings();
     });
+  }
+
+  /**
+   * Toggle left sidebar visibility
+   */
+  toggleLeftSidebar(): void {
+    this._leftSidebarVisible.set(!this._leftSidebarVisible());
+  }
+
+  /**
+   * Set left sidebar visibility
+   */
+  setLeftSidebarVisible(visible: boolean): void {
+    this._leftSidebarVisible.set(visible);
+  }
+
+  /**
+   * Set left sidebar width
+   */
+  setLeftSidebarWidth(width: number): void {
+    // Clamp width between 180 and 400
+    this._leftSidebarWidth.set(Math.max(180, Math.min(400, width)));
   }
 
   /**
@@ -159,6 +194,12 @@ export class ViewSettingsService {
       if (stored) {
         const settings: Partial<ViewSettings> = JSON.parse(stored);
 
+        if (settings.leftSidebarVisible !== undefined) {
+          this._leftSidebarVisible.set(settings.leftSidebarVisible);
+        }
+        if (settings.leftSidebarWidth !== undefined) {
+          this._leftSidebarWidth.set(settings.leftSidebarWidth);
+        }
         if (settings.rightSidebarVisible !== undefined) {
           this._rightSidebarVisible.set(settings.rightSidebarVisible);
         }
@@ -195,6 +236,8 @@ export class ViewSettingsService {
   private saveSettings(): void {
     try {
       const settings: ViewSettings = {
+        leftSidebarVisible: this._leftSidebarVisible(),
+        leftSidebarWidth: this._leftSidebarWidth(),
         rightSidebarVisible: this._rightSidebarVisible(),
         rightSidebarPosition: this._rightSidebarPosition(),
         rightSidebarWidth: this._rightSidebarWidth(),

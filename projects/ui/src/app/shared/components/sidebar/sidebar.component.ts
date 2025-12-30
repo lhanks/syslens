@@ -1,4 +1,4 @@
-import { Component, inject, computed, OnInit, OnDestroy } from '@angular/core';
+import { Component, inject, computed, OnInit, OnDestroy, HostListener, signal } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { Subject, takeUntil } from 'rxjs';
 import { PreloadService, MetricsHistoryService, SystemService, ViewSettingsService, HardwareService, StorageService } from '@core/services';
@@ -15,7 +15,8 @@ interface NavItem {
   standalone: true,
   imports: [RouterLink, RouterLinkActive, BytesPipe, UptimePipe],
   template: `
-    <aside class="w-64 h-screen bg-syslens-bg-secondary border-r border-syslens-border-primary flex flex-col">
+    @if (isVisible()) {
+    <aside class="h-screen bg-syslens-bg-secondary border-r border-syslens-border-primary flex flex-col relative" [style.width.px]="sidebarWidth()">
       <!-- Header -->
       <div class="p-4 border-b border-syslens-border-primary">
         @if (deviceName) {
@@ -211,11 +212,32 @@ interface NavItem {
           <p>Syslens v0.1.0</p>
         </div>
       </div>
+
+      <!-- Resize Handle -->
+      <div class="resize-handle" (mousedown)="startResize($event)" [class.resizing]="isResizing()"></div>
     </aside>
+    }
   `,
   styles: [`
     :host {
       display: block;
+    }
+
+    .resize-handle {
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 4px;
+      height: 100%;
+      cursor: ew-resize;
+      background: transparent;
+      transition: background-color 0.15s;
+      z-index: 10;
+    }
+
+    .resize-handle:hover,
+    .resize-handle.resizing {
+      background: rgba(59, 130, 246, 0.5);
     }
 
     .vendor-badge {
@@ -312,6 +334,15 @@ export class SidebarComponent implements OnInit, OnDestroy {
   gpuVendor = '';
   memoryType = '';
   diskVendor = '';
+
+  // Sidebar visibility and width from settings
+  isVisible = this.viewSettings.leftSidebarVisible;
+  sidebarWidth = this.viewSettings.leftSidebarWidth;
+
+  // Resize state
+  isResizing = signal(false);
+  private resizeStartX = 0;
+  private resizeStartWidth = 0;
 
   // Mini graph visibility from settings
   showCpu = this.viewSettings.showCpuMiniGraph;
@@ -490,5 +521,37 @@ export class SidebarComponent implements OnInit, OnDestroy {
     if (v.includes('corsair')) return 'vendor-corsair';
     if (v.includes('ddr')) return 'vendor-memory';
     return 'vendor-default';
+  }
+
+  /**
+   * Start resize operation
+   */
+  startResize(event: MouseEvent): void {
+    event.preventDefault();
+    this.isResizing.set(true);
+    this.resizeStartX = event.clientX;
+    this.resizeStartWidth = this.sidebarWidth();
+  }
+
+  /**
+   * Handle mouse move during resize
+   */
+  @HostListener('document:mousemove', ['$event'])
+  onMouseMove(event: MouseEvent): void {
+    if (!this.isResizing()) return;
+
+    const delta = event.clientX - this.resizeStartX;
+    const newWidth = this.resizeStartWidth + delta;
+    this.viewSettings.setLeftSidebarWidth(newWidth);
+  }
+
+  /**
+   * Stop resize operation
+   */
+  @HostListener('document:mouseup')
+  stopResize(): void {
+    if (this.isResizing()) {
+      this.isResizing.set(false);
+    }
   }
 }
