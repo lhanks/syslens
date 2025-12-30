@@ -64,6 +64,30 @@ for arg in "$@"; do
     esac
 done
 
+# Function to check if any source file is newer than the binary
+check_source_changes() {
+    local binary="$1"
+
+    # Check UI source files
+    if find "$UI_DIR/src" -type f \( -name "*.ts" -o -name "*.html" -o -name "*.css" -o -name "*.scss" \) -newer "$binary" 2>/dev/null | head -1 | grep -q .; then
+        return 0
+    fi
+
+    # Check backend source files
+    if find "$BACKEND_DIR/src" -type f \( -name "*.rs" -o -name "*.toml" \) -newer "$binary" 2>/dev/null | head -1 | grep -q .; then
+        return 0
+    fi
+
+    # Check key config files
+    for config in "$UI_DIR/package.json" "$UI_DIR/angular.json" "$BACKEND_DIR/Cargo.toml" "$BACKEND_DIR/tauri.conf.json"; do
+        if [[ -f "$config" && "$config" -nt "$binary" ]]; then
+            return 0
+        fi
+    done
+
+    return 1
+}
+
 # Check if we need to build
 NEEDS_BUILD=false
 
@@ -73,6 +97,11 @@ if [[ ! -f "$RELEASE_EXE" ]]; then
 elif [[ "$FORCE_BUILD" == "true" ]]; then
     echo "Force rebuild requested..."
     NEEDS_BUILD=true
+elif check_source_changes "$RELEASE_EXE"; then
+    echo "Source files changed since last build. Rebuilding..."
+    NEEDS_BUILD=true
+else
+    echo "Release build is up to date."
 fi
 
 if [[ "$NEEDS_BUILD" == "true" ]]; then
