@@ -11,12 +11,28 @@ use tauri::State;
 pub fn get_processes(state: State<SysInfoState>) -> Vec<ProcessInfo> {
     log::debug!("Command: get_processes (optimized)");
 
-    state.with_processes(|sys, users, cpu_count| {
+    let processes: Vec<ProcessInfo> = state.with_processes(|sys, users, cpu_count| {
         sys.processes()
             .iter()
             .map(|(pid, process)| process_to_info(*pid, process, users, cpu_count))
             .collect()
-    })
+    });
+
+    // Log icon extraction stats (info level so visible in release builds)
+    let with_icons = processes.iter().filter(|p| p.icon_base64.is_some()).count();
+    let with_exe_path = processes.iter().filter(|p| p.exe_path.is_some()).count();
+    log::info!(
+        "Process list: {} total, {} with exe_path, {} with icons",
+        processes.len(),
+        with_exe_path,
+        with_icons
+    );
+
+    // Log icon cache stats
+    let (cache_total, cache_hits) = ICON_CACHE.stats();
+    log::info!("Icon cache: {} entries, {} with icons", cache_total, cache_hits);
+
+    processes
 }
 
 /// Get process summary statistics using shared state for efficiency

@@ -3,8 +3,10 @@
 use std::collections::HashMap;
 use std::path::Path;
 use std::sync::RwLock;
+use std::sync::atomic::{AtomicUsize, Ordering};
 use base64::Engine;
 use base64::engine::general_purpose::STANDARD;
+use log::{debug, trace};
 
 #[cfg(windows)]
 use windows::Win32::UI::Shell::{SHGetFileInfoW, SHFILEINFOW, SHGFI_ICON, SHGFI_SMALLICON};
@@ -22,6 +24,10 @@ use windows::core::PCWSTR;
 /// Maps executable path -> base64 PNG data.
 pub struct IconCache {
     cache: RwLock<HashMap<String, Option<String>>>,
+    /// Counter for successful extractions (for debugging)
+    success_count: AtomicUsize,
+    /// Counter for failed extractions (for debugging)
+    fail_count: AtomicUsize,
 }
 
 impl IconCache {
@@ -29,6 +35,8 @@ impl IconCache {
     pub fn new() -> Self {
         Self {
             cache: RwLock::new(HashMap::new()),
+            success_count: AtomicUsize::new(0),
+            fail_count: AtomicUsize::new(0),
         }
     }
 
@@ -37,13 +45,31 @@ impl IconCache {
     pub fn get_icon(&self, exe_path: &str) -> Option<String> {
         // Check cache first
         if let Some(cached) = self.cache.read().ok()?.get(exe_path) {
+            trace!("Icon cache hit for: {}", exe_path);
             return cached.clone();
         }
 
         // Extract icon and cache it
         let icon = self.extract_icon(exe_path);
+
+        if icon.is_some() {
+            self.success_count.fetch_add(1, Ordering::Relaxed);
+            trace!("Icon extracted successfully for: {}", exe_path);
+        } else {
+            self.fail_count.fetch_add(1, Ordering::Relaxed);
+            trace!("Icon extraction failed for: {}", exe_path);
+        }
+
         if let Ok(mut cache) = self.cache.write() {
             cache.insert(exe_path.to_string(), icon.clone());
+        }
+
+        // Log stats periodically
+        let total = self.success_count.load(Ordering::Relaxed) + self.fail_count.load(Ordering::Relaxed);
+        if total > 0 && total % 50 == 0 {
+            debug!("Icon cache stats: {} successes, {} failures",
+                   self.success_count.load(Ordering::Relaxed),
+                   self.fail_count.load(Ordering::Relaxed));
         }
 
         icon
@@ -56,6 +82,7 @@ impl IconCache {
 
         let path = Path::new(exe_path);
         if !path.exists() {
+            trace!("Icon extract: file does not exist: {}", exe_path);
             return None;
         }
 
@@ -77,6 +104,7 @@ impl IconCache {
             );
 
             if result == 0 {
+                trace!("Icon extract: SHGetFileInfoW returned 0 for: {}", exe_path);
                 return None;
             }
 
@@ -84,12 +112,14 @@ impl IconCache {
             let hicon = file_info.hIcon;
 
             if hicon.is_invalid() {
+                trace!("Icon extract: Invalid hIcon for: {}", exe_path);
                 return None;
             }
 
             // Get icon bitmap info
             let mut icon_info: MaybeUninit<ICONINFO> = MaybeUninit::uninit();
             if GetIconInfo(hicon, icon_info.as_mut_ptr()).is_err() {
+                trace!("Icon extract: GetIconInfo failed for: {}", exe_path);
                 let _ = DestroyIcon(hicon);
                 return None;
             }
@@ -108,24 +138,57 @@ impl IconCache {
             }
             let _ = DestroyIcon(hicon);
 
+            if png_data.is_none() {
+                trace!("Icon extract: PNG conversion failed for: {}", exe_path);
+            }
+
             png_data.map(|data| STANDARD.encode(&data))
         }
     }
 
     #[cfg(windows)]
     fn icon_to_png(&self, icon_info: ICONINFO) -> Option<Vec<u8>> {
+        use windows::Win32::Graphics::Gdi::{GetObjectW, BITMAP};
+
         unsafe {
-            let hdc = CreateCompatibleDC(None);
-            if hdc.is_invalid() {
+            // Check if color bitmap is valid
+            if icon_info.hbmColor.is_invalid() {
+                trace!("icon_to_png: hbmColor is invalid (monochrome icon?)");
                 return None;
             }
 
-            // Get bitmap info
+            // Get actual bitmap dimensions
+            let mut bm: BITMAP = std::mem::zeroed();
+            let bm_size = GetObjectW(
+                icon_info.hbmColor,
+                std::mem::size_of::<BITMAP>() as i32,
+                Some(&mut bm as *mut _ as *mut _),
+            );
+
+            if bm_size == 0 {
+                trace!("icon_to_png: GetObjectW failed to get bitmap info");
+                return None;
+            }
+
+            let width = bm.bmWidth;
+            let height = bm.bmHeight.abs(); // Height can be negative
+            trace!("icon_to_png: Bitmap dimensions: {}x{}", width, height);
+
+            // Use 16x16 as target size for consistency
+            let target_size = 16i32;
+
+            let hdc = CreateCompatibleDC(None);
+            if hdc.is_invalid() {
+                trace!("icon_to_png: CreateCompatibleDC failed");
+                return None;
+            }
+
+            // Get bitmap info - use actual dimensions
             let mut bmi = BITMAPINFO {
                 bmiHeader: BITMAPINFOHEADER {
                     biSize: std::mem::size_of::<BITMAPINFOHEADER>() as u32,
-                    biWidth: 16, // Small icon size
-                    biHeight: -16, // Negative for top-down
+                    biWidth: width,
+                    biHeight: -height, // Negative for top-down
                     biPlanes: 1,
                     biBitCount: 32,
                     biCompression: BI_RGB.0 as u32,
@@ -141,18 +204,20 @@ impl IconCache {
             // Select the color bitmap
             let old_bitmap = SelectObject(hdc, icon_info.hbmColor);
             if old_bitmap.is_invalid() {
+                trace!("icon_to_png: SelectObject failed");
                 let _ = DeleteDC(hdc);
                 return None;
             }
 
-            // Allocate buffer for pixel data (16x16 RGBA)
-            let mut pixels: Vec<u8> = vec![0u8; 16 * 16 * 4];
+            // Allocate buffer for pixel data
+            let pixel_count = (width * height) as usize;
+            let mut pixels: Vec<u8> = vec![0u8; pixel_count * 4];
 
             let result = GetDIBits(
                 hdc,
                 icon_info.hbmColor,
                 0,
-                16,
+                height as u32,
                 Some(pixels.as_mut_ptr() as *mut _),
                 &mut bmi,
                 DIB_RGB_COLORS,
@@ -163,22 +228,43 @@ impl IconCache {
             let _ = DeleteDC(hdc);
 
             if result == 0 {
+                trace!("icon_to_png: GetDIBits returned 0");
                 return None;
             }
+
+            trace!("icon_to_png: GetDIBits returned {} scan lines", result);
 
             // Convert BGRA to RGBA
             for chunk in pixels.chunks_exact_mut(4) {
                 chunk.swap(0, 2); // Swap B and R
             }
 
-            // Create PNG using image crate
-            let img = image::RgbaImage::from_raw(16, 16, pixels)?;
+            // Create image with actual dimensions
+            let img = match image::RgbaImage::from_raw(width as u32, height as u32, pixels) {
+                Some(img) => img,
+                None => {
+                    trace!("icon_to_png: Failed to create RgbaImage from raw data");
+                    return None;
+                }
+            };
+
+            // Resize to 16x16 if needed for consistency
+            let img = if width != target_size || height != target_size {
+                trace!("icon_to_png: Resizing from {}x{} to {}x{}", width, height, target_size, target_size);
+                image::imageops::resize(&img, target_size as u32, target_size as u32, image::imageops::FilterType::Lanczos3)
+            } else {
+                img
+            };
+
+            // Encode as PNG
             let mut png_data = Vec::new();
             let mut cursor = std::io::Cursor::new(&mut png_data);
-            if img.write_to(&mut cursor, image::ImageFormat::Png).is_err() {
+            if let Err(e) = img.write_to(&mut cursor, image::ImageFormat::Png) {
+                trace!("icon_to_png: PNG encoding failed: {}", e);
                 return None;
             }
 
+            trace!("icon_to_png: Successfully created PNG ({} bytes)", png_data.len());
             Some(png_data)
         }
     }
