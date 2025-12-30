@@ -230,6 +230,20 @@ interface ProcessGroup {
                              fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                         </svg>
+                        <!-- Group Icon (from first process) -->
+                        <div class="flex-shrink-0 w-4 h-4">
+                          @if (group.processes[0]?.iconBase64) {
+                            <img [src]="'data:image/png;base64,' + group.processes[0].iconBase64"
+                                 class="w-4 h-4"
+                                 alt=""
+                                 loading="lazy" />
+                          } @else {
+                            <svg class="w-4 h-4 text-syslens-text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                    d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                            </svg>
+                          }
+                        </div>
                         <span class="text-syslens-text-primary font-medium flex-1">{{ group.name }}</span>
                         <span class="text-sm text-syslens-text-secondary font-mono">
                           ({{ group.processes.length }})
