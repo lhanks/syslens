@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { Subject, takeUntil } from 'rxjs';
@@ -107,36 +107,36 @@ import { BytesPipe, UptimePipe } from '@shared/pipes';
           }
         </a>
 
-        <!-- Network -->
+        <!-- Network - Per Adapter -->
         <a routerLink="/network" class="card-hover cursor-pointer">
           <h3 class="text-sm text-syslens-text-muted mb-2">Network</h3>
-          <div class="mb-2">
-            <app-line-graph
-              [height]="50"
-              [series1]="metricsService.networkDownHistory()"
-              [series2]="metricsService.networkUpHistory()"
-              [maxValue]="metricsService.networkMaxSpeed()"
-              series1Color="syslens-accent-green"
-              series2Color="syslens-accent-blue"
-              [showYAxis]="true"
-              yAxisFormat="bytes"
-              [yAxisWidth]="40"
-            />
-          </div>
-          <div class="space-y-1">
-            <div class="flex justify-between items-center">
-              <span class="text-xs text-syslens-text-secondary">Download</span>
-              <span class="font-mono text-xs text-syslens-accent-green" style="min-width: 8ch; text-align: right;">{{ metricsService.networkDownSpeed() | bytes }}/s</span>
+          @if (adapterHistoryArray().length > 0) {
+            <div class="space-y-3 max-h-[200px] overflow-y-auto">
+              @for (adapter of adapterHistoryArray(); track adapter.adapterId) {
+                <div class="space-y-1">
+                  <div class="flex items-center justify-between">
+                    <span class="text-xs text-syslens-text-secondary truncate max-w-[100px]" [title]="adapter.adapterName">{{ adapter.adapterName }}</span>
+                    <div class="flex gap-2 text-xs font-mono">
+                      <span class="text-syslens-accent-green">↓{{ adapter.downloadSpeed | bytes }}/s</span>
+                      <span class="text-syslens-accent-blue">↑{{ adapter.uploadSpeed | bytes }}/s</span>
+                    </div>
+                  </div>
+                  <app-line-graph
+                    [height]="35"
+                    [series1]="adapter.downloadHistory"
+                    [series2]="adapter.uploadHistory"
+                    [maxValue]="adapter.maxSpeed"
+                    series1Color="syslens-accent-green"
+                    series2Color="syslens-accent-blue"
+                    [showYAxis]="false"
+                  />
+                </div>
+              }
             </div>
-            <div class="flex justify-between items-center">
-              <span class="text-xs text-syslens-text-secondary">Upload</span>
-              <span class="font-mono text-xs text-syslens-accent-blue" style="min-width: 8ch; text-align: right;">{{ metricsService.networkUpSpeed() | bytes }}/s</span>
-            </div>
-          </div>
-          @if (networkLoaded) {
-            <p class="mt-2 text-xs text-syslens-text-secondary truncate" [title]="networkAdapterName">{{ networkAdapterName }}</p>
           } @else {
-            <div class="mt-2 h-3 w-20 bg-syslens-bg-tertiary rounded animate-pulse"></div>
+            <div class="h-[50px] flex items-center justify-center text-syslens-text-muted text-xs">
+              No active adapters
+            </div>
           }
         </a>
       </div>
@@ -241,6 +241,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
   networkAdapterCount = 0;
   networkAdapterName = '';
   networkLoaded = false;
+
+  // Per-adapter traffic history from metrics service
+  adapterHistoryArray = computed(() => {
+    const historyMap = this.metricsService.adapterTrafficHistory();
+    return Array.from(historyMap.values());
+  });
 
   ngOnInit(): void {
     this.loadInitialData();

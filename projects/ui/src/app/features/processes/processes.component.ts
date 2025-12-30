@@ -130,7 +130,7 @@ interface ProcessGroup {
           />
         </div>
 
-        <!-- Network -->
+        <!-- Network - Per Adapter -->
         <div class="card">
           <div class="flex items-center gap-3 mb-2">
             <div class="w-8 h-8 rounded-lg bg-syslens-accent-green/20 flex items-center justify-center">
@@ -141,23 +141,36 @@ interface ProcessGroup {
             </div>
             <div class="flex-1">
               <p class="text-xs text-syslens-text-muted">Network</p>
-              <div class="flex gap-2 text-sm font-mono">
-                <span class="text-syslens-accent-green">↓<span style="min-width: 7ch; display: inline-block; text-align: right;">{{ networkDown() | bytes }}</span>/s</span>
-                <span class="text-syslens-accent-blue">↑<span style="min-width: 7ch; display: inline-block; text-align: right;">{{ networkUp() | bytes }}</span>/s</span>
-              </div>
             </div>
           </div>
-          <app-line-graph
-            [series1]="networkDownloadHistory()"
-            [series2]="networkUploadHistory()"
-            [maxValue]="networkMaxSpeed()"
-            [height]="40"
-            series1Color="syslens-accent-green"
-            series2Color="syslens-accent-blue"
-            [showYAxis]="true"
-            yAxisFormat="bytes"
-            [yAxisWidth]="40"
-          />
+          @if (adapterHistoryArray().length > 0) {
+            <div class="space-y-2 max-h-[120px] overflow-y-auto">
+              @for (adapter of adapterHistoryArray(); track adapter.adapterId) {
+                <div>
+                  <div class="flex items-center justify-between mb-1">
+                    <span class="text-xs text-syslens-text-muted truncate max-w-[80px]" [title]="adapter.adapterName">{{ adapter.adapterName }}</span>
+                    <div class="flex gap-2 text-xs font-mono">
+                      <span class="text-syslens-accent-green">↓{{ adapter.downloadSpeed | bytes }}/s</span>
+                      <span class="text-syslens-accent-blue">↑{{ adapter.uploadSpeed | bytes }}/s</span>
+                    </div>
+                  </div>
+                  <app-line-graph
+                    [series1]="adapter.downloadHistory"
+                    [series2]="adapter.uploadHistory"
+                    [maxValue]="adapter.maxSpeed"
+                    [height]="30"
+                    series1Color="syslens-accent-green"
+                    series2Color="syslens-accent-blue"
+                    [showYAxis]="false"
+                  />
+                </div>
+              }
+            </div>
+          } @else {
+            <div class="h-[40px] flex items-center justify-center text-syslens-text-muted text-xs">
+              No active adapters
+            </div>
+          }
         </div>
       </div>
 
@@ -546,6 +559,12 @@ export class ProcessesComponent implements OnInit, OnDestroy {
   networkDownloadHistory = computed(() => this.metricsService.networkDownHistory());
   networkUploadHistory = computed(() => this.metricsService.networkUpHistory());
   networkMaxSpeed = computed(() => this.metricsService.networkMaxSpeed());
+
+  // Per-adapter traffic history
+  adapterHistoryArray = computed(() => {
+    const historyMap = this.metricsService.adapterTrafficHistory();
+    return Array.from(historyMap.values());
+  });
 
   filteredProcesses = computed(() => {
     const term = this.searchTerm().toLowerCase();

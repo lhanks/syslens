@@ -128,25 +128,40 @@ interface NavItem {
           </div>
         </div>
 
-        <!-- Network -->
-        <div class="flex items-center gap-2 cursor-pointer rounded-md px-1 py-0.5 -mx-1 hover:bg-syslens-bg-hover transition-colors"
-             (click)="navigateTo('/network')">
-          <div class="w-6 h-6 rounded bg-syslens-accent-green/20 flex items-center justify-center flex-shrink-0">
-            <svg class="w-3.5 h-3.5 text-syslens-accent-green" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M8 16l2.879-2.879m0 0a3 3 0 104.243-4.242 3 3 0 00-4.243 4.242zM21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          </div>
-          <div class="flex-1 min-w-0">
-            <div class="flex items-center justify-between text-xs">
-              <span class="text-syslens-text-muted">Net</span>
-              <div class="font-mono text-syslens-text-secondary flex gap-1.5">
-                <span class="text-syslens-accent-green">↓{{ networkDown() | bytes }}/s</span>
-                <span class="text-syslens-accent-blue">↑{{ networkUp() | bytes }}/s</span>
+        <!-- Network - Per Adapter -->
+        @for (adapter of adapterHistoryArray(); track adapter.adapterId) {
+          <div class="flex items-center gap-2 cursor-pointer rounded-md px-1 py-0.5 -mx-1 hover:bg-syslens-bg-hover transition-colors"
+               (click)="navigateTo('/network')">
+            <div class="w-6 h-6 rounded bg-syslens-accent-green/20 flex items-center justify-center flex-shrink-0">
+              <svg class="w-3.5 h-3.5 text-syslens-accent-green" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M8 16l2.879-2.879m0 0a3 3 0 104.243-4.242 3 3 0 00-4.243 4.242zM21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center justify-between text-xs mb-0.5">
+                <span class="text-syslens-text-muted truncate max-w-[60px]" [title]="adapter.adapterName">{{ adapter.adapterName }}</span>
+              </div>
+              <div class="font-mono text-xs text-syslens-text-secondary flex gap-1.5">
+                <span class="text-syslens-accent-green">↓{{ adapter.downloadSpeed | bytes }}/s</span>
+                <span class="text-syslens-accent-blue">↑{{ adapter.uploadSpeed | bytes }}/s</span>
               </div>
             </div>
           </div>
-        </div>
+        } @empty {
+          <div class="flex items-center gap-2 cursor-pointer rounded-md px-1 py-0.5 -mx-1 hover:bg-syslens-bg-hover transition-colors"
+               (click)="navigateTo('/network')">
+            <div class="w-6 h-6 rounded bg-syslens-accent-green/20 flex items-center justify-center flex-shrink-0">
+              <svg class="w-3.5 h-3.5 text-syslens-accent-green" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M8 16l2.879-2.879m0 0a3 3 0 104.243-4.242 3 3 0 00-4.243 4.242zM21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="text-xs text-syslens-text-muted">No active adapters</div>
+            </div>
+          </div>
+        }
       </div>
 
       <!-- Navigation -->
@@ -193,6 +208,12 @@ export class SidebarComponent {
   networkDown = computed(() => this.metricsService.networkDownSpeed());
   networkUp = computed(() => this.metricsService.networkUpSpeed());
   gpuUsage = computed(() => this.metricsService.gpuUsage());
+
+  // Per-adapter traffic history
+  adapterHistoryArray = computed(() => {
+    const historyMap = this.metricsService.adapterTrafficHistory();
+    return Array.from(historyMap.values());
+  });
 
   navItems: NavItem[] = [
     {
