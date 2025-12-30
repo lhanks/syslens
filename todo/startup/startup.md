@@ -7,6 +7,8 @@
 
 (No new tasks)
 
+<!-- Network adapters now poll every 10 seconds to detect enable/disable changes -->
+<!-- Active network adapters are sorted to the top of the list -->
 <!-- Per-adapter network graphs now displayed in Dashboard, Processes, and Sidebar -->
 <!-- Process file paths now display with ellipsis in middle: C:\Windows\...\process.exe -->
 <!-- Network tab graphs now populate from app startup via MetricsHistoryService -->

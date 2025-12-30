@@ -292,7 +292,12 @@ export class NetworkComponent implements OnInit, OnDestroy {
     this.networkService.getNetworkAdapters()
       .pipe(takeUntil(this.destroy$))
       .subscribe(adapters => {
-        this.adapters = adapters;
+        // Sort active adapters to the top
+        this.adapters = [...adapters].sort((a, b) => {
+          if (a.status === 'Up' && b.status !== 'Up') return -1;
+          if (a.status !== 'Up' && b.status === 'Up') return 1;
+          return 0;
+        });
         this.statusService.endOperation('network-init');
 
         // Start polling stats for active adapters (for total bytes display)

@@ -5,6 +5,7 @@ import { takeUntil, switchMap, startWith, catchError } from 'rxjs/operators';
 import { HardwareService } from './hardware.service';
 import { StorageService } from './storage.service';
 import { NetworkService } from './network.service';
+import { TauriService } from './tauri.service';
 import { NetworkAdapter, AdapterStats, MemoryInfo, GpuMetrics } from '../models';
 
 const MAX_HISTORY_POINTS = 60; // 60 seconds of history
@@ -32,6 +33,7 @@ export class MetricsHistoryService implements OnDestroy {
   private hardwareService = inject(HardwareService);
   private storageService = inject(StorageService);
   private networkService = inject(NetworkService);
+  private tauriService = inject(TauriService);
   private destroy$ = new Subject<void>();
 
   // Pre-fill arrays with zeros for constant length from start
@@ -138,8 +140,18 @@ export class MetricsHistoryService implements OnDestroy {
   }
 
   private subscribeToAdapterChanges(): void {
+    // Listen for backend events (if implemented)
     this.networkService.onAdapterChange().pipe(
       takeUntil(this.destroy$)
+    ).subscribe(adapters => {
+      this.updateAdapters(adapters);
+    });
+
+    // Poll for adapter changes every 10 seconds to detect enable/disable
+    // Use direct Tauri call to bypass NetworkService cache
+    interval(10000).pipe(
+      takeUntil(this.destroy$),
+      switchMap(() => this.tauriService.invoke<NetworkAdapter[]>('get_network_adapters'))
     ).subscribe(adapters => {
       this.updateAdapters(adapters);
     });
