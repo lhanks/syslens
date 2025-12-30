@@ -486,8 +486,8 @@ export class ProcessesComponent implements OnInit, OnDestroy {
   currentPage = signal(0);
   pageSize = 50;
 
-  // View mode for grouping
-  viewMode = signal<ViewMode>('flat');
+  // View mode for grouping (default to grouped view)
+  viewMode = signal<ViewMode>('grouped');
   expandedGroups = signal<Set<string>>(new Set());
 
   // Modal state
