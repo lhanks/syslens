@@ -43,7 +43,7 @@ interface NavItem {
               <div class="flex items-center justify-between text-xs mb-0.5">
                 <span class="flex items-center gap-1">
                   <span class="text-syslens-text-muted">CPU</span>
-                  @if (cpuVendor) {<span class="text-syslens-text-muted/50 text-[10px]">{{ cpuVendor }}</span>}
+                  @if (cpuVendor) {<span class="vendor-badge" [class]="getVendorBadgeClass(cpuVendor)">{{ cpuVendor }}</span>}
                 </span>
                 <span class="font-mono text-syslens-text-secondary">{{ cpuUsage().toFixed(0) }}%</span>
               </div>
@@ -73,7 +73,7 @@ interface NavItem {
               <div class="flex items-center justify-between text-xs mb-0.5">
                 <span class="flex items-center gap-1">
                   <span class="text-syslens-text-muted">RAM</span>
-                  @if (memoryType) {<span class="text-syslens-text-muted/50 text-[10px]">{{ memoryType }}</span>}
+                  @if (memoryType) {<span class="vendor-badge" [class]="getVendorBadgeClass(memoryType)">{{ memoryType }}</span>}
                 </span>
                 <span class="font-mono text-syslens-text-secondary">{{ memoryUsage().toFixed(0) }}%</span>
               </div>
@@ -103,7 +103,7 @@ interface NavItem {
               <div class="flex items-center justify-between text-xs mb-0.5">
                 <span class="flex items-center gap-1">
                   <span class="text-syslens-text-muted">Disk</span>
-                  @if (diskVendor) {<span class="text-syslens-text-muted/50 text-[10px]">{{ diskVendor }}</span>}
+                  @if (diskVendor) {<span class="vendor-badge" [class]="getVendorBadgeClass(diskVendor)">{{ diskVendor }}</span>}
                 </span>
                 <span class="font-mono text-syslens-text-secondary">{{ diskActivity().toFixed(0) }}%</span>
               </div>
@@ -133,7 +133,7 @@ interface NavItem {
               <div class="flex items-center justify-between text-xs mb-0.5">
                 <span class="flex items-center gap-1">
                   <span class="text-syslens-text-muted">GPU</span>
-                  @if (gpuVendor) {<span class="text-syslens-text-muted/50 text-[10px]">{{ gpuVendor }}</span>}
+                  @if (gpuVendor) {<span class="vendor-badge" [class]="getVendorBadgeClass(gpuVendor)">{{ gpuVendor }}</span>}
                 </span>
                 <span class="font-mono text-syslens-text-secondary">{{ gpuUsage().toFixed(0) }}%</span>
               </div>
@@ -164,9 +164,9 @@ interface NavItem {
                 <div class="flex items-center justify-between text-xs mb-0.5">
                   <span class="text-syslens-text-muted truncate max-w-[60px]" [title]="adapter.adapterName">{{ adapter.adapterName }}</span>
                 </div>
-                <div class="font-mono text-xs text-syslens-text-secondary flex gap-1.5">
-                  <span class="text-syslens-accent-green w-[70px] text-right">↓{{ adapter.downloadSpeed | bytes }}/s</span>
-                  <span class="text-syslens-accent-blue w-[70px] text-right">↑{{ adapter.uploadSpeed | bytes }}/s</span>
+                <div class="font-mono text-[11px] text-syslens-text-secondary flex gap-1.5">
+                  <span class="text-syslens-accent-green w-[63px] text-right">↓{{ adapter.downloadSpeed | bytes }}/s</span>
+                  <span class="text-syslens-accent-blue w-[63px] text-right">↑{{ adapter.uploadSpeed | bytes }}/s</span>
                 </div>
               </div>
             </div>
@@ -216,6 +216,80 @@ interface NavItem {
   styles: [`
     :host {
       display: block;
+    }
+
+    .vendor-badge {
+      font-size: 9px;
+      font-weight: 600;
+      padding: 1px 4px;
+      border-radius: 3px;
+      letter-spacing: 0.02em;
+    }
+
+    /* Intel - Blue */
+    .vendor-intel {
+      background: rgba(0, 113, 197, 0.2);
+      color: #0071c5;
+    }
+
+    /* AMD - Red */
+    .vendor-amd {
+      background: rgba(237, 28, 36, 0.2);
+      color: #ed1c24;
+    }
+
+    /* NVIDIA - Green */
+    .vendor-nvidia {
+      background: rgba(118, 185, 0, 0.2);
+      color: #76b900;
+    }
+
+    /* Samsung - Blue */
+    .vendor-samsung {
+      background: rgba(20, 40, 160, 0.2);
+      color: #6b99d5;
+    }
+
+    /* Western Digital - Gray */
+    .vendor-wd {
+      background: rgba(100, 100, 100, 0.2);
+      color: #888;
+    }
+
+    /* Seagate - Teal */
+    .vendor-seagate {
+      background: rgba(0, 150, 136, 0.2);
+      color: #00bfa5;
+    }
+
+    /* Crucial - Orange */
+    .vendor-crucial {
+      background: rgba(255, 87, 34, 0.2);
+      color: #ff7043;
+    }
+
+    /* Kingston - Red-Orange */
+    .vendor-kingston {
+      background: rgba(255, 69, 0, 0.2);
+      color: #ff6347;
+    }
+
+    /* Corsair - Yellow */
+    .vendor-corsair {
+      background: rgba(255, 193, 7, 0.2);
+      color: #ffc107;
+    }
+
+    /* Memory Types (DDR4, DDR5) - Purple */
+    .vendor-memory {
+      background: rgba(156, 39, 176, 0.2);
+      color: #ab47bc;
+    }
+
+    /* Default - Muted */
+    .vendor-default {
+      background: rgba(255, 255, 255, 0.1);
+      color: rgba(255, 255, 255, 0.5);
     }
   `]
 })
@@ -299,6 +373,16 @@ export class SidebarComponent implements OnInit, OnDestroy {
       icon: `<svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
           d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+      </svg>`
+    },
+    {
+      label: 'Services',
+      route: '/services',
+      icon: `<svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
       </svg>`
     },
     {
@@ -387,5 +471,24 @@ export class SidebarComponent implements OnInit, OnDestroy {
     // Take first word if still too long
     const words = clean.split(/\s+/);
     return words[0] || '';
+  }
+
+  /**
+   * Get vendor logo badge styling.
+   * Returns a CSS class based on vendor name for distinctive styling.
+   */
+  getVendorBadgeClass(vendor: string): string {
+    const v = vendor.toLowerCase();
+    if (v.includes('intel')) return 'vendor-intel';
+    if (v.includes('amd')) return 'vendor-amd';
+    if (v.includes('nvidia')) return 'vendor-nvidia';
+    if (v.includes('samsung')) return 'vendor-samsung';
+    if (v.includes('wd') || v.includes('western')) return 'vendor-wd';
+    if (v.includes('seagate')) return 'vendor-seagate';
+    if (v.includes('crucial') || v.includes('micron')) return 'vendor-crucial';
+    if (v.includes('kingston')) return 'vendor-kingston';
+    if (v.includes('corsair')) return 'vendor-corsair';
+    if (v.includes('ddr')) return 'vendor-memory';
+    return 'vendor-default';
   }
 }

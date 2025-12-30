@@ -2,14 +2,16 @@
 //!
 //! Each collector module provides functions to gather specific types of system data.
 
-pub mod network;
-pub mod system;
 pub mod hardware;
-pub mod storage;
+pub mod network;
 pub mod process;
+pub mod service;
+pub mod storage;
+pub mod system;
 
-pub use network::NetworkCollector;
-pub use system::SystemCollector;
 pub use hardware::HardwareCollector;
-pub use storage::StorageCollector;
+pub use network::NetworkCollector;
 pub use process::ProcessCollector;
+pub use service::ServiceCollector;
+pub use storage::StorageCollector;
+pub use system::SystemCollector;

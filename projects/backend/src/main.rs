@@ -152,6 +152,7 @@ fn main() {
             commands::get_adapter_stats,
             commands::get_active_connections,
             commands::get_routing_table,
+            commands::set_adapter_enabled,
             // System commands
             commands::get_device_info,
             commands::get_bios_info,
@@ -184,6 +185,9 @@ fn main() {
             commands::get_processes,
             commands::get_process_summary,
             commands::kill_process,
+            // Service commands
+            commands::get_services,
+            commands::get_service_summary,
             // Device info commands
             commands::get_device_deep_info,
             commands::search_device_info,

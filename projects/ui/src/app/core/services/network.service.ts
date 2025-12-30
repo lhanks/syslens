@@ -106,6 +106,16 @@ export class NetworkService {
   }
 
   /**
+   * Enable or disable a network adapter.
+   * Requires administrator privileges on Windows.
+   * @param adapterName - The adapter friendly name
+   * @param enabled - Whether to enable (true) or disable (false) the adapter
+   */
+  setAdapterEnabled(adapterName: string, enabled: boolean): Observable<boolean> {
+    return this.tauri.invoke<boolean>('set_adapter_enabled', { adapterName, enabled });
+  }
+
+  /**
    * Clear cached network data (both in-memory and persistent).
    */
   clearCache(): void {

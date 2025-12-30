@@ -1,7 +1,7 @@
-import { Component, OnInit, OnDestroy, inject, computed } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subject, takeUntil, interval } from 'rxjs';
-import { startWith } from 'rxjs/operators';
+import { startWith, finalize } from 'rxjs/operators';
 
 import { NetworkService, StatusService, MetricsHistoryService } from '@core/services';
 import { NetworkAdapter, AdapterStats, NetworkConnection, Route } from '@core/models';
@@ -20,6 +20,19 @@ import { LineGraphComponent } from '@shared/components';
         <p class="text-syslens-text-secondary">Network adapters and configuration</p>
       </div>
 
+      <!-- Error Banner -->
+      @if (adapterError()) {
+        <div class="bg-syslens-accent-red/20 border border-syslens-accent-red rounded-lg p-3 flex items-center gap-3">
+          <span class="text-syslens-accent-red">⚠</span>
+          <span class="text-syslens-text-primary text-sm flex-1">{{ adapterError() }}</span>
+          <button
+            class="text-syslens-text-muted hover:text-syslens-text-primary"
+            (click)="adapterError.set(null)">
+            ✕
+          </button>
+        </div>
+      }
+
       <!-- Network Adapters -->
       <section>
         <h2 class="section-title">Network Adapters</h2>
@@ -35,9 +48,14 @@ import { LineGraphComponent } from '@shared/components';
                     <p class="text-sm text-syslens-text-muted">{{ adapter.description }}</p>
                   </div>
                 </div>
-                <span class="px-2 py-1 text-xs rounded bg-syslens-bg-tertiary text-syslens-text-secondary">
-                  {{ adapter.adapterType }}
-                </span>
+                <div class="flex items-center gap-2">
+                  <span class="px-2 py-1 text-xs rounded bg-syslens-bg-tertiary text-syslens-text-secondary">
+                    {{ adapter.adapterType }}
+                  </span>
+                  @if (adapter.adapterType !== 'Loopback') {
+                    <button type="button" class="px-3 py-1 text-xs rounded transition-colors text-white" [class.bg-syslens-accent-red]="adapter.status === 'Up'" [class.bg-syslens-accent-green]="adapter.status !== 'Up'" [disabled]="togglingAdapter() === adapter.name" (click)="toggleAdapter(adapter)" [title]="adapter.status === 'Up' ? 'Disable this adapter' : 'Enable this adapter'">{{ togglingAdapter() === adapter.name ? '...' : (adapter.status === 'Up' ? 'Disable' : 'Enable') }}</button>
+                  }
+                </div>
               </div>
 
               @if (adapter.status === 'Up') {
@@ -255,6 +273,11 @@ export class NetworkComponent implements OnInit, OnDestroy {
   connections: NetworkConnection[] = [];
   routes: Route[] = [];
 
+  // Track which adapter is currently being toggled
+  togglingAdapter = signal<string | null>(null);
+  // Error message for displaying to user
+  adapterError = signal<string | null>(null);
+
   // Use traffic history from the metrics service (collected from app startup)
   adapterTrafficHistory = computed(() => {
     const historyMap = this.metricsHistoryService.adapterTrafficHistory();
@@ -332,6 +355,38 @@ export class NetworkComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe(connections => {
         this.connections = connections;
+      });
+  }
+
+  /**
+   * Toggle adapter enabled state
+   */
+  toggleAdapter(adapter: NetworkAdapter): void {
+    const newState = adapter.status !== 'Up';
+    const action = newState ? 'enable' : 'disable';
+
+    this.togglingAdapter.set(adapter.name);
+    this.adapterError.set(null);
+
+    this.networkService.setAdapterEnabled(adapter.name, newState)
+      .pipe(
+        takeUntil(this.destroy$),
+        finalize(() => this.togglingAdapter.set(null))
+      )
+      .subscribe({
+        next: () => {
+          // Refresh adapter list after a short delay to allow Windows to update state
+          setTimeout(() => {
+            this.networkService.clearCache();
+            this.loadNetworkData();
+          }, 1000);
+        },
+        error: (err: string) => {
+          console.error(`Failed to ${action} adapter:`, err);
+          this.adapterError.set(`Failed to ${action} ${adapter.name}: ${err}`);
+          // Clear error after 5 seconds
+          setTimeout(() => this.adapterError.set(null), 5000);
+        }
       });
   }
 }

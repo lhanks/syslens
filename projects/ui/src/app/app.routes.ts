@@ -37,6 +37,12 @@ export const routes: Routes = [
     title: 'Processes - Syslens'
   },
   {
+    path: 'services',
+    loadComponent: () => import('./features/services/services.component')
+      .then(m => m.ServicesComponent),
+    title: 'Services - Syslens'
+  },
+  {
     path: 'restore-points',
     loadComponent: () => import('./features/restore-points/restore-points.component')
       .then(m => m.RestorePointsComponent),

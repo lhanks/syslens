@@ -8,6 +8,7 @@ export { NetworkHistoryService } from './network-history.service';
 export { NetworkService } from './network.service';
 export { PreloadService } from './preload.service';
 export { ProcessService } from './process.service';
+export { ServiceService } from './service.service';
 export { StateService } from './state.service';
 export { StatusService } from './status.service';
 export { StorageService } from './storage.service';

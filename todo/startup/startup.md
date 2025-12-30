@@ -3,23 +3,26 @@
 ** IMPORTANT ** Process the tasks below (in this section). Expand them if needed and put them in the appropriate sections below.
 ** IMPORTANT ** Do not remove this section. Just clear out the tasks once processed.
 
+- Clicking serivices tab hangs the app.
+
 ## Pending
 
-- [ ] Add ability to enable/disable network adapters
-- [ ] Show vendor logo in sidebar details (left of name)
-- [ ] Mini graph click navigation - link to item with line graph history
-- [ ] Record disk history for line graphs
 - [ ] Make left sidebar detachable/resizable/dockable
-- [ ] Add services tab (list system services and status)
 - [ ] Move tabs from left sidebar to top bar (keep mini graphs in sidebar)
 - [ ] Add docking regions (left, right, top, bottom) - all resizable
   - [ ] Draggable dock sections between locations
   - [ ] Stackable sections with reorderable stack order
-- [ ] Reduce network mini graph transfer rate font size by 10%
 - [ ] Dockable section types: System Info, System Performance (CPU/Memory/Disk/Network)
 
 ## Completed (Phase 3)
 
+- [x] Add Services tab (list Windows services with status, startup type, filtering, search)
+- [x] Enable/disable network adapters via UI (netsh command)
+- [x] Vendor badges with brand colors in sidebar details
+- [x] Mini graph click navigation - System page shows CPU/Memory/Disk history
+- [x] Disk activity line graph on System page
+- [x] Network transfer rate font size reduced 10%
+- [x] Remove performance graphs from System tab (per user request)
 - [x] Add app icons to process list with fallback default
 - [x] Remove Dashboard - System is now default view
 - [x] Show vendor name in mini graphs (Intel, NVIDIA, DDR5, Samsung)
