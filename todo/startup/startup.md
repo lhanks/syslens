@@ -6,7 +6,6 @@
 ## Pending
 
 - [ ] Make left sidebar detachable (pop out to floating window)
-- [ ] Move tabs from left sidebar to top bar (keep mini graphs in sidebar)
 - [ ] Add docking regions (left, right, top, bottom) - all resizable
   - [ ] Draggable dock sections between locations
   - [ ] Stackable sections with reorderable stack order
@@ -14,6 +13,7 @@
 
 ## Completed (Phase 3)
 
+- [x] Navigation tabs moved to top bar (sidebar shows only mini graphs)
 - [x] Left sidebar resizable (drag handle, 180-400px) and toggleable (Ctrl+N menu)
 - [x] Fix Services tab hang (optimized WMI query from N+1 to single query)
 - [x] Add Services tab (list Windows services with status, startup type, filtering, search)
