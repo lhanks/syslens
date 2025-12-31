@@ -31,6 +31,7 @@ case "$TARGET" in
         ;;
     release)
         echo "Building release artifacts..."
+        "$SCRIPT_DIR/build-ui"
         cd "$PROJECT_ROOT/projects/backend"
         cargo tauri build
         echo ""

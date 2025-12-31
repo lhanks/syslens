@@ -1,0 +1,59 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+BACKEND_DIR="$PROJECT_ROOT/projects/backend"
+
+echo "========================================"
+echo "  Building Syslens Installer"
+echo "========================================"
+echo ""
+
+# Build UI first
+"$SCRIPT_DIR/build-ui"
+
+echo ""
+echo "Building Tauri release..."
+cd "$BACKEND_DIR"
+cargo tauri build
+
+echo ""
+echo "========================================"
+echo "  Build Complete!"
+echo "========================================"
+echo ""
+echo "Installer location:"
+
+# Find and list the installers
+BUNDLE_DIR="$BACKEND_DIR/target/release/bundle"
+if [[ -d "$BUNDLE_DIR" ]]; then
+    # Windows MSI
+    if [[ -d "$BUNDLE_DIR/msi" ]]; then
+        echo "  MSI: $(ls -1 "$BUNDLE_DIR/msi"/*.msi 2>/dev/null | head -1)"
+    fi
+    # Windows NSIS
+    if [[ -d "$BUNDLE_DIR/nsis" ]]; then
+        echo "  EXE: $(ls -1 "$BUNDLE_DIR/nsis"/*.exe 2>/dev/null | head -1)"
+    fi
+    # macOS DMG
+    if [[ -d "$BUNDLE_DIR/dmg" ]]; then
+        echo "  DMG: $(ls -1 "$BUNDLE_DIR/dmg"/*.dmg 2>/dev/null | head -1)"
+    fi
+    # macOS App
+    if [[ -d "$BUNDLE_DIR/macos" ]]; then
+        echo "  APP: $(ls -1 "$BUNDLE_DIR/macos"/*.app 2>/dev/null | head -1)"
+    fi
+    # Linux AppImage
+    if [[ -d "$BUNDLE_DIR/appimage" ]]; then
+        echo "  AppImage: $(ls -1 "$BUNDLE_DIR/appimage"/*.AppImage 2>/dev/null | head -1)"
+    fi
+    # Linux Deb
+    if [[ -d "$BUNDLE_DIR/deb" ]]; then
+        echo "  DEB: $(ls -1 "$BUNDLE_DIR/deb"/*.deb 2>/dev/null | head -1)"
+    fi
+else
+    echo "  Bundle directory not found: $BUNDLE_DIR"
+fi
+
+echo ""
