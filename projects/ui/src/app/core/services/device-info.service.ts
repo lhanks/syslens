@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable, from, shareReplay, map } from 'rxjs';
+import { Observable, shareReplay, map } from 'rxjs';
 import { TauriService } from './tauri.service';
 import {
   DeviceDeepInfo,

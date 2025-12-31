@@ -422,7 +422,7 @@ export class ProcessesComponent implements OnInit, OnDestroy {
    * Truncate a file path showing beginning and end with ellipsis in middle.
    * Example: C:\Windows\System32\...\process.exe
    */
-  truncatePath(path: string, maxLength: number = 40): string {
+  truncatePath(path: string, maxLength = 40): string {
     if (!path || path.length <= maxLength) return path;
 
     // Find the last path separator for the filename

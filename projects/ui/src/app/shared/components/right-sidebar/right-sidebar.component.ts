@@ -1,4 +1,4 @@
-import { Component, inject, signal, OnInit, OnDestroy, Input, HostListener, ElementRef } from '@angular/core';
+import { Component, inject, signal, OnInit, OnDestroy, Input, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subject, forkJoin } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';

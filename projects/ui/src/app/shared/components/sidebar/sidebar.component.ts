@@ -420,7 +420,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
   private shortenVendorName(name: string): string {
     if (!name) return '';
     // Remove common suffixes and clean up
-    let clean = name
+    const clean = name
       .replace(/\(R\)|\(TM\)|\(C\)/gi, '')  // Remove trademark symbols
       .replace(/Corporation|Corp\.?|Inc\.?|Ltd\.?|LLC/gi, '')  // Remove company suffixes
       .replace(/Advanced Micro Devices/gi, 'AMD')  // Standardize AMD

@@ -7,8 +7,6 @@
 
 ## Pending
 
-
-
 - [ ] Hardware Device Images & Documentation System - [Spec](./../___ai_files/specs/_spec-hardware-images.md)
   - [x] Phase 1: Core infrastructure (ImageCache, data models, custom DB schema)
   - [x] Phase 2: GPU sources (TechPowerUp, ManufacturerSource, enhanced WikipediaSource)
@@ -51,6 +49,7 @@
 ## Completed (Phase 3)
 
 - [x] Hardware Device Images - Phase 3: CPU Sources
+
   - [x] IntelArkSource - Intel ARK database for Intel CPU specs (priority 5)
   - [x] AMDProductSource - AMD product database for AMD CPUs/GPUs (priority 5)
   - [x] WikiChipSource - WikiChip for detailed CPU architecture info (priority 15)

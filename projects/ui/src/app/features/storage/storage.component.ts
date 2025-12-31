@@ -137,17 +137,17 @@ import { BytesPipe, DecimalPipe } from '@shared/pipes';
                       </div>
                       <span class="text-sm font-medium text-syslens-text-primary">{{ health.status }}</span>
                     </div>
-                    @if (health.temperatureCelsius != null && health.temperatureCelsius !== undefined) {
+                    @if (health.temperatureCelsius !== null && health.temperatureCelsius !== undefined) {
                       <p class="text-xs text-syslens-text-muted">
                         Temp: <span class="text-syslens-text-secondary">{{ health.temperatureCelsius }}°C</span>
                       </p>
                     }
-                    @if (health.powerOnHours != null && health.powerOnHours !== undefined) {
+                    @if (health.powerOnHours !== null && health.powerOnHours !== undefined) {
                       <p class="text-xs text-syslens-text-muted">
                         Power On: <span class="text-syslens-text-secondary">{{ health.powerOnHours | number }} hrs</span>
                       </p>
                     }
-                    @if (health.wearLevelPercent != null && health.wearLevelPercent !== undefined) {
+                    @if (health.wearLevelPercent !== null && health.wearLevelPercent !== undefined) {
                       <p class="text-xs text-syslens-text-muted">
                         Wear: <span class="text-syslens-text-secondary">{{ health.wearLevelPercent }}%</span>
                       </p>

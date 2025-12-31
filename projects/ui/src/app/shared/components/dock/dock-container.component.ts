@@ -211,8 +211,9 @@ export class DockContainerComponent {
 
   // Computed grid template based on region states
   gridTemplateColumns = computed(() => {
-    const left = this.dockService.leftRegion();
-    const right = this.dockService.rightRegion();
+    // Access signals to trigger recomputation when regions change
+    this.dockService.leftRegion();
+    this.dockService.rightRegion();
 
     const leftSize = this.getRegionSize('left');
     const rightSize = this.getRegionSize('right');

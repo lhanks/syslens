@@ -4,7 +4,6 @@ import {
   inject,
   computed,
   signal,
-  HostListener,
   ViewChild,
   ElementRef,
   AfterViewInit
@@ -231,7 +230,8 @@ export class DockRegionComponent implements AfterViewInit {
   });
 
   ngAfterViewInit(): void {
-    // Add resize handle styling class
+    // Lifecycle hook placeholder - resize handle styling applied via template
+    void 0;
   }
 
   selectPanel(panelId: string): void {

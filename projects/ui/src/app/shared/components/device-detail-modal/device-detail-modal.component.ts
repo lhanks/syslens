@@ -1,12 +1,9 @@
-import { Component, EventEmitter, Input, Output, OnChanges, SimpleChanges, inject, signal } from '@angular/core';
+import { Component, EventEmitter, Input, Output, OnChanges, SimpleChanges, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DeviceInfoService } from '@core/services/device-info.service';
 import {
   DeviceDeepInfo,
   DeviceType,
-  SpecCategory,
-  DriverInfo,
-  DocumentationLinks,
   ImageEntry,
 } from '@core/models/device-info.model';
 import { DeviceImageComponent } from '../device-image/device-image.component';

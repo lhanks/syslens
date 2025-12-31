@@ -314,7 +314,7 @@ export class PerformancePanelComponent implements OnInit, OnDestroy {
 
   private shortenVendorName(name: string): string {
     if (!name) return '';
-    let clean = name
+    const clean = name
       .replace(/\(R\)|\(TM\)|\(C\)/gi, '')
       .replace(/Corporation|Corp\.?|Inc\.?|Ltd\.?|LLC/gi, '')
       .replace(/Advanced Micro Devices/gi, 'AMD')
