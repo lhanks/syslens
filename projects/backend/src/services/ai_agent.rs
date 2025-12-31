@@ -4,8 +4,8 @@
 //! when traditional manufacturer lookups fail.
 
 use crate::models::{
-    DataMetadata, DataSource, DeviceDeepInfo, DeviceIdentifier, DeviceSpecifications,
-    DeviceType, DocumentationLinks, DriverInfo, ProductImages, SpecCategory, SpecItem,
+    DataMetadata, DataSource, DeviceDeepInfo, DeviceIdentifier, DeviceSpecifications, DeviceType,
+    DocumentationLinks, DriverInfo, ProductImages, SpecCategory, SpecItem,
 };
 use anyhow::{Context, Result};
 use chrono::{Duration, Utc};
@@ -87,7 +87,10 @@ impl AiAgent {
         let mut best_confidence: f32 = 0.0;
 
         for query in queries.iter().take(3) {
-            match self.search_and_extract(query, identifier, device_type).await {
+            match self
+                .search_and_extract(query, identifier, device_type)
+                .await
+            {
                 Ok(result) => {
                     let confidence = result.metadata.ai_confidence.unwrap_or(0.0);
                     log::debug!("Query '{}' returned confidence: {:.2}", query, confidence);
@@ -195,7 +198,11 @@ impl AiAgent {
         let manufacturer = Self::normalize_manufacturer(&identifier.manufacturer);
         let model = Self::clean_model_name(&identifier.model);
 
-        log::debug!("Cleaned search terms - manufacturer: {}, model: {}", manufacturer, model);
+        log::debug!(
+            "Cleaned search terms - manufacturer: {}, model: {}",
+            manufacturer,
+            model
+        );
 
         let type_keyword = match device_type {
             DeviceType::Cpu => "CPU processor",
@@ -235,7 +242,10 @@ impl AiAgent {
         let mut images: Vec<String> = Vec::new();
 
         for result in search_results.iter().take(3) {
-            match self.extract_specs_from_url(&result.url, identifier, device_type).await {
+            match self
+                .extract_specs_from_url(&result.url, identifier, device_type)
+                .await
+            {
                 Ok((specs, page_images)) => {
                     if !specs.is_empty() && source_url.is_none() {
                         source_url = Some(result.url.clone());
@@ -250,7 +260,9 @@ impl AiAgent {
         }
 
         if all_specs.is_empty() {
-            return Err(anyhow::anyhow!("Could not extract specifications from any source"));
+            return Err(anyhow::anyhow!(
+                "Could not extract specifications from any source"
+            ));
         }
 
         // Merge and deduplicate specs
@@ -312,11 +324,9 @@ impl AiAgent {
         let html = response.text().await?;
 
         // Parse in blocking task
-        let results = tokio::task::spawn_blocking(move || {
-            Self::parse_duckduckgo_results(&html)
-        })
-        .await
-        .context("Spawn blocking failed")??;
+        let results = tokio::task::spawn_blocking(move || Self::parse_duckduckgo_results(&html))
+            .await
+            .context("Spawn blocking failed")??;
 
         Ok(results)
     }
@@ -420,7 +430,11 @@ impl AiAgent {
         let mut images = Vec::new();
 
         // Check if page is relevant to our device
-        let page_text = document.root_element().text().collect::<String>().to_lowercase();
+        let page_text = document
+            .root_element()
+            .text()
+            .collect::<String>()
+            .to_lowercase();
         let model_lower = identifier.model.to_lowercase();
 
         if !page_text.contains(&model_lower) {
@@ -560,7 +574,11 @@ impl AiAgent {
         let img_selector = Selector::parse("img[src*='product'], img[src*='gpu'], img[src*='cpu'], img.product-image, .gallery img").unwrap();
 
         for img in document.select(&img_selector) {
-            if let Some(src) = img.value().attr("src").or_else(|| img.value().attr("data-src")) {
+            if let Some(src) = img
+                .value()
+                .attr("src")
+                .or_else(|| img.value().attr("data-src"))
+            {
                 let full_url = if src.starts_with("http") {
                     src.to_string()
                 } else if src.starts_with("//") {
@@ -589,31 +607,114 @@ impl AiAgent {
     fn get_spec_keywords(device_type: &DeviceType) -> Vec<&'static str> {
         match device_type {
             DeviceType::Cpu => vec![
-                "cores", "threads", "frequency", "clock", "ghz", "mhz", "cache",
-                "tdp", "watt", "socket", "lithography", "nm", "architecture",
-                "launch", "release", "sse", "avx", "turbo", "boost", "base",
+                "cores",
+                "threads",
+                "frequency",
+                "clock",
+                "ghz",
+                "mhz",
+                "cache",
+                "tdp",
+                "watt",
+                "socket",
+                "lithography",
+                "nm",
+                "architecture",
+                "launch",
+                "release",
+                "sse",
+                "avx",
+                "turbo",
+                "boost",
+                "base",
             ],
             DeviceType::Gpu => vec![
-                "cuda", "cores", "shaders", "vram", "memory", "bandwidth", "bus",
-                "clock", "boost", "tdp", "watt", "architecture", "directx", "opengl",
-                "vulkan", "ray tracing", "tensor", "rtx", "gddr", "pcie",
+                "cuda",
+                "cores",
+                "shaders",
+                "vram",
+                "memory",
+                "bandwidth",
+                "bus",
+                "clock",
+                "boost",
+                "tdp",
+                "watt",
+                "architecture",
+                "directx",
+                "opengl",
+                "vulkan",
+                "ray tracing",
+                "tensor",
+                "rtx",
+                "gddr",
+                "pcie",
             ],
             DeviceType::Motherboard => vec![
-                "socket", "chipset", "memory", "slots", "pcie", "sata", "usb",
-                "m.2", "nvme", "form factor", "atx", "ddr", "audio", "lan",
+                "socket",
+                "chipset",
+                "memory",
+                "slots",
+                "pcie",
+                "sata",
+                "usb",
+                "m.2",
+                "nvme",
+                "form factor",
+                "atx",
+                "ddr",
+                "audio",
+                "lan",
             ],
             DeviceType::Memory => vec![
-                "ddr", "speed", "mhz", "cas", "latency", "timing", "voltage",
-                "capacity", "dimm", "ecc", "registered", "unbuffered",
+                "ddr",
+                "speed",
+                "mhz",
+                "cas",
+                "latency",
+                "timing",
+                "voltage",
+                "capacity",
+                "dimm",
+                "ecc",
+                "registered",
+                "unbuffered",
             ],
             DeviceType::Storage => vec![
-                "capacity", "interface", "read", "write", "iops", "tbw",
-                "nand", "controller", "cache", "form factor", "nvme", "sata",
+                "capacity",
+                "interface",
+                "read",
+                "write",
+                "iops",
+                "tbw",
+                "nand",
+                "controller",
+                "cache",
+                "form factor",
+                "nvme",
+                "sata",
             ],
             DeviceType::Monitor => vec![
-                "resolution", "refresh", "hz", "panel", "ips", "va", "oled",
-                "response", "contrast", "brightness", "nits", "hdr", "freesync",
-                "gsync", "size", "inch", "aspect", "ports", "hdmi", "displayport",
+                "resolution",
+                "refresh",
+                "hz",
+                "panel",
+                "ips",
+                "va",
+                "oled",
+                "response",
+                "contrast",
+                "brightness",
+                "nits",
+                "hdr",
+                "freesync",
+                "gsync",
+                "size",
+                "inch",
+                "aspect",
+                "ports",
+                "hdmi",
+                "displayport",
             ],
         }
     }
@@ -746,7 +847,9 @@ impl AiAgent {
             DeviceType::Gpu => match mfr.as_str() {
                 "nvidia" => Some("https://www.nvidia.com/Download/index.aspx"),
                 "amd" => Some("https://www.amd.com/en/support/download/drivers.html"),
-                "intel" => Some("https://www.intel.com/content/www/us/en/download-center/home.html"),
+                "intel" => {
+                    Some("https://www.intel.com/content/www/us/en/download-center/home.html")
+                }
                 _ => None,
             },
             DeviceType::Motherboard => match mfr.as_str() {
@@ -771,7 +874,11 @@ impl AiAgent {
     }
 
     /// Generate a device ID from identifier and type.
-    fn generate_device_id(&self, identifier: &DeviceIdentifier, device_type: &DeviceType) -> String {
+    fn generate_device_id(
+        &self,
+        identifier: &DeviceIdentifier,
+        device_type: &DeviceType,
+    ) -> String {
         let prefix = match device_type {
             DeviceType::Cpu => "cpu",
             DeviceType::Gpu => "gpu",

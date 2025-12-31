@@ -4,8 +4,8 @@
 //! device specifications when web scraping fails.
 
 use crate::models::{
-    DataMetadata, DataSource, DeviceDeepInfo, DeviceIdentifier, DeviceSpecifications,
-    DeviceType, DocumentationLinks, DriverInfo, SpecCategory, SpecItem,
+    DataMetadata, DataSource, DeviceDeepInfo, DeviceIdentifier, DeviceSpecifications, DeviceType,
+    DocumentationLinks, DriverInfo, SpecCategory, SpecItem,
 };
 use anyhow::{Context, Result};
 use chrono::{Duration, Utc};

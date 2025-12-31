@@ -123,7 +123,10 @@ pub async fn update_databases(data_dir: &Path) -> UpdateResult {
 }
 
 /// Download a file from URL to the specified path.
-async fn download_file(url: &str, path: &PathBuf) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+async fn download_file(
+    url: &str,
+    path: &PathBuf,
+) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let response = reqwest::get(url).await?;
 
     if !response.status().is_success() {

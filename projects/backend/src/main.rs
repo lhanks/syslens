@@ -40,23 +40,15 @@ fn main() {
                 .build(app)?;
 
             // File submenu
-            let file_submenu = SubmenuBuilder::new(app, "File")
-                .quit()
-                .build()?;
+            let file_submenu = SubmenuBuilder::new(app, "File").quit().build()?;
 
             // View submenu - Show resources submenu
-            let toggle_cpu = MenuItemBuilder::new("CPU")
-                .id("toggle_cpu")
-                .build(app)?;
+            let toggle_cpu = MenuItemBuilder::new("CPU").id("toggle_cpu").build(app)?;
             let toggle_memory = MenuItemBuilder::new("Memory")
                 .id("toggle_memory")
                 .build(app)?;
-            let toggle_disk = MenuItemBuilder::new("Disk")
-                .id("toggle_disk")
-                .build(app)?;
-            let toggle_gpu = MenuItemBuilder::new("GPU")
-                .id("toggle_gpu")
-                .build(app)?;
+            let toggle_disk = MenuItemBuilder::new("Disk").id("toggle_disk").build(app)?;
+            let toggle_gpu = MenuItemBuilder::new("GPU").id("toggle_gpu").build(app)?;
             let toggle_network = MenuItemBuilder::new("Network")
                 .id("toggle_network")
                 .build(app)?;
@@ -75,7 +67,12 @@ fn main() {
                 .separator()
                 .item(&show_submenu)
                 .separator()
-                .item(&MenuItemBuilder::new("Refresh").id("refresh").accelerator("F5").build(app)?)
+                .item(
+                    &MenuItemBuilder::new("Refresh")
+                        .id("refresh")
+                        .accelerator("F5")
+                        .build(app)?,
+                )
                 .build()?;
 
             // Help submenu

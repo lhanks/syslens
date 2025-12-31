@@ -43,11 +43,9 @@ impl PciIdDatabase {
             (0x102b, "Matrox Electronics Systems Ltd."),
             (0x1039, "Silicon Integrated Systems [SiS]"),
             (0x5333, "S3 Graphics Ltd."),
-
             // CPU/Chipset Vendors
             (0x1022, "Advanced Micro Devices, Inc. [AMD]"),
             (0x1106, "VIA Technologies, Inc."),
-
             // Storage Controllers
             (0x1000, "Broadcom / LSI"),
             (0x1028, "Dell"),
@@ -66,7 +64,6 @@ impl PciIdDatabase {
             (0x1344, "Micron Technology Inc"),
             (0x1cc1, "ADATA Technology Co., Ltd."),
             (0xc0a9, "Micron/Crucial Technology"),
-
             // Network Controllers
             (0x14e4, "Broadcom Inc. and subsidiaries"),
             (0x10ec, "Realtek Semiconductor Co., Ltd."),
@@ -76,7 +73,6 @@ impl PciIdDatabase {
             (0x1969, "Qualcomm Atheros"),
             (0x10b7, "3Com Corporation"),
             (0x197b, "JMicron Technology Corp."),
-
             // USB Controllers
             (0x1912, "Renesas Technology Corp."),
             (0x1b21, "ASMedia Technology Inc."),
@@ -84,11 +80,9 @@ impl PciIdDatabase {
             (0x104c, "Texas Instruments"),
             (0x1033, "NEC Corporation"),
             (0x0b05, "ASUSTek Computer, Inc."),
-
             // Audio
             (0x1102, "Creative Labs"),
             (0x13f6, "C-Media Electronics Inc"),
-
             // Motherboard/System
             (0x1043, "ASUSTeK Computer Inc."),
             (0x1462, "Micro-Star International Co., Ltd. [MSI]"),
@@ -100,7 +94,6 @@ impl PciIdDatabase {
             (0x1297, "Shuttle Inc"),
             (0x1565, "Biostar Microtech Int'l Corp"),
             (0x10b9, "ULi Electronics Inc."),
-
             // Thunderbolt/USB4
             (0x8086, "Intel Corporation"),
         ];
@@ -142,7 +135,6 @@ impl PciIdDatabase {
             ((0x10de, 0x1c81), "GeForce GTX 1050"),
             ((0x10de, 0x1c82), "GeForce GTX 1050 Ti"),
             ((0x10de, 0x1c03), "GeForce GTX 1060 3GB"),
-
             // AMD GPUs
             ((0x1002, 0x744c), "Radeon RX 7900 XTX"),
             ((0x1002, 0x7448), "Radeon RX 7900 XT"),
@@ -161,7 +153,6 @@ impl PciIdDatabase {
             ((0x1002, 0x67df), "Radeon RX 580"),
             ((0x1002, 0x67ef), "Radeon RX 560"),
             ((0x1002, 0x699f), "Radeon RX 550"),
-
             // Intel GPUs
             ((0x8086, 0x56a0), "Arc A770"),
             ((0x8086, 0x56a1), "Arc A750"),
@@ -173,15 +164,22 @@ impl PciIdDatabase {
             ((0x8086, 0x5912), "HD Graphics 630"),
             ((0x8086, 0x5917), "UHD Graphics 620"),
             ((0x8086, 0x191b), "HD Graphics 530"),
-
             // Intel/AMD Chipsets
-            ((0x8086, 0xa382), "400 Series Chipset Family SATA AHCI Controller"),
+            (
+                (0x8086, 0xa382),
+                "400 Series Chipset Family SATA AHCI Controller",
+            ),
             ((0x8086, 0xa352), "Q370 Chipset SATA AHCI Controller"),
-            ((0x8086, 0x43d2), "500 Series Chipset Family SATA AHCI Controller"),
-            ((0x8086, 0x7a83), "600/700 Series Chipset SATA AHCI Controller"),
+            (
+                (0x8086, 0x43d2),
+                "500 Series Chipset Family SATA AHCI Controller",
+            ),
+            (
+                (0x8086, 0x7a83),
+                "600/700 Series Chipset SATA AHCI Controller",
+            ),
             ((0x1022, 0x43b7), "300 Series Chipset SATA Controller"),
             ((0x1022, 0x43eb), "500 Series Chipset SATA Controller"),
-
             // NVMe Controllers
             ((0x144d, 0xa808), "NVMe SSD Controller SM981/PM981/PM983"),
             ((0x144d, 0xa809), "NVMe SSD Controller 980"),
@@ -194,21 +192,25 @@ impl PciIdDatabase {
             ((0x1987, 0x5016), "E16 NVMe Controller"),
             ((0x1987, 0x5018), "E18 NVMe Controller"),
             ((0x126f, 0x2263), "SM2263EN/SM2263XT NVMe Controller"),
-            ((0x1c5c, 0x174a), "Gold P31/BC711/PC711 NVMe Solid State Drive"),
+            (
+                (0x1c5c, 0x174a),
+                "Gold P31/BC711/PC711 NVMe Solid State Drive",
+            ),
             ((0x1344, 0x5410), "2200S NVMe SSD"),
             ((0x1344, 0x5411), "2300 NVMe SSD"),
             ((0x2646, 0x5008), "A1000/U-SNS8154P3 NVMe SSD"),
             ((0x2646, 0x500f), "NV1 NVMe PCIe SSD"),
             ((0x2646, 0x5013), "KC3000/FURY Renegade NVMe SSD"),
             ((0x1e0f, 0x0001), "XG6 NVMe SSD Controller"),
-
             // Realtek Network
-            ((0x10ec, 0x8168), "RTL8111/8168/8411 PCI Express Gigabit Ethernet"),
+            (
+                (0x10ec, 0x8168),
+                "RTL8111/8168/8411 PCI Express Gigabit Ethernet",
+            ),
             ((0x10ec, 0x8125), "RTL8125 2.5GbE Controller"),
             ((0x10ec, 0x2600), "RTL8125 2.5GbE Controller"),
             ((0x10ec, 0x8139), "RTL-8100/8101L/8139 PCI Fast Ethernet"),
             ((0x10ec, 0x8136), "RTL810xE PCI Express Fast Ethernet"),
-
             // Intel Network
             ((0x8086, 0x15b8), "Ethernet Connection (2) I219-V"),
             ((0x8086, 0x15bc), "Ethernet Connection (7) I219-V"),
@@ -217,7 +219,6 @@ impl PciIdDatabase {
             ((0x8086, 0x125c), "Ethernet Controller I226-V"),
             ((0x8086, 0x1533), "I210 Gigabit Network Connection"),
             ((0x8086, 0x10d3), "82574L Gigabit Network Connection"),
-
             // Intel Wireless
             ((0x8086, 0x2723), "Wi-Fi 6 AX200"),
             ((0x8086, 0x2725), "Wi-Fi 6 AX210/AX211/AX411"),
@@ -227,25 +228,46 @@ impl PciIdDatabase {
             ((0x8086, 0x24fd), "Wireless 8265 / 8275"),
             ((0x8086, 0x24fb), "Wireless-AC 9260"),
             ((0x8086, 0x9df0), "Cannon Point-LP CNVi [Wireless-AC]"),
-
             // Realtek/MediaTek Wireless
-            ((0x10ec, 0xc822), "RTL8822CE 802.11ac PCIe Wireless Network Adapter"),
-            ((0x10ec, 0x8852), "RTL8852AE 802.11ax PCIe Wireless Network Adapter"),
-            ((0x10ec, 0xc852), "RTL8852CE PCIe 802.11ax Wireless Network Controller"),
-
+            (
+                (0x10ec, 0xc822),
+                "RTL8822CE 802.11ac PCIe Wireless Network Adapter",
+            ),
+            (
+                (0x10ec, 0x8852),
+                "RTL8852AE 802.11ax PCIe Wireless Network Adapter",
+            ),
+            (
+                (0x10ec, 0xc852),
+                "RTL8852CE PCIe 802.11ax Wireless Network Controller",
+            ),
             // USB Controllers
-            ((0x8086, 0xa36d), "Cannon Lake PCH USB 3.1 xHCI Host Controller"),
-            ((0x8086, 0x43ed), "Tiger Lake-H USB 3.2 Gen 2x1 xHCI Host Controller"),
-            ((0x8086, 0x7ae0), "Alder Lake-S PCH USB 3.2 Gen 2x2 XHCI Host Controller"),
+            (
+                (0x8086, 0xa36d),
+                "Cannon Lake PCH USB 3.1 xHCI Host Controller",
+            ),
+            (
+                (0x8086, 0x43ed),
+                "Tiger Lake-H USB 3.2 Gen 2x1 xHCI Host Controller",
+            ),
+            (
+                (0x8086, 0x7ae0),
+                "Alder Lake-S PCH USB 3.2 Gen 2x2 XHCI Host Controller",
+            ),
             ((0x1022, 0x149c), "Matisse USB 3.0 Host Controller"),
-            ((0x1022, 0x43d5), "400 Series Chipset USB 3.1 xHCI Compliant Host Controller"),
+            (
+                (0x1022, 0x43d5),
+                "400 Series Chipset USB 3.1 xHCI Compliant Host Controller",
+            ),
             ((0x1b21, 0x1142), "ASM1042 SuperSpeed USB Host Controller"),
             ((0x1b21, 0x2142), "ASM2142/ASM3142 USB 3.1 Host Controller"),
             ((0x1b21, 0x3241), "ASM3241 USB 3.2 Gen2 Host Controller"),
-
             // Audio
             ((0x8086, 0xa348), "Cannon Lake PCH cAVS"),
-            ((0x8086, 0xf0c8), "Smart Sound Technology (SST) Audio Controller"),
+            (
+                (0x8086, 0xf0c8),
+                "Smart Sound Technology (SST) Audio Controller",
+            ),
             ((0x8086, 0x7ad0), "Alder Lake-S HD Audio Controller"),
             ((0x1022, 0x1487), "Starship/Matisse HD Audio Controller"),
             ((0x1002, 0xab38), "Navi 10 HDMI Audio"),
@@ -294,7 +316,10 @@ mod tests {
     fn test_vendor_lookup() {
         let db = PciIdDatabase::global();
         assert_eq!(db.get_vendor(0x10de), Some("NVIDIA Corporation"));
-        assert_eq!(db.get_vendor(0x1002), Some("Advanced Micro Devices, Inc. [AMD/ATI]"));
+        assert_eq!(
+            db.get_vendor(0x1002),
+            Some("Advanced Micro Devices, Inc. [AMD/ATI]")
+        );
         assert_eq!(db.get_vendor(0x8086), Some("Intel Corporation"));
     }
 
@@ -302,7 +327,10 @@ mod tests {
     fn test_device_lookup() {
         let db = PciIdDatabase::global();
         assert_eq!(db.get_device(0x10de, 0x2684), Some("GeForce RTX 4090"));
-        assert_eq!(db.get_device(0x10ec, 0x8168), Some("RTL8111/8168/8411 PCI Express Gigabit Ethernet"));
+        assert_eq!(
+            db.get_device(0x10ec, 0x8168),
+            Some("RTL8111/8168/8411 PCI Express Gigabit Ethernet")
+        );
     }
 
     #[test]

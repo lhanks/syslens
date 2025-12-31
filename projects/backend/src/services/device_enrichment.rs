@@ -3,11 +3,13 @@
 //! This service orchestrates multi-source fetching of device information,
 //! manages caching, and provides a unified API for the frontend.
 
-use crate::models::{DeviceIdentifier, DeviceType, ProductImages, ImageEntry, ImageType, ImageMetadata};
+use crate::models::{
+    DeviceIdentifier, DeviceType, ImageEntry, ImageMetadata, ImageType, ProductImages,
+};
 use crate::services::device_sources::{
-    fetch_from_all_sources, merge_results, DeviceSource, ManufacturerSource,
-    TechPowerUpSource, WikipediaSource, IntelArkSource, AMDProductSource, WikiChipSource,
-    MemorySource, MonitorSource, MotherboardSource, StorageSource,
+    fetch_from_all_sources, merge_results, AMDProductSource, DeviceSource, IntelArkSource,
+    ManufacturerSource, MemorySource, MonitorSource, MotherboardSource, StorageSource,
+    TechPowerUpSource, WikiChipSource, WikipediaSource,
 };
 use crate::services::{ImageCache, KnowledgeStore, PartialDeviceInfo};
 use anyhow::Result;
@@ -82,42 +84,63 @@ impl DeviceEnrichmentService {
 
         // Add CPU sources (Intel/AMD official sources have highest priority)
         if let Ok(source) = IntelArkSource::new() {
-            log::info!("Registered Intel ARK source (priority {})", source.priority());
+            log::info!(
+                "Registered Intel ARK source (priority {})",
+                source.priority()
+            );
             sources.push(Box::new(source));
         }
 
         if let Ok(source) = AMDProductSource::new() {
-            log::info!("Registered AMD Product source (priority {})", source.priority());
+            log::info!(
+                "Registered AMD Product source (priority {})",
+                source.priority()
+            );
             sources.push(Box::new(source));
         }
 
         // Add GPU source
         if let Ok(source) = TechPowerUpSource::new() {
-            log::info!("Registered TechPowerUp source (priority {})", source.priority());
+            log::info!(
+                "Registered TechPowerUp source (priority {})",
+                source.priority()
+            );
             sources.push(Box::new(source));
         }
 
         // Add WikiChip for detailed CPU architecture info
         if let Ok(source) = WikiChipSource::new() {
-            log::info!("Registered WikiChip source (priority {})", source.priority());
+            log::info!(
+                "Registered WikiChip source (priority {})",
+                source.priority()
+            );
             sources.push(Box::new(source));
         }
 
         // Add generic manufacturer source
         if let Ok(source) = ManufacturerSource::new() {
-            log::info!("Registered Manufacturer source (priority {})", source.priority());
+            log::info!(
+                "Registered Manufacturer source (priority {})",
+                source.priority()
+            );
             sources.push(Box::new(source));
         }
 
         // Add Wikipedia as fallback
         if let Ok(source) = WikipediaSource::new() {
-            log::info!("Registered Wikipedia source (priority {})", source.priority());
+            log::info!(
+                "Registered Wikipedia source (priority {})",
+                source.priority()
+            );
             sources.push(Box::new(source));
         }
 
         // Add motherboard source
         if let Ok(source) = MotherboardSource::new() {
-            log::info!("Registered Motherboard source (priority {})", source.priority());
+            log::info!(
+                "Registered Motherboard source (priority {})",
+                source.priority()
+            );
             sources.push(Box::new(source));
         }
 
@@ -142,7 +165,10 @@ impl DeviceEnrichmentService {
         // Sort by priority (lower = higher priority)
         sources.sort_by_key(|s| s.priority());
 
-        log::info!("DeviceEnrichmentService initialized with {} sources", sources.len());
+        log::info!(
+            "DeviceEnrichmentService initialized with {} sources",
+            sources.len()
+        );
 
         Ok(Self {
             sources,
@@ -162,7 +188,10 @@ impl DeviceEnrichmentService {
 
         // Check cache first (unless force refresh)
         if !force_refresh {
-            if let Some(cached) = self.check_cache(&device_id, &device_type, &identifier).await? {
+            if let Some(cached) = self
+                .check_cache(&device_id, &device_type, &identifier)
+                .await?
+            {
                 if !self.is_stale(&cached) {
                     log::debug!("Using cached device info for {}", device_id);
                     return Ok(cached);
@@ -171,7 +200,11 @@ impl DeviceEnrichmentService {
         }
 
         // Fetch from all sources in parallel
-        log::info!("Fetching device info from {} sources for {}", self.sources.len(), device_id);
+        log::info!(
+            "Fetching device info from {} sources for {}",
+            self.sources.len(),
+            device_id
+        );
         let results = fetch_from_all_sources(&self.sources, &device_type, &identifier).await;
 
         // Log results
@@ -187,13 +220,17 @@ impl DeviceEnrichmentService {
         let merged = merge_results(results);
 
         if merged.is_none() {
-            return Err(anyhow::anyhow!("No device information found from any source"));
+            return Err(anyhow::anyhow!(
+                "No device information found from any source"
+            ));
         }
 
         let partial = merged.unwrap();
 
         // Fetch and cache images
-        let images = self.process_images(&partial, &device_type, &identifier).await?;
+        let images = self
+            .process_images(&partial, &device_type, &identifier)
+            .await?;
 
         // Build enriched info
         let enriched = EnrichedDeviceInfo {
@@ -215,14 +252,19 @@ impl DeviceEnrichmentService {
         };
 
         // Store in knowledge store
-        self.store_in_cache(&device_id, &device_type, &identifier, &partial).await?;
+        self.store_in_cache(&device_id, &device_type, &identifier, &partial)
+            .await?;
 
         Ok(enriched)
     }
 
     /// Generate a unique device ID.
-    fn generate_device_id(&self, device_type: &DeviceType, identifier: &DeviceIdentifier) -> String {
-        use sha2::{Sha256, Digest};
+    fn generate_device_id(
+        &self,
+        device_type: &DeviceType,
+        identifier: &DeviceIdentifier,
+    ) -> String {
+        use sha2::{Digest, Sha256};
 
         let mut hasher = Sha256::new();
         hasher.update(format!("{:?}", device_type).as_bytes());
@@ -242,29 +284,35 @@ impl DeviceEnrichmentService {
         // Get from knowledge store - returns DeviceDeepInfo
         if let Some(device) = self.knowledge_store.get(device_id, device_type) {
             // Convert DeviceDeepInfo to EnrichedDeviceInfo
-            let specs = device.specifications
+            let specs = device
+                .specifications
                 .as_ref()
                 .map(|s| s.specs.clone())
                 .unwrap_or_default();
 
-            let categories = device.specifications
+            let categories = device
+                .specifications
                 .as_ref()
                 .map(|s| s.categories.clone())
                 .unwrap_or_default();
 
-            let description = device.specifications
+            let description = device
+                .specifications
                 .as_ref()
                 .and_then(|s| s.description.clone());
 
-            let release_date = device.specifications
+            let release_date = device
+                .specifications
                 .as_ref()
                 .and_then(|s| s.release_date.clone());
 
-            let product_page = device.documentation
+            let product_page = device
+                .documentation
                 .as_ref()
                 .and_then(|d| d.product_page.clone());
 
-            let support_page = device.documentation
+            let support_page = device
+                .documentation
                 .as_ref()
                 .and_then(|d| d.support_page.clone());
 
@@ -315,19 +363,26 @@ impl DeviceEnrichmentService {
         // Cache primary image
         if let Some(ref url) = partial.image_url {
             let cache_key = format!("{}_primary", cache_key_base);
-            match self.image_cache.fetch_and_cache_with_key(url, &cache_key).await {
+            match self
+                .image_cache
+                .fetch_and_cache_with_key(url, &cache_key)
+                .await
+            {
                 Ok(result) => {
                     images.primary_image = Some(url.clone());
-                    images.primary_image_cached = Some(result.file_path.to_string_lossy().to_string());
+                    images.primary_image_cached =
+                        Some(result.file_path.to_string_lossy().to_string());
 
                     // Generate thumbnail
                     if let Some(ref cached_path) = images.primary_image_cached {
-                        match self.image_cache.generate_thumbnail(
-                            std::path::Path::new(cached_path),
-                            128
-                        ).await {
+                        match self
+                            .image_cache
+                            .generate_thumbnail(std::path::Path::new(cached_path), 128)
+                            .await
+                        {
                             Ok(thumb_path) => {
-                                images.thumbnail_cached = Some(thumb_path.to_string_lossy().to_string());
+                                images.thumbnail_cached =
+                                    Some(thumb_path.to_string_lossy().to_string());
                             }
                             Err(e) => {
                                 log::warn!("Failed to generate thumbnail: {}", e);
@@ -353,7 +408,11 @@ impl DeviceEnrichmentService {
         // Cache gallery images
         for (i, (url, _)) in partial.image_gallery.iter().enumerate().take(5) {
             let cache_key = format!("{}_gallery_{}", cache_key_base, i);
-            match self.image_cache.fetch_and_cache_with_key(url, &cache_key).await {
+            match self
+                .image_cache
+                .fetch_and_cache_with_key(url, &cache_key)
+                .await
+            {
                 Ok(result) => {
                     images.gallery.push(ImageEntry {
                         url: url.clone(),
@@ -417,7 +476,8 @@ impl DeviceEnrichmentService {
 
     /// Cleanup old cached data.
     pub async fn cleanup(&self, max_age_days: u64) -> Result<CleanupResult> {
-        let images_cleaned = self.image_cache
+        let images_cleaned = self
+            .image_cache
             .cleanup_older_than(Duration::from_secs(max_age_days * 24 * 60 * 60))
             .await?;
 

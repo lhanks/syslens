@@ -18,8 +18,7 @@ impl LocalDatabaseManager {
     /// Create a new LocalDatabaseManager, loading or initializing the database.
     pub fn new() -> Result<Self> {
         let db_dir = Self::get_app_data_dir()?;
-        std::fs::create_dir_all(&db_dir)
-            .context("Failed to create database directory")?;
+        std::fs::create_dir_all(&db_dir).context("Failed to create database directory")?;
 
         let db_file = db_dir.join("device_database.json");
 
@@ -47,29 +46,26 @@ impl LocalDatabaseManager {
 
     /// Parse the bundled database JSON.
     fn parse_bundled_database() -> Result<LocalDatabase> {
-        serde_json::from_str(BUNDLED_DATABASE)
-            .context("Failed to parse bundled device database")
+        serde_json::from_str(BUNDLED_DATABASE).context("Failed to parse bundled device database")
     }
 
     /// Load database from disk.
     fn load_database_file(path: &PathBuf) -> Result<LocalDatabase> {
-        let content = std::fs::read_to_string(path)
-            .context("Failed to read database file")?;
-        serde_json::from_str(&content)
-            .context("Failed to parse database file")
+        let content = std::fs::read_to_string(path).context("Failed to read database file")?;
+        serde_json::from_str(&content).context("Failed to parse database file")
     }
 
     /// Save database to disk.
     fn save_database_file(path: &PathBuf, db: &LocalDatabase) -> Result<()> {
-        let content = serde_json::to_string_pretty(db)
-            .context("Failed to serialize database")?;
-        std::fs::write(path, content)
-            .context("Failed to write database file")
+        let content = serde_json::to_string_pretty(db).context("Failed to serialize database")?;
+        std::fs::write(path, content).context("Failed to write database file")
     }
 
     /// Save current database state to disk.
     fn save(&self) -> Result<()> {
-        let db = self.database.read()
+        let db = self
+            .database
+            .read()
             .map_err(|_| anyhow::anyhow!("Failed to acquire read lock"))?;
         Self::save_database_file(&self.db_file, &db)
     }
@@ -84,28 +80,35 @@ impl LocalDatabaseManager {
         let devices = db.devices.get_by_type(device_type);
 
         // Try exact match first
-        if let Some(device) = devices.iter()
+        if let Some(device) = devices
+            .iter()
             .find(|d| Self::exact_match(&d.identifier, identifier))
         {
             return Some(device.clone());
         }
 
         // Try fuzzy match on model name
-        devices.iter()
+        devices
+            .iter()
             .find(|d| Self::fuzzy_match(&d.identifier, identifier))
             .cloned()
     }
 
     /// Exact match on manufacturer and model (case-insensitive).
     fn exact_match(db_id: &DeviceIdentifier, search_id: &DeviceIdentifier) -> bool {
-        db_id.manufacturer.eq_ignore_ascii_case(&search_id.manufacturer)
+        db_id
+            .manufacturer
+            .eq_ignore_ascii_case(&search_id.manufacturer)
             && db_id.model.eq_ignore_ascii_case(&search_id.model)
     }
 
     /// Fuzzy match - checks if model names are similar.
     fn fuzzy_match(db_id: &DeviceIdentifier, search_id: &DeviceIdentifier) -> bool {
         // Must match manufacturer
-        if !db_id.manufacturer.eq_ignore_ascii_case(&search_id.manufacturer) {
+        if !db_id
+            .manufacturer
+            .eq_ignore_ascii_case(&search_id.manufacturer)
+        {
             return false;
         }
 
@@ -115,7 +118,8 @@ impl LocalDatabaseManager {
 
         log::debug!(
             "Fuzzy match comparing: db='{}' search='{}'",
-            db_model, search_model
+            db_model,
+            search_model
         );
 
         // Require exact model identifier match to prevent false positives
@@ -160,7 +164,9 @@ impl LocalDatabaseManager {
 
     /// Add or update a device in the database.
     pub fn upsert_device(&self, device_info: DeviceDeepInfo) -> Result<()> {
-        let mut db = self.database.write()
+        let mut db = self
+            .database
+            .write()
             .map_err(|_| anyhow::anyhow!("Failed to acquire write lock"))?;
 
         let devices = db.devices.get_by_type_mut(&device_info.device_type);
@@ -210,7 +216,9 @@ impl LocalDatabaseManager {
     pub fn reset_to_bundled(&self) -> Result<()> {
         let bundled = Self::parse_bundled_database()?;
 
-        let mut db = self.database.write()
+        let mut db = self
+            .database
+            .write()
             .map_err(|_| anyhow::anyhow!("Failed to acquire write lock"))?;
 
         *db = bundled;

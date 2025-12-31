@@ -36,7 +36,8 @@ impl WikiChipSource {
         let model_lower = model.to_lowercase();
 
         // Extract series and model number
-        if let Some(captures) = regex::Regex::new(r"(?i)(i[3579])[\s-]?(\d{4,5}[a-z]*)").ok()
+        if let Some(captures) = regex::Regex::new(r"(?i)(i[3579])[\s-]?(\d{4,5}[a-z]*)")
+            .ok()
             .and_then(|re| re.captures(&model_lower))
         {
             let series = captures.get(1).map(|m| m.as_str()).unwrap_or("");
@@ -46,12 +47,18 @@ impl WikiChipSource {
 
         // Xeon patterns
         if model_lower.contains("xeon") {
-            if let Some(captures) = regex::Regex::new(r"(?i)([egw]\d?)-?(\d{4,5}[a-z]*)").ok()
+            if let Some(captures) = regex::Regex::new(r"(?i)([egw]\d?)-?(\d{4,5}[a-z]*)")
+                .ok()
                 .and_then(|re| re.captures(&model_lower))
             {
                 let series = captures.get(1).map(|m| m.as_str()).unwrap_or("");
                 let number = captures.get(2).map(|m| m.as_str()).unwrap_or("");
-                return format!("intel/xeon_{}/{}-{}", series.to_lowercase(), series.to_lowercase(), number);
+                return format!(
+                    "intel/xeon_{}/{}-{}",
+                    series.to_lowercase(),
+                    series.to_lowercase(),
+                    number
+                );
             }
         }
 
@@ -64,7 +71,8 @@ impl WikiChipSource {
         let model_lower = model.to_lowercase();
 
         // Ryzen patterns
-        if let Some(captures) = regex::Regex::new(r"(?i)ryzen\s*(\d)\s*(\d{4}[a-z0-9]*)").ok()
+        if let Some(captures) = regex::Regex::new(r"(?i)ryzen\s*(\d)\s*(\d{4}[a-z0-9]*)")
+            .ok()
             .and_then(|re| re.captures(&model_lower))
         {
             let series = captures.get(1).map(|m| m.as_str()).unwrap_or("");
@@ -73,7 +81,8 @@ impl WikiChipSource {
         }
 
         // Threadripper patterns
-        if let Some(captures) = regex::Regex::new(r"(?i)threadripper\s*(pro\s*)?(\d{4}[a-z]*)").ok()
+        if let Some(captures) = regex::Regex::new(r"(?i)threadripper\s*(pro\s*)?(\d{4}[a-z]*)")
+            .ok()
             .and_then(|re| re.captures(&model_lower))
         {
             let number = captures.get(2).map(|m| m.as_str()).unwrap_or("");
@@ -84,7 +93,8 @@ impl WikiChipSource {
         }
 
         // EPYC patterns
-        if let Some(captures) = regex::Regex::new(r"(?i)epyc\s*(\d{4}[a-z]*)").ok()
+        if let Some(captures) = regex::Regex::new(r"(?i)epyc\s*(\d{4}[a-z]*)")
+            .ok()
             .and_then(|re| re.captures(&model_lower))
         {
             let number = captures.get(1).map(|m| m.as_str()).unwrap_or("");
@@ -147,8 +157,13 @@ impl WikiChipSource {
         }
 
         // Fall back to search
-        let search_query = format!("{} {}",
-            if manufacturer.contains("intel") { "Intel" } else { "AMD" },
+        let search_query = format!(
+            "{} {}",
+            if manufacturer.contains("intel") {
+                "Intel"
+            } else {
+                "AMD"
+            },
             model
         );
 
@@ -205,11 +220,13 @@ impl WikiChipSource {
         }
 
         // Extract die shot if available
-        let dieshot_selector = Selector::parse("a[href*='die'], img[alt*='die'], a[title*='die shot']").unwrap();
+        let dieshot_selector =
+            Selector::parse("a[href*='die'], img[alt*='die'], a[title*='die shot']").unwrap();
         if let Some(dieshot) = document.select(&dieshot_selector).next() {
             if let Some(href) = dieshot.value().attr("href") {
                 if href.contains("/wiki/File:") {
-                    data.gallery_images.push(format!("{}{}", WIKICHIP_BASE, href));
+                    data.gallery_images
+                        .push(format!("{}{}", WIKICHIP_BASE, href));
                 }
             }
         }
@@ -220,9 +237,13 @@ impl WikiChipSource {
         let td_selector = Selector::parse("td, .infobox-data").unwrap();
 
         for row in document.select(&infobox_selector) {
-            let label = row.select(&th_selector).next()
+            let label = row
+                .select(&th_selector)
+                .next()
                 .map(|e| e.text().collect::<String>().trim().to_string());
-            let value = row.select(&td_selector).next()
+            let value = row
+                .select(&td_selector)
+                .next()
                 .map(|e| e.text().collect::<String>().trim().to_string());
 
             if let (Some(label), Some(value)) = (label, value) {
@@ -235,9 +256,13 @@ impl WikiChipSource {
         // Extract specs from specification section tables
         let spec_table_selector = Selector::parse("table.wikitable tr").unwrap();
         for row in document.select(&spec_table_selector) {
-            let th = row.select(&th_selector).next()
+            let th = row
+                .select(&th_selector)
+                .next()
                 .map(|e| e.text().collect::<String>().trim().to_string());
-            let td = row.select(&td_selector).next()
+            let td = row
+                .select(&td_selector)
+                .next()
                 .map(|e| e.text().collect::<String>().trim().to_string());
 
             if let (Some(label), Some(value)) = (th, td) {
@@ -266,7 +291,9 @@ impl WikiChipSource {
     }
 
     /// Convert raw specs to categorized specs.
-    fn categorize_specs(raw_specs: &HashMap<String, String>) -> (HashMap<String, String>, Vec<SpecCategory>) {
+    fn categorize_specs(
+        raw_specs: &HashMap<String, String>,
+    ) -> (HashMap<String, String>, Vec<SpecCategory>) {
         let mut specs = HashMap::new();
         let mut general = Vec::new();
         let mut microarch = Vec::new();
@@ -285,10 +312,13 @@ impl WikiChipSource {
             ("Released", "release_date", "General"),
             ("MSRP", "msrp", "General"),
             ("Launch Price", "msrp", "General"),
-
             // Microarchitecture
             ("Architecture", "architecture", "Microarchitecture"),
-            ("Microarchitecture", "microarchitecture", "Microarchitecture"),
+            (
+                "Microarchitecture",
+                "microarchitecture",
+                "Microarchitecture",
+            ),
             ("Core Name", "core_name", "Microarchitecture"),
             ("Codename", "codename", "Microarchitecture"),
             ("Process", "process", "Microarchitecture"),
@@ -299,7 +329,6 @@ impl WikiChipSource {
             ("Transistor Count", "transistors", "Microarchitecture"),
             ("Pipeline Stages", "pipeline_stages", "Microarchitecture"),
             ("I/O", "io", "Microarchitecture"),
-
             // Cores
             ("Core Count", "cores", "Cores"),
             ("Cores", "cores", "Cores"),
@@ -315,7 +344,6 @@ impl WikiChipSource {
             ("Max Turbo Frequency", "turbo_frequency", "Cores"),
             ("TDP", "tdp", "Cores"),
             ("Thermal Design Power", "tdp", "Cores"),
-
             // Cache
             ("L1 Cache", "l1_cache", "Cache"),
             ("L1 Data Cache", "l1d_cache", "Cache"),
@@ -323,14 +351,12 @@ impl WikiChipSource {
             ("L2 Cache", "l2_cache", "Cache"),
             ("L3 Cache", "l3_cache", "Cache"),
             ("Total Cache", "total_cache", "Cache"),
-
             // Memory
             ("Memory Support", "memory_support", "Memory"),
             ("Max Memory", "max_memory", "Memory"),
             ("Memory Channels", "memory_channels", "Memory"),
             ("Memory Bandwidth", "memory_bandwidth", "Memory"),
             ("Memory Types", "memory_types", "Memory"),
-
             // Features
             ("Socket", "socket", "Features"),
             ("CPU Socket", "socket", "Features"),
@@ -369,22 +395,40 @@ impl WikiChipSource {
 
         let mut categories = Vec::new();
         if !general.is_empty() {
-            categories.push(SpecCategory { name: "General".to_string(), specs: general });
+            categories.push(SpecCategory {
+                name: "General".to_string(),
+                specs: general,
+            });
         }
         if !microarch.is_empty() {
-            categories.push(SpecCategory { name: "Microarchitecture".to_string(), specs: microarch });
+            categories.push(SpecCategory {
+                name: "Microarchitecture".to_string(),
+                specs: microarch,
+            });
         }
         if !cores.is_empty() {
-            categories.push(SpecCategory { name: "Core Configuration".to_string(), specs: cores });
+            categories.push(SpecCategory {
+                name: "Core Configuration".to_string(),
+                specs: cores,
+            });
         }
         if !cache.is_empty() {
-            categories.push(SpecCategory { name: "Cache Hierarchy".to_string(), specs: cache });
+            categories.push(SpecCategory {
+                name: "Cache Hierarchy".to_string(),
+                specs: cache,
+            });
         }
         if !memory.is_empty() {
-            categories.push(SpecCategory { name: "Memory".to_string(), specs: memory });
+            categories.push(SpecCategory {
+                name: "Memory".to_string(),
+                specs: memory,
+            });
         }
         if !features.is_empty() {
-            categories.push(SpecCategory { name: "Features".to_string(), specs: features });
+            categories.push(SpecCategory {
+                name: "Features".to_string(),
+                specs: features,
+            });
         }
 
         (specs, categories)
@@ -392,7 +436,9 @@ impl WikiChipSource {
 
     /// Extract unit from a value string.
     fn extract_unit(value: &str) -> Option<String> {
-        let units = ["GHz", "MHz", "MB", "KB", "GB", "TB", "W", "nm", "mm²", "billion", "million"];
+        let units = [
+            "GHz", "MHz", "MB", "KB", "GB", "TB", "W", "nm", "mm²", "billion", "million",
+        ];
         for unit in units {
             if value.contains(unit) {
                 return Some(unit.to_string());
@@ -455,7 +501,9 @@ impl DeviceSource for WikiChipSource {
         let (specs, categories) = Self::categorize_specs(&page_data.specs);
 
         // Get release date
-        let release_date = page_data.specs.get("Release Date")
+        let release_date = page_data
+            .specs
+            .get("Release Date")
             .or_else(|| page_data.specs.get("Launch Date"))
             .or_else(|| page_data.specs.get("Released"))
             .cloned();
@@ -487,16 +535,37 @@ mod tests {
 
     #[test]
     fn test_build_intel_title() {
-        assert_eq!(WikiChipSource::build_intel_title("i9-14900K"), "intel/core_i9/i9_14900k");
-        assert_eq!(WikiChipSource::build_intel_title("Intel Core i7-13700K"), "intel/core_i7/i7_13700k");
-        assert_eq!(WikiChipSource::build_intel_title("i5-12400"), "intel/core_i5/i5_12400");
+        assert_eq!(
+            WikiChipSource::build_intel_title("i9-14900K"),
+            "intel/core_i9/i9_14900k"
+        );
+        assert_eq!(
+            WikiChipSource::build_intel_title("Intel Core i7-13700K"),
+            "intel/core_i7/i7_13700k"
+        );
+        assert_eq!(
+            WikiChipSource::build_intel_title("i5-12400"),
+            "intel/core_i5/i5_12400"
+        );
     }
 
     #[test]
     fn test_build_amd_title() {
-        assert_eq!(WikiChipSource::build_amd_title("Ryzen 9 7950X"), "amd/ryzen_9/7950x");
-        assert_eq!(WikiChipSource::build_amd_title("AMD Ryzen 7 5800X"), "amd/ryzen_7/5800x");
-        assert_eq!(WikiChipSource::build_amd_title("Threadripper Pro 5995WX"), "amd/ryzen_threadripper_pro/5995wx");
-        assert_eq!(WikiChipSource::build_amd_title("EPYC 9654"), "amd/epyc/9654");
+        assert_eq!(
+            WikiChipSource::build_amd_title("Ryzen 9 7950X"),
+            "amd/ryzen_9/7950x"
+        );
+        assert_eq!(
+            WikiChipSource::build_amd_title("AMD Ryzen 7 5800X"),
+            "amd/ryzen_7/5800x"
+        );
+        assert_eq!(
+            WikiChipSource::build_amd_title("Threadripper Pro 5995WX"),
+            "amd/ryzen_threadripper_pro/5995wx"
+        );
+        assert_eq!(
+            WikiChipSource::build_amd_title("EPYC 9654"),
+            "amd/epyc/9654"
+        );
     }
 }

@@ -36,11 +36,20 @@ impl MonitorSource {
             Some(Manufacturer::Dell)
         } else if combined.contains("samsung") || combined.contains("odyssey") {
             Some(Manufacturer::Samsung)
-        } else if combined.contains("lg") || combined.contains("ultragear") || combined.contains("ultrawide") {
+        } else if combined.contains("lg")
+            || combined.contains("ultragear")
+            || combined.contains("ultrawide")
+        {
             Some(Manufacturer::Lg)
-        } else if combined.contains("asus") || combined.contains("rog") || combined.contains("proart") {
+        } else if combined.contains("asus")
+            || combined.contains("rog")
+            || combined.contains("proart")
+        {
             Some(Manufacturer::Asus)
-        } else if combined.contains("acer") || combined.contains("predator") || combined.contains("nitro") {
+        } else if combined.contains("acer")
+            || combined.contains("predator")
+            || combined.contains("nitro")
+        {
             Some(Manufacturer::Acer)
         } else if combined.contains("benq") || combined.contains("zowie") {
             Some(Manufacturer::BenQ)
@@ -176,7 +185,11 @@ impl MonitorSource {
                 if let Some(idx) = idx {
                     // Check if followed by inch indicator or end of segment
                     let after = &model[idx + size.len()..];
-                    if after.starts_with('"') || after.starts_with("in") || after.starts_with('-') || after.starts_with(' ') {
+                    if after.starts_with('"')
+                        || after.starts_with("in")
+                        || after.starts_with('-')
+                        || after.starts_with(' ')
+                    {
                         return Some(format!("{}\"", size));
                     }
                 }
@@ -190,7 +203,10 @@ impl MonitorSource {
     fn extract_panel_type(model: &str) -> Option<String> {
         let model_upper = model.to_uppercase();
 
-        if model_upper.contains("OLED") || model_upper.contains("QD-OLED") || model_upper.contains("WOLED") {
+        if model_upper.contains("OLED")
+            || model_upper.contains("QD-OLED")
+            || model_upper.contains("WOLED")
+        {
             Some("OLED".to_string())
         } else if model_upper.contains("MINI-LED") || model_upper.contains("MINILED") {
             Some("Mini-LED".to_string())
@@ -227,7 +243,10 @@ impl MonitorSource {
     }
 
     /// Build specs from model name parsing.
-    fn build_basic_specs(manufacturer: &str, model: &str) -> (HashMap<String, String>, Vec<SpecCategory>) {
+    fn build_basic_specs(
+        manufacturer: &str,
+        model: &str,
+    ) -> (HashMap<String, String>, Vec<SpecCategory>) {
         let mut specs = HashMap::new();
         let mut general_specs = Vec::new();
 
@@ -442,20 +461,41 @@ mod tests {
 
     #[test]
     fn test_extract_refresh_rate() {
-        assert_eq!(MonitorSource::extract_refresh_rate("240Hz Gaming"), Some("240 Hz".to_string()));
-        assert_eq!(MonitorSource::extract_refresh_rate("165hz IPS"), Some("165 Hz".to_string()));
+        assert_eq!(
+            MonitorSource::extract_refresh_rate("240Hz Gaming"),
+            Some("240 Hz".to_string())
+        );
+        assert_eq!(
+            MonitorSource::extract_refresh_rate("165hz IPS"),
+            Some("165 Hz".to_string())
+        );
     }
 
     #[test]
     fn test_extract_panel_type() {
-        assert_eq!(MonitorSource::extract_panel_type("OLED Gaming Monitor"), Some("OLED".to_string()));
-        assert_eq!(MonitorSource::extract_panel_type("IPS Panel 144Hz"), Some("IPS".to_string()));
-        assert_eq!(MonitorSource::extract_panel_type("Nano IPS Display"), Some("Nano IPS".to_string()));
+        assert_eq!(
+            MonitorSource::extract_panel_type("OLED Gaming Monitor"),
+            Some("OLED".to_string())
+        );
+        assert_eq!(
+            MonitorSource::extract_panel_type("IPS Panel 144Hz"),
+            Some("IPS".to_string())
+        );
+        assert_eq!(
+            MonitorSource::extract_panel_type("Nano IPS Display"),
+            Some("Nano IPS".to_string())
+        );
     }
 
     #[test]
     fn test_extract_screen_size() {
-        assert_eq!(MonitorSource::extract_screen_size("27\" Gaming Monitor"), Some("27\"".to_string()));
-        assert_eq!(MonitorSource::extract_screen_size("32in 4K Display"), Some("32\"".to_string()));
+        assert_eq!(
+            MonitorSource::extract_screen_size("27\" Gaming Monitor"),
+            Some("27\"".to_string())
+        );
+        assert_eq!(
+            MonitorSource::extract_screen_size("32in 4K Display"),
+            Some("32\"".to_string())
+        );
     }
 }

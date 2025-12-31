@@ -1,9 +1,7 @@
 //! Storage-related Tauri commands
 
 use crate::collectors::StorageCollector;
-use crate::models::{
-    DiskHealth, DiskPerformance, NetworkDrive, Partition, PhysicalDisk, Volume,
-};
+use crate::models::{DiskHealth, DiskPerformance, NetworkDrive, Partition, PhysicalDisk, Volume};
 
 /// Get all physical disks
 #[tauri::command]

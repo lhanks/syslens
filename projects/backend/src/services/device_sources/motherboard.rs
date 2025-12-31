@@ -32,11 +32,19 @@ impl MotherboardSource {
     fn detect_manufacturer(manufacturer: &str, model: &str) -> Option<Manufacturer> {
         let combined = format!("{} {}", manufacturer, model).to_lowercase();
 
-        if combined.contains("asus") || combined.contains("rog") || combined.contains("tuf") || combined.contains("prime") {
+        if combined.contains("asus")
+            || combined.contains("rog")
+            || combined.contains("tuf")
+            || combined.contains("prime")
+        {
             Some(Manufacturer::Asus)
         } else if combined.contains("gigabyte") || combined.contains("aorus") {
             Some(Manufacturer::Gigabyte)
-        } else if combined.contains("msi") || combined.contains("meg") || combined.contains("mpg") || combined.contains("mag") {
+        } else if combined.contains("msi")
+            || combined.contains("meg")
+            || combined.contains("mpg")
+            || combined.contains("mag")
+        {
             Some(Manufacturer::Msi)
         } else if combined.contains("asrock") {
             Some(Manufacturer::AsRock)
@@ -140,21 +148,15 @@ impl MotherboardSource {
 
         // Intel chipsets
         let intel_chipsets = [
-            "Z890", "B860", "H810",
-            "Z790", "B760", "H770", "H710",
-            "Z690", "B660", "H670", "H610",
-            "Z590", "B560", "H570", "H510",
-            "Z490", "B460", "H470", "H410",
-            "Z390", "B365", "B360", "H370", "H310",
+            "Z890", "B860", "H810", "Z790", "B760", "H770", "H710", "Z690", "B660", "H670", "H610",
+            "Z590", "B560", "H570", "H510", "Z490", "B460", "H470", "H410", "Z390", "B365", "B360",
+            "H370", "H310",
         ];
 
         // AMD chipsets
         let amd_chipsets = [
-            "X870E", "X870", "B850", "B840",
-            "X670E", "X670", "B650E", "B650", "A620",
-            "X570", "B550", "A520",
-            "X470", "B450", "A320",
-            "TRX50", "TRX40", "WRX80",
+            "X870E", "X870", "B850", "B840", "X670E", "X670", "B650E", "B650", "A620", "X570",
+            "B550", "A520", "X470", "B450", "A320", "TRX50", "TRX40", "WRX80",
         ];
 
         for chipset in intel_chipsets.iter().chain(amd_chipsets.iter()) {
@@ -170,11 +172,20 @@ impl MotherboardSource {
     fn extract_form_factor(model: &str) -> Option<String> {
         let model_lower = model.to_lowercase();
 
-        if model_lower.contains("e-atx") || model_lower.contains("eatx") || model_lower.contains("extended") {
+        if model_lower.contains("e-atx")
+            || model_lower.contains("eatx")
+            || model_lower.contains("extended")
+        {
             Some("E-ATX".to_string())
-        } else if model_lower.contains("micro") || model_lower.contains("m-atx") || model_lower.contains("matx") {
+        } else if model_lower.contains("micro")
+            || model_lower.contains("m-atx")
+            || model_lower.contains("matx")
+        {
             Some("Micro-ATX".to_string())
-        } else if model_lower.contains("mini") || model_lower.contains("m-itx") || model_lower.contains("itx") {
+        } else if model_lower.contains("mini")
+            || model_lower.contains("m-itx")
+            || model_lower.contains("itx")
+        {
             Some("Mini-ITX".to_string())
         } else if model_lower.contains("atx") {
             Some("ATX".to_string())
@@ -184,7 +195,10 @@ impl MotherboardSource {
     }
 
     /// Build basic specs from model name parsing.
-    fn build_basic_specs(manufacturer: &str, model: &str) -> (HashMap<String, String>, Vec<SpecCategory>) {
+    fn build_basic_specs(
+        manufacturer: &str,
+        model: &str,
+    ) -> (HashMap<String, String>, Vec<SpecCategory>) {
         let mut specs = HashMap::new();
         let mut general_specs = Vec::new();
 
@@ -198,7 +212,14 @@ impl MotherboardSource {
 
         // Extract chipset
         if let Some(chipset) = Self::extract_chipset(model) {
-            let platform = if chipset.starts_with('X') || chipset.starts_with('B') && chipset.chars().nth(1).is_some_and(|c| c.is_ascii_digit() && c >= '4') || chipset.starts_with('A') {
+            let platform = if chipset.starts_with('X')
+                || chipset.starts_with('B')
+                    && chipset
+                        .chars()
+                        .nth(1)
+                        .is_some_and(|c| c.is_ascii_digit() && c >= '4')
+                || chipset.starts_with('A')
+            {
                 if chipset.contains("TRX") || chipset.contains("WRX") {
                     "AMD HEDT"
                 } else {
@@ -390,15 +411,33 @@ mod tests {
 
     #[test]
     fn test_extract_chipset() {
-        assert_eq!(MotherboardSource::extract_chipset("ROG STRIX Z790-E"), Some("Z790".to_string()));
-        assert_eq!(MotherboardSource::extract_chipset("B650 AORUS ELITE"), Some("B650".to_string()));
-        assert_eq!(MotherboardSource::extract_chipset("MEG X670E ACE"), Some("X670E".to_string()));
+        assert_eq!(
+            MotherboardSource::extract_chipset("ROG STRIX Z790-E"),
+            Some("Z790".to_string())
+        );
+        assert_eq!(
+            MotherboardSource::extract_chipset("B650 AORUS ELITE"),
+            Some("B650".to_string())
+        );
+        assert_eq!(
+            MotherboardSource::extract_chipset("MEG X670E ACE"),
+            Some("X670E".to_string())
+        );
     }
 
     #[test]
     fn test_extract_form_factor() {
-        assert_eq!(MotherboardSource::extract_form_factor("B650M AORUS ELITE"), Some("Micro-ATX".to_string()));
-        assert_eq!(MotherboardSource::extract_form_factor("ROG STRIX B650-I"), Some("Mini-ITX".to_string()));
-        assert_eq!(MotherboardSource::extract_form_factor("Z790 AORUS XTREME"), Some("ATX".to_string()));
+        assert_eq!(
+            MotherboardSource::extract_form_factor("B650M AORUS ELITE"),
+            Some("Micro-ATX".to_string())
+        );
+        assert_eq!(
+            MotherboardSource::extract_form_factor("ROG STRIX B650-I"),
+            Some("Mini-ITX".to_string())
+        );
+        assert_eq!(
+            MotherboardSource::extract_form_factor("Z790 AORUS XTREME"),
+            Some("ATX".to_string())
+        );
     }
 }

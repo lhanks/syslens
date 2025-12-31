@@ -34,11 +34,22 @@ impl ManufacturerSource {
         let mfr_lower = identifier.manufacturer.to_lowercase();
         let model_lower = identifier.model.to_lowercase();
 
-        if mfr_lower.contains("nvidia") || model_lower.contains("geforce") || model_lower.contains("quadro") {
+        if mfr_lower.contains("nvidia")
+            || model_lower.contains("geforce")
+            || model_lower.contains("quadro")
+        {
             Some(Manufacturer::Nvidia)
-        } else if mfr_lower.contains("amd") || mfr_lower.contains("ati") || model_lower.contains("radeon") || model_lower.contains("ryzen") {
+        } else if mfr_lower.contains("amd")
+            || mfr_lower.contains("ati")
+            || model_lower.contains("radeon")
+            || model_lower.contains("ryzen")
+        {
             Some(Manufacturer::Amd)
-        } else if mfr_lower.contains("intel") || model_lower.contains("core i") || model_lower.contains("xeon") || model_lower.contains("arc") {
+        } else if mfr_lower.contains("intel")
+            || model_lower.contains("core i")
+            || model_lower.contains("xeon")
+            || model_lower.contains("arc")
+        {
             Some(Manufacturer::Intel)
         } else {
             None
@@ -141,9 +152,17 @@ impl ManufacturerSource {
         // Determine series from model number
         let series = if model.contains("5090") || model.contains("5080") || model.contains("5070") {
             "50-series"
-        } else if model.contains("4090") || model.contains("4080") || model.contains("4070") || model.contains("4060") {
+        } else if model.contains("4090")
+            || model.contains("4080")
+            || model.contains("4070")
+            || model.contains("4060")
+        {
             "40-series"
-        } else if model.contains("3090") || model.contains("3080") || model.contains("3070") || model.contains("3060") {
+        } else if model.contains("3090")
+            || model.contains("3080")
+            || model.contains("3070")
+            || model.contains("3060")
+        {
             "30-series"
         } else {
             "40-series" // Default
@@ -169,7 +188,9 @@ impl ManufacturerSource {
             if let Ok(selector) = Selector::parse(selector_str) {
                 if let Some(element) = document.select(&selector).next() {
                     // Check for src, data-src, or content attribute
-                    if let Some(src) = element.value().attr("src")
+                    if let Some(src) = element
+                        .value()
+                        .attr("src")
                         .or_else(|| element.value().attr("data-src"))
                         .or_else(|| element.value().attr("content"))
                     {
@@ -185,7 +206,11 @@ impl ManufacturerSource {
     }
 
     /// Fetch AMD GPU/CPU information.
-    async fn fetch_amd(&self, identifier: &DeviceIdentifier, device_type: &DeviceType) -> Result<PartialDeviceInfo> {
+    async fn fetch_amd(
+        &self,
+        identifier: &DeviceIdentifier,
+        device_type: &DeviceType,
+    ) -> Result<PartialDeviceInfo> {
         let model = &identifier.model;
         log::debug!("Searching AMD for: {}", model);
 
@@ -294,7 +319,9 @@ impl ManufacturerSource {
         for selector_str in selectors {
             if let Ok(selector) = Selector::parse(selector_str) {
                 if let Some(element) = document.select(&selector).next() {
-                    if let Some(src) = element.value().attr("src")
+                    if let Some(src) = element
+                        .value()
+                        .attr("src")
                         .or_else(|| element.value().attr("data-src"))
                         .or_else(|| element.value().attr("content"))
                     {
@@ -338,7 +365,8 @@ impl ManufacturerSource {
         let document = Html::parse_document(&html);
 
         // Try to find product link
-        let product_url = self.extract_intel_product_link(&document)
+        let product_url = self
+            .extract_intel_product_link(&document)
             .unwrap_or(search_url.clone());
 
         // Extract product image
@@ -409,7 +437,9 @@ impl ManufacturerSource {
         for selector_str in selectors {
             if let Ok(selector) = Selector::parse(selector_str) {
                 if let Some(element) = document.select(&selector).next() {
-                    if let Some(src) = element.value().attr("src")
+                    if let Some(src) = element
+                        .value()
+                        .attr("src")
                         .or_else(|| element.value().attr("content"))
                     {
                         if src.contains("http") {
@@ -457,8 +487,7 @@ impl DeviceSource for ManufacturerSource {
         device_type: &DeviceType,
         identifier: &DeviceIdentifier,
     ) -> Result<PartialDeviceInfo> {
-        let manufacturer = Self::detect_manufacturer(identifier)
-            .context("Unknown manufacturer")?;
+        let manufacturer = Self::detect_manufacturer(identifier).context("Unknown manufacturer")?;
 
         match manufacturer {
             Manufacturer::Nvidia => self.fetch_nvidia(identifier).await,
@@ -481,7 +510,10 @@ mod tests {
             serial_number: None,
             hardware_ids: vec![],
         };
-        assert!(matches!(ManufacturerSource::detect_manufacturer(&nvidia_id), Some(Manufacturer::Nvidia)));
+        assert!(matches!(
+            ManufacturerSource::detect_manufacturer(&nvidia_id),
+            Some(Manufacturer::Nvidia)
+        ));
 
         let amd_id = DeviceIdentifier {
             manufacturer: "AMD".to_string(),
@@ -490,7 +522,10 @@ mod tests {
             serial_number: None,
             hardware_ids: vec![],
         };
-        assert!(matches!(ManufacturerSource::detect_manufacturer(&amd_id), Some(Manufacturer::Amd)));
+        assert!(matches!(
+            ManufacturerSource::detect_manufacturer(&amd_id),
+            Some(Manufacturer::Amd)
+        ));
 
         let intel_id = DeviceIdentifier {
             manufacturer: "Intel".to_string(),
@@ -499,14 +534,26 @@ mod tests {
             serial_number: None,
             hardware_ids: vec![],
         };
-        assert!(matches!(ManufacturerSource::detect_manufacturer(&intel_id), Some(Manufacturer::Intel)));
+        assert!(matches!(
+            ManufacturerSource::detect_manufacturer(&intel_id),
+            Some(Manufacturer::Intel)
+        ));
     }
 
     #[test]
     fn test_extract_nvidia_model() {
-        assert_eq!(ManufacturerSource::extract_nvidia_model("GeForce RTX 4090"), "rtx-4090");
-        assert_eq!(ManufacturerSource::extract_nvidia_model("NVIDIA GeForce RTX 5070 Ti"), "rtx-5070-ti");
-        assert_eq!(ManufacturerSource::extract_nvidia_model("GTX 1080"), "gtx-1080");
+        assert_eq!(
+            ManufacturerSource::extract_nvidia_model("GeForce RTX 4090"),
+            "rtx-4090"
+        );
+        assert_eq!(
+            ManufacturerSource::extract_nvidia_model("NVIDIA GeForce RTX 5070 Ti"),
+            "rtx-5070-ti"
+        );
+        assert_eq!(
+            ManufacturerSource::extract_nvidia_model("GTX 1080"),
+            "gtx-1080"
+        );
     }
 
     #[test]

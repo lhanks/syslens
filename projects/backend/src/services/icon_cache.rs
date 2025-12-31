@@ -1,24 +1,24 @@
 //! Icon caching and extraction service for process icons.
 
+use base64::engine::general_purpose::STANDARD;
+use base64::Engine;
+use log::{debug, trace};
 use std::collections::HashMap;
 use std::path::Path;
-use std::sync::RwLock;
 use std::sync::atomic::{AtomicUsize, Ordering};
-use base64::Engine;
-use base64::engine::general_purpose::STANDARD;
-use log::{debug, trace};
+use std::sync::RwLock;
 
+#[cfg(windows)]
+use windows::core::PCWSTR;
+#[cfg(windows)]
+use windows::Win32::Graphics::Gdi::{
+    CreateCompatibleDC, DeleteDC, DeleteObject, GetDIBits, SelectObject, BITMAPINFO,
+    BITMAPINFOHEADER, BI_RGB, DIB_RGB_COLORS,
+};
 #[cfg(windows)]
 use windows::Win32::UI::Shell::{SHGetFileInfoW, SHFILEINFOW, SHGFI_ICON, SHGFI_SMALLICON};
 #[cfg(windows)]
 use windows::Win32::UI::WindowsAndMessaging::{DestroyIcon, GetIconInfo, ICONINFO};
-#[cfg(windows)]
-use windows::Win32::Graphics::Gdi::{
-    CreateCompatibleDC, DeleteDC, DeleteObject, GetDIBits, SelectObject,
-    BITMAPINFO, BITMAPINFOHEADER, BI_RGB, DIB_RGB_COLORS,
-};
-#[cfg(windows)]
-use windows::core::PCWSTR;
 
 /// Cache for extracted process icons.
 /// Maps executable path -> base64 PNG data.
@@ -65,11 +65,14 @@ impl IconCache {
         }
 
         // Log stats periodically
-        let total = self.success_count.load(Ordering::Relaxed) + self.fail_count.load(Ordering::Relaxed);
+        let total =
+            self.success_count.load(Ordering::Relaxed) + self.fail_count.load(Ordering::Relaxed);
         if total > 0 && total.is_multiple_of(50) {
-            debug!("Icon cache stats: {} successes, {} failures",
-                   self.success_count.load(Ordering::Relaxed),
-                   self.fail_count.load(Ordering::Relaxed));
+            debug!(
+                "Icon cache stats: {} successes, {} failures",
+                self.success_count.load(Ordering::Relaxed),
+                self.fail_count.load(Ordering::Relaxed)
+            );
         }
 
         icon
@@ -87,10 +90,7 @@ impl IconCache {
         }
 
         // Convert path to wide string
-        let wide_path: Vec<u16> = exe_path
-            .encode_utf16()
-            .chain(std::iter::once(0))
-            .collect();
+        let wide_path: Vec<u16> = exe_path.encode_utf16().chain(std::iter::once(0)).collect();
 
         unsafe {
             let mut file_info: MaybeUninit<SHFILEINFOW> = MaybeUninit::uninit();
@@ -250,8 +250,19 @@ impl IconCache {
 
             // Resize to 16x16 if needed for consistency
             let img = if width != target_size || height != target_size {
-                trace!("icon_to_png: Resizing from {}x{} to {}x{}", width, height, target_size, target_size);
-                image::imageops::resize(&img, target_size as u32, target_size as u32, image::imageops::FilterType::Lanczos3)
+                trace!(
+                    "icon_to_png: Resizing from {}x{} to {}x{}",
+                    width,
+                    height,
+                    target_size,
+                    target_size
+                );
+                image::imageops::resize(
+                    &img,
+                    target_size as u32,
+                    target_size as u32,
+                    image::imageops::FilterType::Lanczos3,
+                )
             } else {
                 img
             };
@@ -264,7 +275,10 @@ impl IconCache {
                 return None;
             }
 
-            trace!("icon_to_png: Successfully created PNG ({} bytes)", png_data.len());
+            trace!(
+                "icon_to_png: Successfully created PNG ({} bytes)",
+                png_data.len()
+            );
             Some(png_data)
         }
     }

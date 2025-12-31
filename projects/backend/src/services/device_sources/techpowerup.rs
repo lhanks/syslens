@@ -76,7 +76,8 @@ impl TechPowerUpSource {
                 let name = link.text().collect::<String>().to_lowercase();
 
                 // Check for exact or close match
-                if name.contains(&normalized_model) || self.is_close_match(&name, &normalized_model) {
+                if name.contains(&normalized_model) || self.is_close_match(&name, &normalized_model)
+                {
                     if let Some(href) = link.value().attr("href") {
                         let full_url = if href.starts_with('/') {
                             format!("{}{}", TECHPOWERUP_BASE, href)
@@ -96,11 +97,21 @@ impl TechPowerUpSource {
     /// Check if two model names are a close match.
     fn is_close_match(&self, name: &str, model: &str) -> bool {
         // Extract model numbers and compare
-        let name_numbers: Vec<&str> = name.split(|c: char| !c.is_alphanumeric()).filter(|s| !s.is_empty()).collect();
-        let model_numbers: Vec<&str> = model.split(|c: char| !c.is_alphanumeric()).filter(|s| !s.is_empty()).collect();
+        let name_numbers: Vec<&str> = name
+            .split(|c: char| !c.is_alphanumeric())
+            .filter(|s| !s.is_empty())
+            .collect();
+        let model_numbers: Vec<&str> = model
+            .split(|c: char| !c.is_alphanumeric())
+            .filter(|s| !s.is_empty())
+            .collect();
 
         // Check if all model parts are in the name
-        model_numbers.iter().all(|part| name_numbers.iter().any(|n| n.contains(part) || part.contains(n)))
+        model_numbers.iter().all(|part| {
+            name_numbers
+                .iter()
+                .any(|n| n.contains(part) || part.contains(n))
+        })
     }
 
     /// Fetch and parse GPU product page.
@@ -136,7 +147,8 @@ impl TechPowerUpSource {
 
         // Try alternative image selector
         if data.image_url.is_none() {
-            let alt_img_selector = Selector::parse("div.gpu-image img, .gpudb-card-large img").unwrap();
+            let alt_img_selector =
+                Selector::parse("div.gpu-image img, .gpudb-card-large img").unwrap();
             if let Some(img) = document.select(&alt_img_selector).next() {
                 if let Some(src) = img.value().attr("src") {
                     data.image_url = Some(if src.starts_with('/') {
@@ -194,7 +206,11 @@ impl TechPowerUpSource {
         }
 
         // Extract release date
-        if let Some(date) = data.specs.get("Release Date").or(data.specs.get("Launch Date")) {
+        if let Some(date) = data
+            .specs
+            .get("Release Date")
+            .or(data.specs.get("Launch Date"))
+        {
             data.release_date = Some(date.clone());
         }
 
@@ -202,7 +218,9 @@ impl TechPowerUpSource {
     }
 
     /// Convert raw specs to categorized specs.
-    fn categorize_specs(raw_specs: &HashMap<String, String>) -> (HashMap<String, String>, Vec<SpecCategory>) {
+    fn categorize_specs(
+        raw_specs: &HashMap<String, String>,
+    ) -> (HashMap<String, String>, Vec<SpecCategory>) {
         let mut specs = HashMap::new();
         let mut gpu_engine = Vec::new();
         let mut memory = Vec::new();
@@ -227,7 +245,6 @@ impl TechPowerUpSource {
             ("Base Clock", "base_clock", "GPU Engine"),
             ("Boost Clock", "boost_clock", "GPU Engine"),
             ("GPU Clock", "gpu_clock", "GPU Engine"),
-
             // Memory specs
             ("Memory Size", "memory_size", "Memory"),
             ("Memory Type", "memory_type", "Memory"),
@@ -235,7 +252,6 @@ impl TechPowerUpSource {
             ("Bandwidth", "bandwidth", "Memory"),
             ("Memory Clock", "memory_clock", "Memory"),
             ("Effective Memory Clock", "effective_memory_clock", "Memory"),
-
             // Board Design specs
             ("TDP", "tdp", "Board Design"),
             ("Slot Width", "slot_width", "Board Design"),
@@ -245,7 +261,6 @@ impl TechPowerUpSource {
             ("Power Connectors", "power_connectors", "Board Design"),
             ("Outputs", "outputs", "Board Design"),
             ("Bus Interface", "bus_interface", "Board Design"),
-
             // Graphics Features
             ("DirectX", "directx", "Graphics Features"),
             ("OpenGL", "opengl", "Graphics Features"),
@@ -306,7 +321,9 @@ impl TechPowerUpSource {
 
     /// Extract unit from a value string.
     fn extract_unit(value: &str) -> Option<String> {
-        let units = ["MHz", "GHz", "GB", "MB", "W", "nm", "bit", "GB/s", "mm²", "mm", "billion"];
+        let units = [
+            "MHz", "GHz", "GB", "MB", "W", "nm", "bit", "GB/s", "mm²", "mm", "billion",
+        ];
         for unit in units {
             if value.contains(unit) {
                 return Some(unit.to_string());
@@ -385,8 +402,14 @@ mod tests {
 
     #[test]
     fn test_normalize_model() {
-        assert_eq!(TechPowerUpSource::normalize_model("NVIDIA GeForce RTX 4090"), "rtx 4090");
-        assert_eq!(TechPowerUpSource::normalize_model("AMD Radeon RX 7900 XTX"), "rx 7900 xtx");
+        assert_eq!(
+            TechPowerUpSource::normalize_model("NVIDIA GeForce RTX 4090"),
+            "rtx 4090"
+        );
+        assert_eq!(
+            TechPowerUpSource::normalize_model("AMD Radeon RX 7900 XTX"),
+            "rx 7900 xtx"
+        );
         assert_eq!(TechPowerUpSource::normalize_model("RTX 5070"), "rtx 5070");
     }
 

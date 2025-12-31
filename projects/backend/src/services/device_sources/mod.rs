@@ -101,10 +101,7 @@ pub async fn fetch_from_all_sources(
 /// - All sources are recorded
 /// - Categories from highest-confidence source are used
 pub fn merge_results(results: Vec<SourceResult>) -> Option<PartialDeviceInfo> {
-    let successful: Vec<_> = results
-        .into_iter()
-        .filter_map(|r| r.partial_info)
-        .collect();
+    let successful: Vec<_> = results.into_iter().filter_map(|r| r.partial_info).collect();
 
     if successful.is_empty() {
         return None;

@@ -3,9 +3,9 @@
 //! This module provides a cached System instance that persists across Tauri IPC calls,
 //! avoiding the expensive cost of creating new System objects for each request.
 
-use sysinfo::{MemoryRefreshKind, ProcessRefreshKind, System, Users};
 use std::sync::Mutex;
 use std::time::{Duration, Instant};
+use sysinfo::{MemoryRefreshKind, ProcessRefreshKind, System, Users};
 
 /// Cached system information state
 pub struct SysInfoState {
@@ -50,8 +50,8 @@ impl SysInfoState {
         let mut last_refresh = self.last_cpu_refresh.lock().unwrap();
 
         // Check if we need to wait for accurate measurement
-        let needs_initial_wait = last_refresh.is_none()
-            || last_refresh.unwrap().elapsed() > Duration::from_secs(5);
+        let needs_initial_wait =
+            last_refresh.is_none() || last_refresh.unwrap().elapsed() > Duration::from_secs(5);
 
         if needs_initial_wait {
             // First refresh
@@ -95,15 +95,15 @@ impl SysInfoState {
         let mut last_refresh = self.last_process_refresh.lock().unwrap();
 
         // Check if we need to wait for accurate CPU measurement
-        let needs_initial_wait = last_refresh.is_none()
-            || last_refresh.unwrap().elapsed() > Duration::from_secs(5);
+        let needs_initial_wait =
+            last_refresh.is_none() || last_refresh.unwrap().elapsed() > Duration::from_secs(5);
 
         if needs_initial_wait {
             // First refresh for CPU baseline
             sys.refresh_cpu_all();
             sys.refresh_processes_specifics(
                 sysinfo::ProcessesToUpdate::All,
-                ProcessRefreshKind::everything()
+                ProcessRefreshKind::everything(),
             );
             // Brief wait for accurate CPU measurement
             std::thread::sleep(Duration::from_millis(50));
@@ -113,7 +113,7 @@ impl SysInfoState {
         sys.refresh_cpu_all();
         sys.refresh_processes_specifics(
             sysinfo::ProcessesToUpdate::All,
-            ProcessRefreshKind::everything()
+            ProcessRefreshKind::everything(),
         );
         *last_refresh = Some(Instant::now());
 
@@ -175,9 +175,7 @@ mod tests {
     fn test_process_listing() {
         let state = SysInfoState::new();
 
-        let count = state.with_processes(|sys, _users, _cpu_count| {
-            sys.processes().len()
-        });
+        let count = state.with_processes(|sys, _users, _cpu_count| sys.processes().len());
 
         assert!(count > 0, "Should have at least one process");
     }

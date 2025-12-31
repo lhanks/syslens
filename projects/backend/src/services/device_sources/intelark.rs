@@ -99,7 +99,8 @@ impl IntelArkSource {
         let document = Html::parse_document(&html);
 
         // Look for search results
-        let result_selector = Selector::parse("div.search-result a, a.result-title, div.results a").unwrap();
+        let result_selector =
+            Selector::parse("div.search-result a, a.result-title, div.results a").unwrap();
         let normalized_model = Self::normalize_model(model).to_lowercase();
         let model_number = Self::extract_model_number(model);
 
@@ -134,7 +135,8 @@ impl IntelArkSource {
         }
 
         // Try alternative selector for newer ARK layout
-        let alt_selector = Selector::parse("table.results tbody tr td a, .ark-product-link").unwrap();
+        let alt_selector =
+            Selector::parse("table.results tbody tr td a, .ark-product-link").unwrap();
         for link in document.select(&alt_selector) {
             let text = link.text().collect::<String>().to_lowercase();
             let href = link.value().attr("href");
@@ -156,7 +158,11 @@ impl IntelArkSource {
                     };
 
                     if full_url.contains("/products/") {
-                        log::debug!("Found Intel ARK match (alt): {} -> {}", text.trim(), full_url);
+                        log::debug!(
+                            "Found Intel ARK match (alt): {} -> {}",
+                            text.trim(),
+                            full_url
+                        );
                         return Ok(Some(full_url));
                     }
                 }
@@ -194,7 +200,11 @@ impl IntelArkSource {
         for selector_str in img_selectors {
             if let Ok(selector) = Selector::parse(selector_str) {
                 if let Some(img) = document.select(&selector).next() {
-                    if let Some(src) = img.value().attr("src").or_else(|| img.value().attr("data-src")) {
+                    if let Some(src) = img
+                        .value()
+                        .attr("src")
+                        .or_else(|| img.value().attr("data-src"))
+                    {
                         data.image_url = Some(if src.starts_with("//") {
                             format!("https:{}", src)
                         } else if src.starts_with('/') {
@@ -224,16 +234,21 @@ impl IntelArkSource {
 
         // Extract specs from ARK specification tables
         // ARK uses a format with section headers and key-value pairs
-        let section_selector = Selector::parse("div.specs-section, section.specs, div.blade-inside").unwrap();
+        let section_selector =
+            Selector::parse("div.specs-section, section.specs, div.blade-inside").unwrap();
         let row_selector = Selector::parse("li.ark-data-param, tr.ark-row, div.spec-row").unwrap();
         let label_selector = Selector::parse("span.label, td.label, .spec-label").unwrap();
         let value_selector = Selector::parse("span.value, td.value, .spec-value").unwrap();
 
         for section in document.select(&section_selector) {
             for row in section.select(&row_selector) {
-                let label = row.select(&label_selector).next()
+                let label = row
+                    .select(&label_selector)
+                    .next()
                     .map(|e| e.text().collect::<String>().trim().to_string());
-                let value = row.select(&value_selector).next()
+                let value = row
+                    .select(&value_selector)
+                    .next()
                     .map(|e| e.text().collect::<String>().trim().to_string());
 
                 if let (Some(label), Some(value)) = (label, value) {
@@ -285,7 +300,11 @@ impl IntelArkSource {
         }
 
         // Extract launch date
-        if let Some(date) = data.specs.get("Launch Date").or(data.specs.get("LaunchDate")) {
+        if let Some(date) = data
+            .specs
+            .get("Launch Date")
+            .or(data.specs.get("LaunchDate"))
+        {
             data.release_date = Some(date.clone());
         }
 
@@ -296,7 +315,9 @@ impl IntelArkSource {
     }
 
     /// Convert raw specs to categorized specs.
-    fn categorize_specs(raw_specs: &HashMap<String, String>) -> (HashMap<String, String>, Vec<SpecCategory>) {
+    fn categorize_specs(
+        raw_specs: &HashMap<String, String>,
+    ) -> (HashMap<String, String>, Vec<SpecCategory>) {
         let mut specs = HashMap::new();
         let mut essentials = Vec::new();
         let mut performance = Vec::new();
@@ -313,7 +334,6 @@ impl IntelArkSource {
             ("Launch Date", "launch_date", "Essentials"),
             ("MSRP", "msrp", "Essentials"),
             ("Status", "status", "Essentials"),
-
             // Performance
             ("Cores", "cores", "Performance"),
             ("# of Cores", "cores", "Performance"),
@@ -332,7 +352,6 @@ impl IntelArkSource {
             ("Cache", "cache", "Performance"),
             ("L3 Cache", "l3_cache", "Performance"),
             ("L2 Cache", "l2_cache", "Performance"),
-
             // Memory
             ("Max Memory Size", "max_memory", "Memory"),
             ("Memory Types", "memory_types", "Memory"),
@@ -340,24 +359,25 @@ impl IntelArkSource {
             ("Max Memory Bandwidth", "max_memory_bandwidth", "Memory"),
             ("Max # of Memory Channels", "memory_channels", "Memory"),
             ("ECC Memory Supported", "ecc_support", "Memory"),
-
             // Expansion
             ("Max # of PCI Express Lanes", "pcie_lanes", "Expansion"),
             ("PCI Express Revision", "pcie_revision", "Expansion"),
             ("PCI Express Configurations", "pcie_configs", "Expansion"),
             ("Scalability", "scalability", "Expansion"),
-
             // Package
             ("Socket", "socket", "Package"),
             ("Sockets Supported", "socket", "Package"),
             ("SocketsSupported", "socket", "Package"),
             ("Package Size", "package_size", "Package"),
             ("Max CPU Configuration", "max_cpu_config", "Package"),
-
             // Graphics (for CPUs with integrated graphics)
             ("Processor Graphics", "processor_graphics", "Graphics"),
             ("Graphics Base Frequency", "graphics_base_freq", "Graphics"),
-            ("Graphics Max Dynamic Frequency", "graphics_max_freq", "Graphics"),
+            (
+                "Graphics Max Dynamic Frequency",
+                "graphics_max_freq",
+                "Graphics",
+            ),
             ("Graphics Output", "graphics_output", "Graphics"),
             ("Max Resolution", "max_resolution", "Graphics"),
         ];
@@ -513,15 +533,30 @@ mod tests {
 
     #[test]
     fn test_normalize_model() {
-        assert_eq!(IntelArkSource::normalize_model("Intel Core i9-14900K Processor"), "i9-14900k");
-        assert_eq!(IntelArkSource::normalize_model("Intel(R) Core(TM) i7-13700K"), "i7-13700k");
+        assert_eq!(
+            IntelArkSource::normalize_model("Intel Core i9-14900K Processor"),
+            "i9-14900k"
+        );
+        assert_eq!(
+            IntelArkSource::normalize_model("Intel(R) Core(TM) i7-13700K"),
+            "i7-13700k"
+        );
     }
 
     #[test]
     fn test_extract_model_number() {
-        assert_eq!(IntelArkSource::extract_model_number("Intel Core i9-14900K"), Some("I9-14900K".to_string()));
-        assert_eq!(IntelArkSource::extract_model_number("Intel Core i7-13700K Processor"), Some("I7-13700K".to_string()));
-        assert_eq!(IntelArkSource::extract_model_number("Intel Xeon Gold 6348"), Some("GOLD 6348".to_string()));
+        assert_eq!(
+            IntelArkSource::extract_model_number("Intel Core i9-14900K"),
+            Some("I9-14900K".to_string())
+        );
+        assert_eq!(
+            IntelArkSource::extract_model_number("Intel Core i7-13700K Processor"),
+            Some("I7-13700K".to_string())
+        );
+        assert_eq!(
+            IntelArkSource::extract_model_number("Intel Xeon Gold 6348"),
+            Some("GOLD 6348".to_string())
+        );
     }
 
     #[test]

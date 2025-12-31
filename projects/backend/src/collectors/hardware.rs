@@ -1,9 +1,8 @@
 //! Hardware information collector
 
 use crate::models::{
-    AudioDevice, CacheInfo, CpuInfo, CpuMetrics,
-    GpuAdapterType, GpuInfo, GpuMetrics, MemoryInfo, MemoryMetrics, MemoryModule,
-    Monitor, MotherboardInfo, UsbDevice, UsbSpeed,
+    AudioDevice, CacheInfo, CpuInfo, CpuMetrics, GpuAdapterType, GpuInfo, GpuMetrics, MemoryInfo,
+    MemoryMetrics, MemoryModule, Monitor, MotherboardInfo, UsbDevice, UsbSpeed,
 };
 use sysinfo::{Components, CpuRefreshKind, MemoryRefreshKind, System};
 
@@ -33,8 +32,12 @@ impl HardwareCollector {
         let cpu = cpus.first();
 
         CpuInfo {
-            name: cpu.map(|c| c.brand().to_string()).unwrap_or_else(|| "Unknown".to_string()),
-            manufacturer: cpu.map(|c| c.vendor_id().to_string()).unwrap_or_else(|| "Unknown".to_string()),
+            name: cpu
+                .map(|c| c.brand().to_string())
+                .unwrap_or_else(|| "Unknown".to_string()),
+            manufacturer: cpu
+                .map(|c| c.vendor_id().to_string())
+                .unwrap_or_else(|| "Unknown".to_string()),
             architecture: std::env::consts::ARCH.to_string(),
             family: String::new(),
             model: String::new(),
@@ -56,8 +59,8 @@ impl HardwareCollector {
 
     #[cfg(target_os = "windows")]
     fn get_cpu_info_windows() -> CpuInfo {
-        use wmi::{COMLibrary, WMIConnection};
         use serde::Deserialize;
+        use wmi::{COMLibrary, WMIConnection};
 
         let mut sys = System::new();
         sys.refresh_cpu_specifics(CpuRefreshKind::new().with_frequency());
@@ -66,8 +69,12 @@ impl HardwareCollector {
         let cpu = cpus.first();
 
         // Get basic info from sysinfo
-        let name = cpu.map(|c| c.brand().to_string()).unwrap_or_else(|| "Unknown".to_string());
-        let manufacturer = cpu.map(|c| c.vendor_id().to_string()).unwrap_or_else(|| "Unknown".to_string());
+        let name = cpu
+            .map(|c| c.brand().to_string())
+            .unwrap_or_else(|| "Unknown".to_string());
+        let manufacturer = cpu
+            .map(|c| c.vendor_id().to_string())
+            .unwrap_or_else(|| "Unknown".to_string());
         let base_clock = cpu.map(|c| c.frequency() as u32).unwrap_or(0);
         let physical_cores = sys.physical_core_count().unwrap_or(0) as u32;
         let logical_processors = cpus.len() as u32;
@@ -227,8 +234,8 @@ impl HardwareCollector {
 
     #[cfg(target_os = "windows")]
     fn get_memory_info_windows() -> MemoryInfo {
-        use wmi::{COMLibrary, WMIConnection};
         use serde::Deserialize;
+        use wmi::{COMLibrary, WMIConnection};
 
         #[derive(Deserialize, Debug)]
         #[serde(rename = "Win32_PhysicalMemory")]
@@ -275,7 +282,9 @@ impl HardwareCollector {
                         // Try to get the rated speed from WMI first
                         let wmi_speed = module.speed.unwrap_or(0);
                         // Also try to extract rated speed from part number (e.g., "6000" from "FLBD516G6000HC38GBKT")
-                        let part_speed = module.part_number.as_ref()
+                        let part_speed = module
+                            .part_number
+                            .as_ref()
                             .map(|pn| Self::extract_speed_from_part_number(pn))
                             .unwrap_or(0);
                         // Use the higher of the two (part number often has XMP speed, WMI has JEDEC speed)
@@ -283,12 +292,14 @@ impl HardwareCollector {
                     }
 
                     if memory_type == "Unknown" {
-                        memory_type = module.memory_type
+                        memory_type = module
+                            .memory_type
                             .map(Self::decode_memory_type)
                             .unwrap_or_else(|| "Unknown".to_string());
                     }
 
-                    let part_number = module.part_number
+                    let part_number = module
+                        .part_number
                         .unwrap_or_else(|| "Unknown".to_string())
                         .trim()
                         .to_string();
@@ -299,7 +310,8 @@ impl HardwareCollector {
                     let rated_speed = wmi_speed.max(part_speed);
 
                     // Get manufacturer - try multiple sources
-                    let wmi_manufacturer = module.manufacturer
+                    let wmi_manufacturer = module
+                        .manufacturer
                         .map(|m| m.trim().to_string())
                         .filter(|m| !m.is_empty() && m != "Unknown")
                         .and_then(|m| Self::decode_manufacturer(&m));
@@ -309,11 +321,14 @@ impl HardwareCollector {
                         .unwrap_or_else(|| "Unknown".to_string());
 
                     modules.push(MemoryModule {
-                        slot: module.device_locator.unwrap_or_else(|| "Unknown".to_string()),
+                        slot: module
+                            .device_locator
+                            .unwrap_or_else(|| "Unknown".to_string()),
                         capacity_bytes: capacity,
                         manufacturer,
                         part_number,
-                        serial_number: module.serial_number
+                        serial_number: module
+                            .serial_number
                             .unwrap_or_else(|| "Unknown".to_string())
                             .trim()
                             .to_string(),
@@ -637,7 +652,7 @@ impl HardwareCollector {
             in_use_bytes: used,
             available_bytes: available,
             committed_bytes: used, // Approximation
-            cached_bytes: 0, // Not available from sysinfo
+            cached_bytes: 0,       // Not available from sysinfo
             paged_pool_bytes: 0,
             non_paged_pool_bytes: 0,
         }
@@ -658,8 +673,8 @@ impl HardwareCollector {
 
     #[cfg(target_os = "windows")]
     fn get_gpu_info_windows() -> Vec<GpuInfo> {
-        use wmi::{COMLibrary, WMIConnection};
         use serde::Deserialize;
+        use wmi::{COMLibrary, WMIConnection};
 
         #[derive(Deserialize, Debug)]
         #[serde(rename = "Win32_VideoController")]
@@ -686,17 +701,24 @@ impl HardwareCollector {
         if let Ok(wmi_con) = WMIConnection::new(com) {
             if let Ok(results) = wmi_con.query::<Win32VideoController>() {
                 for (i, gpu) in results.into_iter().enumerate() {
-                    let manufacturer = gpu.adapter_compatibility
+                    let manufacturer = gpu
+                        .adapter_compatibility
                         .as_ref()
                         .and_then(|s| Self::extract_gpu_vendor(s))
                         .unwrap_or_else(|| "Unknown".to_string());
 
                     let pnp_id = gpu.pnp_device_id.clone();
-                    let driver_link = pnp_id.as_ref()
+                    let driver_link = pnp_id
+                        .as_ref()
                         .and_then(|id| Self::get_gpu_driver_link(&manufacturer, id));
 
-                    let adapter_type = if gpu.name.as_ref()
-                        .map(|n| n.to_lowercase().contains("integrated") || n.to_lowercase().contains("intel uhd"))
+                    let adapter_type = if gpu
+                        .name
+                        .as_ref()
+                        .map(|n| {
+                            n.to_lowercase().contains("integrated")
+                                || n.to_lowercase().contains("intel uhd")
+                        })
                         .unwrap_or(false)
                     {
                         GpuAdapterType::Integrated
@@ -712,7 +734,9 @@ impl HardwareCollector {
                         driver_date: gpu.driver_date.unwrap_or_else(|| "Unknown".to_string()),
                         driver_link,
                         vram_bytes: gpu.adapter_ram.unwrap_or(0),
-                        current_resolution: gpu.video_mode_description.unwrap_or_else(|| "Unknown".to_string()),
+                        current_resolution: gpu
+                            .video_mode_description
+                            .unwrap_or_else(|| "Unknown".to_string()),
                         refresh_rate_hz: gpu.current_refresh_rate.unwrap_or(0),
                         adapter_type,
                         pnp_device_id: pnp_id,
@@ -742,9 +766,13 @@ impl HardwareCollector {
     #[cfg(target_os = "windows")]
     fn get_gpu_driver_link(vendor: &str, _pnp_id: &str) -> Option<String> {
         match vendor.to_lowercase().as_str() {
-            v if v.contains("nvidia") => Some("https://www.nvidia.com/Download/index.aspx".to_string()),
+            v if v.contains("nvidia") => {
+                Some("https://www.nvidia.com/Download/index.aspx".to_string())
+            }
             v if v.contains("amd") => Some("https://www.amd.com/en/support".to_string()),
-            v if v.contains("intel") => Some("https://www.intel.com/content/www/us/en/download-center/home.html".to_string()),
+            v if v.contains("intel") => Some(
+                "https://www.intel.com/content/www/us/en/download-center/home.html".to_string(),
+            ),
             _ => None,
         }
     }
@@ -785,8 +813,8 @@ impl HardwareCollector {
 
     #[cfg(target_os = "windows")]
     fn get_motherboard_info_windows() -> MotherboardInfo {
-        use wmi::{COMLibrary, WMIConnection};
         use serde::Deserialize;
+        use wmi::{COMLibrary, WMIConnection};
 
         #[derive(Deserialize, Debug)]
         #[serde(rename = "Win32_BaseBoard")]
@@ -833,19 +861,19 @@ impl HardwareCollector {
             // Get baseboard info
             if let Ok(results) = wmi_con.query::<Win32BaseBoard>() {
                 if let Some(board) = results.into_iter().next() {
-                    manufacturer = board.manufacturer
+                    manufacturer = board
+                        .manufacturer
                         .unwrap_or_else(|| "Unknown".to_string())
                         .trim()
                         .to_string();
-                    product = board.product
+                    product = board
+                        .product
                         .unwrap_or_else(|| "Unknown".to_string())
                         .trim()
                         .to_string();
-                    version = board.version
-                        .unwrap_or_else(String::new)
-                        .trim()
-                        .to_string();
-                    serial_number = board.serial_number
+                    version = board.version.unwrap_or_else(String::new).trim().to_string();
+                    serial_number = board
+                        .serial_number
                         .unwrap_or_else(String::new)
                         .trim()
                         .to_string();
@@ -928,15 +956,27 @@ impl HardwareCollector {
         let hklm = RegKey::predef(HKEY_LOCAL_MACHINE);
 
         // Method 1: Check firmware type from setup API
-        if hklm.open_subkey(r"SYSTEM\CurrentControlSet\Control\SecureBoot\State").is_ok() {
+        if hklm
+            .open_subkey(r"SYSTEM\CurrentControlSet\Control\SecureBoot\State")
+            .is_ok()
+        {
             // If SecureBoot key exists, we're in UEFI mode
             return Some("UEFI".to_string());
         }
 
         // Method 2: Check PlatformInfo
-        if let Ok(firmware_key) = hklm.open_subkey(r"SYSTEM\CurrentControlSet\Control\SystemInformation") {
+        if let Ok(firmware_key) =
+            hklm.open_subkey(r"SYSTEM\CurrentControlSet\Control\SystemInformation")
+        {
             if let Ok(bios_mode) = firmware_key.get_value::<String, _>("BIOSMode") {
-                return Some(if bios_mode.to_uppercase().contains("UEFI") { "UEFI" } else { "Legacy" }.to_string());
+                return Some(
+                    if bios_mode.to_uppercase().contains("UEFI") {
+                        "UEFI"
+                    } else {
+                        "Legacy"
+                    }
+                    .to_string(),
+                );
             }
         }
 
@@ -961,7 +1001,9 @@ impl HardwareCollector {
 
         let hklm = RegKey::predef(HKEY_LOCAL_MACHINE);
 
-        if let Ok(secure_boot_key) = hklm.open_subkey(r"SYSTEM\CurrentControlSet\Control\SecureBoot\State") {
+        if let Ok(secure_boot_key) =
+            hklm.open_subkey(r"SYSTEM\CurrentControlSet\Control\SecureBoot\State")
+        {
             if let Ok(value) = secure_boot_key.get_value::<u32, _>("UEFISecureBootEnabled") {
                 return Some(value == 1);
             }
@@ -994,7 +1036,10 @@ impl HardwareCollector {
         }
 
         // Alternative: check if TPM is present at all
-        if hklm.open_subkey(r"SYSTEM\CurrentControlSet\Services\TPM").is_ok() {
+        if hklm
+            .open_subkey(r"SYSTEM\CurrentControlSet\Services\TPM")
+            .is_ok()
+        {
             // TPM service exists but we couldn't get version - assume 2.0 for modern systems
             return Some("TPM (version unknown)".to_string());
         }
@@ -1065,8 +1110,7 @@ impl HardwareCollector {
 
         let mut devices = Vec::new();
 
-        let com = COMLibrary::new()
-            .unwrap_or_else(|_| unsafe { COMLibrary::assume_initialized() });
+        let com = COMLibrary::new().unwrap_or_else(|_| unsafe { COMLibrary::assume_initialized() });
 
         if let Ok(wmi_con) = WMIConnection::new(com) {
             // Query for USB devices using PnP entities with USB in the device ID
@@ -1131,18 +1175,23 @@ impl HardwareCollector {
     /// Format: USB\VID_xxxx&PID_xxxx\... or USB\VID_xxxx&PID_xxxx&...
     #[cfg(target_os = "windows")]
     fn parse_usb_vid_pid(device_id: &str) -> (String, String) {
-        use regex::Regex;
         use lazy_static::lazy_static;
+        use regex::Regex;
 
         lazy_static! {
-            static ref VID_PID_REGEX: Regex = Regex::new(
-                r"(?i)VID_([0-9A-F]{4})&PID_([0-9A-F]{4})"
-            ).unwrap();
+            static ref VID_PID_REGEX: Regex =
+                Regex::new(r"(?i)VID_([0-9A-F]{4})&PID_([0-9A-F]{4})").unwrap();
         }
 
         if let Some(caps) = VID_PID_REGEX.captures(device_id) {
-            let vid = caps.get(1).map(|m| m.as_str().to_string()).unwrap_or_default();
-            let pid = caps.get(2).map(|m| m.as_str().to_string()).unwrap_or_default();
+            let vid = caps
+                .get(1)
+                .map(|m| m.as_str().to_string())
+                .unwrap_or_default();
+            let pid = caps
+                .get(2)
+                .map(|m| m.as_str().to_string())
+                .unwrap_or_default();
             (vid, pid)
         } else {
             (String::new(), String::new())
@@ -1220,7 +1269,8 @@ impl HardwareCollector {
             "MSI" => "MSI",
             "GBT" => "Gigabyte",
             _ => &manufacturer_code,
-        }.to_string();
+        }
+        .to_string();
 
         // Look for monitor name in descriptor blocks (bytes 54-125)
         // Each descriptor block is 18 bytes. Descriptor type 0xFC = Monitor Name
@@ -1285,16 +1335,24 @@ impl HardwareCollector {
                         // Iterate over instances
                         if let Ok(instances) = type_key.enum_keys().collect::<Result<Vec<_>, _>>() {
                             for instance in instances {
-                                let edid_path = format!(r"{}\{}\Device Parameters", type_path, instance);
+                                let edid_path =
+                                    format!(r"{}\{}\Device Parameters", type_path, instance);
                                 if let Ok(params_key) = hklm.open_subkey(&edid_path) {
                                     if let Ok(edid_data) = params_key.get_raw_value("EDID") {
-                                        if let Some((manufacturer, name)) = Self::parse_edid(&edid_data.bytes) {
+                                        if let Some((manufacturer, name)) =
+                                            Self::parse_edid(&edid_data.bytes)
+                                        {
                                             // Use monitor_type as the key (e.g., "DELA1A2")
                                             // This matches the DeviceID from EnumDisplayDevices
-                                            edid_map.insert(monitor_type.clone(), (manufacturer.clone(), name.clone()));
+                                            edid_map.insert(
+                                                monitor_type.clone(),
+                                                (manufacturer.clone(), name.clone()),
+                                            );
                                             log::debug!(
                                                 "EDID found: {} -> {} {}",
-                                                monitor_type, manufacturer, name
+                                                monitor_type,
+                                                manufacturer,
+                                                name
                                             );
                                         }
                                     }
@@ -1354,9 +1412,15 @@ impl HardwareCollector {
                 let (refresh_rate, resolution) = if let Ok(controllers) = &video_info {
                     if let Some(controller) = controllers.first() {
                         let rate = controller.current_refresh_rate.unwrap_or(60);
-                        let res = match (controller.current_horizontal_resolution, controller.current_vertical_resolution) {
+                        let res = match (
+                            controller.current_horizontal_resolution,
+                            controller.current_vertical_resolution,
+                        ) {
                             (Some(w), Some(h)) => format!("{}x{}", w, h),
-                            _ => controller.video_mode_description.clone().unwrap_or_else(|| "Unknown".to_string()),
+                            _ => controller
+                                .video_mode_description
+                                .clone()
+                                .unwrap_or_else(|| "Unknown".to_string()),
                         };
                         (rate, res)
                     } else {
@@ -1370,13 +1434,17 @@ impl HardwareCollector {
                 let monitor_info: Result<Vec<Win32DesktopMonitor>, _> = wmi_con.query();
                 if let Ok(wmi_monitors) = monitor_info {
                     for (idx, mon) in wmi_monitors.into_iter().enumerate() {
-                        let device_id = mon.device_id.clone().unwrap_or_else(|| format!("monitor-{}", idx));
+                        let device_id = mon
+                            .device_id
+                            .clone()
+                            .unwrap_or_else(|| format!("monitor-{}", idx));
 
                         // Try to find EDID info by matching device ID
                         // WMI DeviceID format: "DesktopMonitor1" or "\\.\DISPLAY1\Monitor0"
                         // Registry format: "DELA1A2" (manufacturer + product code)
                         // We need to check if any EDID key is present in a connected monitor
-                        let (edid_manufacturer, edid_name) = edid_info.iter()
+                        let (edid_manufacturer, edid_name) = edid_info
+                            .iter()
                             .find(|(key, _)| {
                                 // Match if the key appears in the device ID or matches any connected monitor
                                 device_id.contains(*key)
@@ -1385,7 +1453,10 @@ impl HardwareCollector {
                             .unwrap_or((None, None));
 
                         // Use EDID name if available, otherwise WMI name
-                        let wmi_name = mon.name.clone().unwrap_or_else(|| format!("Display {}", idx + 1));
+                        let wmi_name = mon
+                            .name
+                            .clone()
+                            .unwrap_or_else(|| format!("Display {}", idx + 1));
                         let name = edid_name.unwrap_or_else(|| {
                             // If WMI gives "Generic PnP Monitor", try to use EDID data by index
                             if wmi_name.contains("Generic") {
@@ -1425,9 +1496,14 @@ impl HardwareCollector {
                 if monitors.is_empty() {
                     if let Ok(controllers) = video_info {
                         for (idx, controller) in controllers.into_iter().enumerate() {
-                            let res = match (controller.current_horizontal_resolution, controller.current_vertical_resolution) {
+                            let res = match (
+                                controller.current_horizontal_resolution,
+                                controller.current_vertical_resolution,
+                            ) {
                                 (Some(w), Some(h)) => format!("{}x{}", w, h),
-                                _ => controller.video_mode_description.unwrap_or_else(|| "Unknown".to_string()),
+                                _ => controller
+                                    .video_mode_description
+                                    .unwrap_or_else(|| "Unknown".to_string()),
                             };
 
                             monitors.push(Monitor {
@@ -1455,7 +1531,9 @@ impl HardwareCollector {
     }
 
     #[cfg(target_os = "windows")]
-    fn get_monitors_from_gdi(edid_info: &std::collections::HashMap<String, (String, String)>) -> Vec<Monitor> {
+    fn get_monitors_from_gdi(
+        edid_info: &std::collections::HashMap<String, (String, String)>,
+    ) -> Vec<Monitor> {
         use windows::Win32::Graphics::Gdi::{
             EnumDisplayDevicesW, EnumDisplaySettingsW, DEVMODEW, DISPLAY_DEVICEW,
             ENUM_CURRENT_SETTINGS,
@@ -1474,9 +1552,8 @@ impl HardwareCollector {
                 ..Default::default()
             };
 
-            let adapter_result = unsafe {
-                EnumDisplayDevicesW(None, adapter_idx, &mut adapter_device, 0)
-            };
+            let adapter_result =
+                unsafe { EnumDisplayDevicesW(None, adapter_idx, &mut adapter_device, 0) };
 
             if !adapter_result.as_bool() {
                 break;
@@ -1537,13 +1614,15 @@ impl HardwareCollector {
                         found_monitor = true;
 
                         // DeviceID format: "MONITOR\DELA1A2\{GUID}"
-                        let monitor_id: String = monitor_device.DeviceID
+                        let monitor_id: String = monitor_device
+                            .DeviceID
                             .iter()
                             .take_while(|&&c| c != 0)
                             .map(|&c| c as u8 as char)
                             .collect();
 
-                        let gdi_name: String = monitor_device.DeviceString
+                        let gdi_name: String = monitor_device
+                            .DeviceString
                             .iter()
                             .take_while(|&&c| c != 0)
                             .map(|&c| c as u8 as char)
@@ -1551,7 +1630,8 @@ impl HardwareCollector {
 
                         // Try to find EDID info by matching DeviceID
                         // DeviceID format: "MONITOR\DELA1A2\{GUID}"
-                        let (edid_manufacturer, edid_name) = edid_info.iter()
+                        let (edid_manufacturer, edid_name) = edid_info
+                            .iter()
                             .find(|(key, _)| monitor_id.contains(key.as_str()))
                             .map(|(_, (mfg, name))| (Some(mfg.clone()), Some(name.clone())))
                             .unwrap_or((None, None));
@@ -1593,7 +1673,8 @@ impl HardwareCollector {
 
                 // If no monitors found for this adapter, create a generic entry
                 if !found_monitor {
-                    let adapter_name_str: String = adapter_device.DeviceName
+                    let adapter_name_str: String = adapter_device
+                        .DeviceName
                         .iter()
                         .take_while(|&&c| c != 0)
                         .map(|&c| c as u8 as char)
@@ -1730,15 +1811,30 @@ mod tests {
     #[test]
     fn test_extract_speed_from_part_number() {
         // DDR5 speeds
-        assert_eq!(HardwareCollector::extract_speed_from_part_number("FLBD516G6000HC38GBKT"), 6000);
-        assert_eq!(HardwareCollector::extract_speed_from_part_number("CMK32GX5M2B5600C36"), 5600);
+        assert_eq!(
+            HardwareCollector::extract_speed_from_part_number("FLBD516G6000HC38GBKT"),
+            6000
+        );
+        assert_eq!(
+            HardwareCollector::extract_speed_from_part_number("CMK32GX5M2B5600C36"),
+            5600
+        );
 
         // DDR4 speeds
-        assert_eq!(HardwareCollector::extract_speed_from_part_number("CMK16GX4M2B3200C16"), 3200);
-        assert_eq!(HardwareCollector::extract_speed_from_part_number("F4-3600C16D-16GTZNC"), 3600);
+        assert_eq!(
+            HardwareCollector::extract_speed_from_part_number("CMK16GX4M2B3200C16"),
+            3200
+        );
+        assert_eq!(
+            HardwareCollector::extract_speed_from_part_number("F4-3600C16D-16GTZNC"),
+            3600
+        );
 
         // No valid speed found
-        assert_eq!(HardwareCollector::extract_speed_from_part_number("RANDOMPART123"), 0);
+        assert_eq!(
+            HardwareCollector::extract_speed_from_part_number("RANDOMPART123"),
+            0
+        );
         assert_eq!(HardwareCollector::extract_speed_from_part_number(""), 0);
     }
 
@@ -1821,29 +1917,60 @@ mod tests {
     #[cfg(target_os = "windows")]
     #[test]
     fn test_extract_gpu_vendor() {
-        assert_eq!(HardwareCollector::extract_gpu_vendor("NVIDIA Corporation"), Some("NVIDIA".to_string()));
-        assert_eq!(HardwareCollector::extract_gpu_vendor("AMD Radeon"), Some("AMD".to_string()));
-        assert_eq!(HardwareCollector::extract_gpu_vendor("ATI Technologies"), Some("AMD".to_string()));
-        assert_eq!(HardwareCollector::extract_gpu_vendor("Intel Corporation"), Some("Intel".to_string()));
-        assert_eq!(HardwareCollector::extract_gpu_vendor("CustomVendor"), Some("CustomVendor".to_string()));
+        assert_eq!(
+            HardwareCollector::extract_gpu_vendor("NVIDIA Corporation"),
+            Some("NVIDIA".to_string())
+        );
+        assert_eq!(
+            HardwareCollector::extract_gpu_vendor("AMD Radeon"),
+            Some("AMD".to_string())
+        );
+        assert_eq!(
+            HardwareCollector::extract_gpu_vendor("ATI Technologies"),
+            Some("AMD".to_string())
+        );
+        assert_eq!(
+            HardwareCollector::extract_gpu_vendor("Intel Corporation"),
+            Some("Intel".to_string())
+        );
+        assert_eq!(
+            HardwareCollector::extract_gpu_vendor("CustomVendor"),
+            Some("CustomVendor".to_string())
+        );
     }
 
     #[cfg(target_os = "windows")]
     #[test]
     fn test_get_gpu_driver_link() {
-        assert!(HardwareCollector::get_gpu_driver_link("NVIDIA", "").unwrap().contains("nvidia.com"));
-        assert!(HardwareCollector::get_gpu_driver_link("AMD", "").unwrap().contains("amd.com"));
-        assert!(HardwareCollector::get_gpu_driver_link("Intel", "").unwrap().contains("intel.com"));
+        assert!(HardwareCollector::get_gpu_driver_link("NVIDIA", "")
+            .unwrap()
+            .contains("nvidia.com"));
+        assert!(HardwareCollector::get_gpu_driver_link("AMD", "")
+            .unwrap()
+            .contains("amd.com"));
+        assert!(HardwareCollector::get_gpu_driver_link("Intel", "")
+            .unwrap()
+            .contains("intel.com"));
         assert!(HardwareCollector::get_gpu_driver_link("Unknown", "").is_none());
     }
 
     #[cfg(target_os = "windows")]
     #[test]
     fn test_get_motherboard_support_url() {
-        assert!(HardwareCollector::get_motherboard_support_url("ASUS", "").unwrap().contains("asus.com"));
-        assert!(HardwareCollector::get_motherboard_support_url("MSI", "").unwrap().contains("msi.com"));
-        assert!(HardwareCollector::get_motherboard_support_url("Gigabyte", "").unwrap().contains("gigabyte.com"));
-        assert!(HardwareCollector::get_motherboard_support_url("ASRock", "").unwrap().contains("asrock.com"));
+        assert!(HardwareCollector::get_motherboard_support_url("ASUS", "")
+            .unwrap()
+            .contains("asus.com"));
+        assert!(HardwareCollector::get_motherboard_support_url("MSI", "")
+            .unwrap()
+            .contains("msi.com"));
+        assert!(
+            HardwareCollector::get_motherboard_support_url("Gigabyte", "")
+                .unwrap()
+                .contains("gigabyte.com")
+        );
+        assert!(HardwareCollector::get_motherboard_support_url("ASRock", "")
+            .unwrap()
+            .contains("asrock.com"));
         assert!(HardwareCollector::get_motherboard_support_url("Unknown", "").is_none());
     }
 

@@ -39,11 +39,7 @@ pub fn set_adapter_enabled(adapter_name: String, enabled: bool) -> Result<bool, 
             .map_err(|e| format!("Failed to execute netsh: {}", e))?;
 
         if output.status.success() {
-            log::info!(
-                "Successfully {} adapter: {}",
-                action,
-                adapter_name
-            );
+            log::info!("Successfully {} adapter: {}", action, adapter_name);
             Ok(true)
         } else {
             let stderr = String::from_utf8_lossy(&output.stderr);
@@ -72,7 +68,11 @@ pub fn set_adapter_enabled(adapter_name: String, enabled: bool) -> Result<bool, 
                     adapter_name,
                     error_msg
                 );
-                Err(format!("Failed to {} adapter: {}", action, error_msg.trim()))
+                Err(format!(
+                    "Failed to {} adapter: {}",
+                    action,
+                    error_msg.trim()
+                ))
             }
         }
     }

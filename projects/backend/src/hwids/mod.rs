@@ -11,7 +11,7 @@ mod updater;
 mod usb_ids;
 
 pub use pci_ids::PciIdDatabase;
-pub use updater::{update_databases, needs_update, UpdateResult};
+pub use updater::{needs_update, update_databases, UpdateResult};
 pub use usb_ids::UsbIdDatabase;
 
 use std::path::PathBuf;

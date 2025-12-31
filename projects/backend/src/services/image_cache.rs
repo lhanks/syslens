@@ -4,11 +4,11 @@
 
 use anyhow::{Context, Result};
 use sha2::{Digest, Sha256};
+use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::{Duration, SystemTime};
 use tokio::sync::RwLock;
-use std::collections::HashMap;
 
 /// Statistics for image cache operations.
 #[derive(Debug, Default)]
@@ -63,8 +63,7 @@ impl ImageCache {
     /// Create a new ImageCache with a custom max size.
     pub fn with_max_size(max_size_bytes: u64) -> Result<Self> {
         let cache_dir = Self::get_cache_dir()?;
-        std::fs::create_dir_all(&cache_dir)
-            .context("Failed to create image cache directory")?;
+        std::fs::create_dir_all(&cache_dir).context("Failed to create image cache directory")?;
 
         let client = reqwest::Client::builder()
             .timeout(Duration::from_secs(30))
@@ -104,11 +103,7 @@ impl ImageCache {
     }
 
     /// Generate a cache key from device type and identifier.
-    pub fn generate_device_cache_key(
-        device_type: &str,
-        manufacturer: &str,
-        model: &str,
-    ) -> String {
+    pub fn generate_device_cache_key(device_type: &str, manufacturer: &str, model: &str) -> String {
         let mut hasher = Sha256::new();
         hasher.update(device_type.to_lowercase().as_bytes());
         hasher.update(b"|");
@@ -165,7 +160,8 @@ impl ImageCache {
         self.stats.misses.fetch_add(1, Ordering::Relaxed);
 
         // Download the image
-        let response = self.client
+        let response = self
+            .client
             .get(url)
             .send()
             .await
@@ -187,7 +183,10 @@ impl ImageCache {
         let file_path = self.cache_dir.join(format!("{}.{}", cache_key, extension));
 
         // Download bytes
-        let bytes = response.bytes().await.context("Failed to read image bytes")?;
+        let bytes = response
+            .bytes()
+            .await
+            .context("Failed to read image bytes")?;
         let file_size = bytes.len() as u64;
 
         // Validate it's actually an image
@@ -202,7 +201,9 @@ impl ImageCache {
             .context("Failed to write image to cache")?;
 
         self.stats.downloads.fetch_add(1, Ordering::Relaxed);
-        self.stats.total_bytes_cached.fetch_add(file_size, Ordering::Relaxed);
+        self.stats
+            .total_bytes_cached
+            .fetch_add(file_size, Ordering::Relaxed);
 
         // Generate thumbnail
         let thumbnail_path = self.generate_thumbnail(&file_path, 128).await.ok();
@@ -256,7 +257,8 @@ impl ImageCache {
         self.stats.misses.fetch_add(1, Ordering::Relaxed);
 
         // Download the image
-        let response = self.client
+        let response = self
+            .client
             .get(url)
             .send()
             .await
@@ -278,7 +280,10 @@ impl ImageCache {
         let file_path = self.cache_dir.join(format!("{}.{}", cache_key, extension));
 
         // Download bytes
-        let bytes = response.bytes().await.context("Failed to read image bytes")?;
+        let bytes = response
+            .bytes()
+            .await
+            .context("Failed to read image bytes")?;
         let file_size = bytes.len() as u64;
 
         // Validate it's actually an image
@@ -293,7 +298,9 @@ impl ImageCache {
             .context("Failed to write image to cache")?;
 
         self.stats.downloads.fetch_add(1, Ordering::Relaxed);
-        self.stats.total_bytes_cached.fetch_add(file_size, Ordering::Relaxed);
+        self.stats
+            .total_bytes_cached
+            .fetch_add(file_size, Ordering::Relaxed);
 
         // Generate thumbnail
         let thumbnail_path = self.generate_thumbnail(&file_path, 128).await.ok();
@@ -316,7 +323,12 @@ impl ImageCache {
         // Save cache index
         self.save_cache_index().await?;
 
-        log::info!("Cached image with key {}: {} -> {:?}", cache_key, url, file_path);
+        log::info!(
+            "Cached image with key {}: {} -> {:?}",
+            cache_key,
+            url,
+            file_path
+        );
 
         Ok(ImageCacheResult {
             cache_key: cache_key.to_string(),
@@ -333,8 +345,7 @@ impl ImageCache {
 
         // Run image processing in blocking task
         tokio::task::spawn_blocking(move || {
-            let img = image::open(&image_path)
-                .context("Failed to open image for thumbnail")?;
+            let img = image::open(&image_path).context("Failed to open image for thumbnail")?;
 
             let thumb = img.thumbnail(size, size);
 
@@ -344,7 +355,8 @@ impl ImageCache {
                 .unwrap_or("unknown");
 
             let thumb_path = cache_dir.join(format!("{}_thumb.png", file_stem));
-            thumb.save(&thumb_path)
+            thumb
+                .save(&thumb_path)
                 .context("Failed to save thumbnail")?;
 
             Ok(thumb_path)
@@ -370,9 +382,7 @@ impl ImageCache {
         let is_gif = bytes.starts_with(b"GIF87a") || bytes.starts_with(b"GIF89a");
 
         // WebP: RIFF....WEBP
-        let is_webp = bytes.len() >= 12
-            && bytes.starts_with(b"RIFF")
-            && &bytes[8..12] == b"WEBP";
+        let is_webp = bytes.len() >= 12 && bytes.starts_with(b"RIFF") && &bytes[8..12] == b"WEBP";
 
         if !is_png && !is_jpeg && !is_gif && !is_webp {
             anyhow::bail!("Invalid or unsupported image format");
@@ -517,8 +527,8 @@ impl ImageCache {
         let entries: Vec<CachedImageInfoSerializable> =
             files.values().cloned().map(|i| i.into()).collect();
 
-        let content = serde_json::to_string_pretty(&entries)
-            .context("Failed to serialize cache index")?;
+        let content =
+            serde_json::to_string_pretty(&entries).context("Failed to serialize cache index")?;
 
         let index_path = self.cache_dir.join("cache_index.json");
         tokio::fs::write(&index_path, content)
@@ -634,7 +644,10 @@ mod tests {
         assert_eq!(ImageCache::mime_to_extension("image/jpeg"), "jpg");
         assert_eq!(ImageCache::mime_to_extension("image/gif"), "gif");
         assert_eq!(ImageCache::mime_to_extension("image/webp"), "webp");
-        assert_eq!(ImageCache::mime_to_extension("application/octet-stream"), "jpg");
+        assert_eq!(
+            ImageCache::mime_to_extension("application/octet-stream"),
+            "jpg"
+        );
     }
 
     #[test]

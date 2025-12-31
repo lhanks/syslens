@@ -50,15 +50,28 @@ impl MemorySource {
     fn detect_manufacturer(manufacturer: &str, model: &str) -> Option<Manufacturer> {
         let combined = format!("{} {}", manufacturer, model).to_lowercase();
 
-        if combined.contains("corsair") || combined.contains("vengeance") || combined.contains("dominator") {
+        if combined.contains("corsair")
+            || combined.contains("vengeance")
+            || combined.contains("dominator")
+        {
             Some(Manufacturer::Corsair)
-        } else if combined.contains("g.skill") || combined.contains("gskill") || combined.contains("trident") || combined.contains("ripjaws") {
+        } else if combined.contains("g.skill")
+            || combined.contains("gskill")
+            || combined.contains("trident")
+            || combined.contains("ripjaws")
+        {
             Some(Manufacturer::GSkill)
-        } else if combined.contains("kingston") || combined.contains("fury") || combined.contains("hyperx") {
+        } else if combined.contains("kingston")
+            || combined.contains("fury")
+            || combined.contains("hyperx")
+        {
             Some(Manufacturer::Kingston)
         } else if combined.contains("crucial") || combined.contains("ballistix") {
             Some(Manufacturer::Crucial)
-        } else if combined.contains("teamgroup") || combined.contains("team") || combined.contains("t-force") {
+        } else if combined.contains("teamgroup")
+            || combined.contains("team")
+            || combined.contains("t-force")
+        {
             Some(Manufacturer::TeamGroup)
         } else if combined.contains("samsung") {
             Some(Manufacturer::Samsung)
@@ -92,7 +105,8 @@ impl MemorySource {
         ];
 
         for (pattern, formatted) in patterns {
-            if model_upper.contains(pattern) || model_upper.contains(&pattern.replace("GB", " GB")) {
+            if model_upper.contains(pattern) || model_upper.contains(&pattern.replace("GB", " GB"))
+            {
                 return Some(formatted.to_string());
             }
         }
@@ -188,7 +202,10 @@ impl MemorySource {
     }
 
     /// Build specs from model name parsing.
-    fn build_basic_specs(manufacturer: &str, model: &str) -> (HashMap<String, String>, Vec<SpecCategory>) {
+    fn build_basic_specs(
+        manufacturer: &str,
+        model: &str,
+    ) -> (HashMap<String, String>, Vec<SpecCategory>) {
         let mut specs = HashMap::new();
         let mut general_specs = Vec::new();
 
@@ -401,19 +418,37 @@ mod tests {
 
     #[test]
     fn test_extract_capacity() {
-        assert_eq!(MemorySource::extract_capacity("Vengeance 32GB DDR5"), Some("32 GB".to_string()));
-        assert_eq!(MemorySource::extract_capacity("16GB DDR4-3600"), Some("16 GB".to_string()));
+        assert_eq!(
+            MemorySource::extract_capacity("Vengeance 32GB DDR5"),
+            Some("32 GB".to_string())
+        );
+        assert_eq!(
+            MemorySource::extract_capacity("16GB DDR4-3600"),
+            Some("16 GB".to_string())
+        );
     }
 
     #[test]
     fn test_extract_speed() {
-        assert_eq!(MemorySource::extract_speed("DDR5-6000 RGB"), Some("DDR5-6000".to_string()));
-        assert_eq!(MemorySource::extract_speed("DDR4-3600 CL16"), Some("DDR4-3600".to_string()));
+        assert_eq!(
+            MemorySource::extract_speed("DDR5-6000 RGB"),
+            Some("DDR5-6000".to_string())
+        );
+        assert_eq!(
+            MemorySource::extract_speed("DDR4-3600 CL16"),
+            Some("DDR4-3600".to_string())
+        );
     }
 
     #[test]
     fn test_extract_kit_config() {
-        assert_eq!(MemorySource::extract_kit_config("2x16GB DDR5"), Some("2x16GB".to_string()));
-        assert_eq!(MemorySource::extract_kit_config("4x8GB Kit"), Some("4x8GB".to_string()));
+        assert_eq!(
+            MemorySource::extract_kit_config("2x16GB DDR5"),
+            Some("2x16GB".to_string())
+        );
+        assert_eq!(
+            MemorySource::extract_kit_config("4x8GB Kit"),
+            Some("4x8GB".to_string())
+        );
     }
 }

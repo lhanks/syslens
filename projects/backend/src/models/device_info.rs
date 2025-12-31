@@ -199,7 +199,6 @@ pub enum ImageType {
     Other,
 }
 
-
 /// A single image entry with metadata
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -413,8 +412,14 @@ mod tests {
     #[test]
     fn test_data_source_display() {
         assert_eq!(format!("{}", DataSource::LocalDatabase), "Local Database");
-        assert_eq!(format!("{}", DataSource::ManufacturerWebsite), "Manufacturer Website");
-        assert_eq!(format!("{}", DataSource::ThirdPartyDatabase), "Third-Party Database");
+        assert_eq!(
+            format!("{}", DataSource::ManufacturerWebsite),
+            "Manufacturer Website"
+        );
+        assert_eq!(
+            format!("{}", DataSource::ThirdPartyDatabase),
+            "Third-Party Database"
+        );
         assert_eq!(format!("{}", DataSource::AiAgent), "AI Agent");
         assert_eq!(format!("{}", DataSource::Cache), "Cache");
     }
@@ -469,28 +474,30 @@ mod tests {
         assert!(categories.get_by_type(&DeviceType::Storage).is_empty());
 
         // Test get_by_type_mut allows modification
-        categories.get_by_type_mut(&DeviceType::Cpu).push(DeviceDeepInfo {
-            device_id: "test-cpu".to_string(),
-            device_type: DeviceType::Cpu,
-            identifier: DeviceIdentifier {
-                manufacturer: "Intel".to_string(),
-                model: "Test CPU".to_string(),
-                part_number: None,
-                serial_number: None,
-                hardware_ids: vec![],
-            },
-            specifications: None,
-            drivers: None,
-            documentation: None,
-            images: None,
-            metadata: DataMetadata {
-                source: DataSource::LocalDatabase,
-                last_updated: Utc::now(),
-                expires_at: Utc::now(),
-                source_url: None,
-                ai_confidence: None,
-            },
-        });
+        categories
+            .get_by_type_mut(&DeviceType::Cpu)
+            .push(DeviceDeepInfo {
+                device_id: "test-cpu".to_string(),
+                device_type: DeviceType::Cpu,
+                identifier: DeviceIdentifier {
+                    manufacturer: "Intel".to_string(),
+                    model: "Test CPU".to_string(),
+                    part_number: None,
+                    serial_number: None,
+                    hardware_ids: vec![],
+                },
+                specifications: None,
+                drivers: None,
+                documentation: None,
+                images: None,
+                metadata: DataMetadata {
+                    source: DataSource::LocalDatabase,
+                    last_updated: Utc::now(),
+                    expires_at: Utc::now(),
+                    source_url: None,
+                    ai_confidence: None,
+                },
+            });
 
         assert_eq!(categories.get_by_type(&DeviceType::Cpu).len(), 1);
     }

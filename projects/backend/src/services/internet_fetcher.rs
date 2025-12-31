@@ -1,9 +1,8 @@
 //! Internet fetcher for device information from manufacturer websites.
 
 use crate::models::{
-    DataMetadata, DataSource, DeviceDeepInfo, DeviceIdentifier, DeviceSpecifications,
-    DeviceType, DocumentationLinks, DriverInfo, ProductImages, SpecCategory,
-    SpecItem,
+    DataMetadata, DataSource, DeviceDeepInfo, DeviceIdentifier, DeviceSpecifications, DeviceType,
+    DocumentationLinks, DriverInfo, ProductImages, SpecCategory, SpecItem,
 };
 use anyhow::{Context, Result};
 use chrono::{Duration, Utc};
@@ -75,10 +74,17 @@ impl InternetFetcher {
         if model_lower.contains("radeon") || model_lower.contains("ryzen") {
             return "amd".to_string();
         }
-        if model_lower.contains("geforce") || model_lower.contains("rtx") || model_lower.contains("gtx") {
+        if model_lower.contains("geforce")
+            || model_lower.contains("rtx")
+            || model_lower.contains("gtx")
+        {
             return "nvidia".to_string();
         }
-        if model_lower.contains("core i") || model_lower.contains("xeon") || model_lower.contains("celeron") || model_lower.contains("pentium") {
+        if model_lower.contains("core i")
+            || model_lower.contains("xeon")
+            || model_lower.contains("celeron")
+            || model_lower.contains("pentium")
+        {
             return "intel".to_string();
         }
 
@@ -92,22 +98,34 @@ impl InternetFetcher {
         identifier: &DeviceIdentifier,
         device_type: &DeviceType,
     ) -> Result<DeviceDeepInfo> {
-        let manufacturer = Self::normalize_manufacturer(&identifier.manufacturer, &identifier.model);
-        log::debug!("Normalized manufacturer: {} -> {}", identifier.manufacturer, manufacturer);
+        let manufacturer =
+            Self::normalize_manufacturer(&identifier.manufacturer, &identifier.model);
+        log::debug!(
+            "Normalized manufacturer: {} -> {}",
+            identifier.manufacturer,
+            manufacturer
+        );
 
         match device_type {
             DeviceType::Cpu => match manufacturer.as_str() {
                 "intel" => self.fetch_intel_cpu(&identifier.model).await,
                 "amd" => self.fetch_amd_cpu(&identifier.model).await,
-                _ => Err(anyhow::anyhow!("Unsupported CPU manufacturer: {}", manufacturer)),
+                _ => Err(anyhow::anyhow!(
+                    "Unsupported CPU manufacturer: {}",
+                    manufacturer
+                )),
             },
             DeviceType::Gpu => match manufacturer.as_str() {
                 "nvidia" => self.fetch_nvidia_gpu(&identifier.model).await,
                 "amd" => self.fetch_amd_gpu(&identifier.model).await,
-                _ => Err(anyhow::anyhow!("Unsupported GPU manufacturer: {}", manufacturer)),
+                _ => Err(anyhow::anyhow!(
+                    "Unsupported GPU manufacturer: {}",
+                    manufacturer
+                )),
             },
             DeviceType::Motherboard => {
-                self.fetch_motherboard_info(&identifier.manufacturer, &identifier.model).await
+                self.fetch_motherboard_info(&identifier.manufacturer, &identifier.model)
+                    .await
             }
             _ => Err(anyhow::anyhow!(
                 "Internet fetch not yet implemented for {:?}",
@@ -165,7 +183,9 @@ impl InternetFetcher {
                 let model_lower = model.to_lowercase();
 
                 // Check if this link matches our model
-                if text.contains(&model_lower) || href.to_lowercase().contains(&model_lower.replace(" ", "-")) {
+                if text.contains(&model_lower)
+                    || href.to_lowercase().contains(&model_lower.replace(" ", "-"))
+                {
                     let full_url = if href.starts_with("http") {
                         href.to_string()
                     } else {
@@ -176,7 +196,10 @@ impl InternetFetcher {
             }
         }
 
-        Err(anyhow::anyhow!("Could not find Intel product page for: {}", model))
+        Err(anyhow::anyhow!(
+            "Could not find Intel product page for: {}",
+            model
+        ))
     }
 
     /// Parse Intel product page for specifications (static version for spawn_blocking).
@@ -198,9 +221,13 @@ impl InternetFetcher {
             let mut section_specs = Vec::new();
 
             for row in section.select(&row_selector) {
-                let label = row.select(&label_selector).next()
+                let label = row
+                    .select(&label_selector)
+                    .next()
                     .map(|e| e.text().collect::<String>().trim().to_string());
-                let value = row.select(&value_selector).next()
+                let value = row
+                    .select(&value_selector)
+                    .next()
                     .map(|e| e.text().collect::<String>().trim().to_string());
 
                 if let (Some(label), Some(value)) = (label, value) {
@@ -218,7 +245,9 @@ impl InternetFetcher {
             if !section_specs.is_empty() {
                 // Try to get section title
                 let title_selector = Selector::parse("h2, .section-title").unwrap();
-                let section_name = section.select(&title_selector).next()
+                let section_name = section
+                    .select(&title_selector)
+                    .next()
                     .map(|e| e.text().collect::<String>().trim().to_string())
                     .unwrap_or_else(|| "Specifications".to_string());
 
@@ -231,7 +260,9 @@ impl InternetFetcher {
 
         // Extract product image
         let image_selector = Selector::parse(".product-image img, .blade-media img").unwrap();
-        let primary_image = document.select(&image_selector).next()
+        let primary_image = document
+            .select(&image_selector)
+            .next()
             .and_then(|e| e.value().attr("src"))
             .map(|s| {
                 if s.starts_with("http") {
@@ -330,7 +361,7 @@ impl InternetFetcher {
         // "ryzen-7-7800x3d" -> 7800 -> 7000 series
         if let Some(idx) = model_lower.find("ryzen-") {
             let after_ryzen = &model_lower[idx + 6..]; // Skip "ryzen-"
-            // Skip the tier (5, 7, 9) and the dash
+                                                       // Skip the tier (5, 7, 9) and the dash
             if let Some(dash_idx) = after_ryzen.find('-') {
                 let model_number = &after_ryzen[dash_idx + 1..];
                 // Get first digit of model number
@@ -387,14 +418,19 @@ impl InternetFetcher {
                     .await
                     .context("Spawn blocking failed")?
                 } else {
-                    log::warn!("AMD product page returned status {}, falling back to TechPowerUp", status);
-                    self.fetch_from_techpowerup(&cleaned_model, &DeviceType::Cpu).await
+                    log::warn!(
+                        "AMD product page returned status {}, falling back to TechPowerUp",
+                        status
+                    );
+                    self.fetch_from_techpowerup(&cleaned_model, &DeviceType::Cpu)
+                        .await
                 }
             }
             Err(e) => {
                 log::warn!("AMD request failed: {}, falling back to TechPowerUp", e);
                 // Fallback to TechPowerUp with cleaned model name
-                self.fetch_from_techpowerup(&cleaned_model, &DeviceType::Cpu).await
+                self.fetch_from_techpowerup(&cleaned_model, &DeviceType::Cpu)
+                    .await
             }
         }
     }
@@ -466,7 +502,9 @@ impl InternetFetcher {
                 download_url: None,
                 release_date: None,
                 release_notes_url: None,
-                driver_page_url: Some("https://www.amd.com/en/support/downloads/drivers.html".to_string()),
+                driver_page_url: Some(
+                    "https://www.amd.com/en/support/downloads/drivers.html".to_string(),
+                ),
                 update_available: false,
             }),
             documentation: Some(DocumentationLinks {
@@ -535,10 +573,17 @@ impl InternetFetcher {
 
         // Check for GTX series
         if model_lower.contains("gtx") {
-            if model_lower.contains("1660") || model_lower.contains("1650") || model_lower.contains("1630") {
+            if model_lower.contains("1660")
+                || model_lower.contains("1650")
+                || model_lower.contains("1630")
+            {
                 return "16-series";
             }
-            if model_lower.contains("1080") || model_lower.contains("1070") || model_lower.contains("1060") || model_lower.contains("1050") {
+            if model_lower.contains("1080")
+                || model_lower.contains("1070")
+                || model_lower.contains("1060")
+                || model_lower.contains("1050")
+            {
                 return "10-series";
             }
         }
@@ -584,15 +629,20 @@ impl InternetFetcher {
                     .await
                     .context("Spawn blocking failed")?
                 } else {
-                    log::warn!("NVIDIA product page returned status {}, falling back to TechPowerUp", status);
+                    log::warn!(
+                        "NVIDIA product page returned status {}, falling back to TechPowerUp",
+                        status
+                    );
                     // Fallback to TechPowerUp with cleaned model name
-                    self.fetch_from_techpowerup(&cleaned_model, &DeviceType::Gpu).await
+                    self.fetch_from_techpowerup(&cleaned_model, &DeviceType::Gpu)
+                        .await
                 }
             }
             Err(e) => {
                 log::warn!("NVIDIA request failed: {}, falling back to TechPowerUp", e);
                 // Fallback to TechPowerUp with cleaned model name
-                self.fetch_from_techpowerup(&cleaned_model, &DeviceType::Gpu).await
+                self.fetch_from_techpowerup(&cleaned_model, &DeviceType::Gpu)
+                    .await
             }
         }
     }
@@ -611,9 +661,13 @@ impl InternetFetcher {
         let value_selector = Selector::parse(".spec-value, td:last-child").unwrap();
 
         for row in document.select(&spec_selector) {
-            let label = row.select(&label_selector).next()
+            let label = row
+                .select(&label_selector)
+                .next()
                 .map(|e| e.text().collect::<String>().trim().to_string());
-            let value = row.select(&value_selector).next()
+            let value = row
+                .select(&value_selector)
+                .next()
                 .map(|e| e.text().collect::<String>().trim().to_string());
 
             if let (Some(label), Some(value)) = (label, value) {
@@ -639,11 +693,14 @@ impl InternetFetcher {
                 specs: specs.clone(),
                 categories: vec![SpecCategory {
                     name: "GPU Specifications".to_string(),
-                    specs: specs.iter().map(|(k, v)| SpecItem {
-                        label: k.clone(),
-                        value: v.clone(),
-                        unit: None,
-                    }).collect(),
+                    specs: specs
+                        .iter()
+                        .map(|(k, v)| SpecItem {
+                            label: k.clone(),
+                            value: v.clone(),
+                            unit: None,
+                        })
+                        .collect(),
                 }],
                 description: None,
                 release_date: None,
@@ -686,7 +743,11 @@ impl InternetFetcher {
     }
 
     /// Fetch motherboard information from manufacturer website.
-    async fn fetch_motherboard_info(&self, manufacturer: &str, model: &str) -> Result<DeviceDeepInfo> {
+    async fn fetch_motherboard_info(
+        &self,
+        manufacturer: &str,
+        model: &str,
+    ) -> Result<DeviceDeepInfo> {
         log::info!("Fetching motherboard info for: {} {}", manufacturer, model);
 
         let mfr_lower = manufacturer.to_lowercase();
@@ -696,7 +757,10 @@ impl InternetFetcher {
             "msi" => self.fetch_msi_motherboard(model).await,
             "gigabyte" => self.fetch_gigabyte_motherboard(model).await,
             "asrock" => self.fetch_asrock_motherboard(model).await,
-            _ => Err(anyhow::anyhow!("Unsupported motherboard manufacturer: {}", manufacturer)),
+            _ => Err(anyhow::anyhow!(
+                "Unsupported motherboard manufacturer: {}",
+                manufacturer
+            )),
         }
     }
 
@@ -901,7 +965,10 @@ impl InternetFetcher {
                     slugs.push(model_lower.clone());
                     // Try with nvidia-geforce prefix
                     if !model_lower.starts_with("nvidia-") {
-                        slugs.push(format!("nvidia-geforce-{}", model_lower.trim_start_matches("geforce-")));
+                        slugs.push(format!(
+                            "nvidia-geforce-{}",
+                            model_lower.trim_start_matches("geforce-")
+                        ));
                     }
                 } else if model_lower.contains("radeon") || model_lower.contains("rx-") {
                     // For AMD GPUs
@@ -941,15 +1008,27 @@ impl InternetFetcher {
     }
 
     /// Fallback: Fetch from TechPowerUp database.
-    pub async fn fetch_from_techpowerup(&self, model: &str, device_type: &DeviceType) -> Result<DeviceDeepInfo> {
-        log::info!("Fetching from TechPowerUp for: {} ({:?})", model, device_type);
+    pub async fn fetch_from_techpowerup(
+        &self,
+        model: &str,
+        device_type: &DeviceType,
+    ) -> Result<DeviceDeepInfo> {
+        log::info!(
+            "Fetching from TechPowerUp for: {} ({:?})",
+            model,
+            device_type
+        );
         let model = model.to_string();
         let device_type = device_type.clone();
 
         let (db_type, _prefix) = match device_type {
             DeviceType::Cpu => ("cpu-specs", "cpu"),
             DeviceType::Gpu => ("gpu-specs", "gpu"),
-            _ => return Err(anyhow::anyhow!("TechPowerUp only supports CPU and GPU lookups")),
+            _ => {
+                return Err(anyhow::anyhow!(
+                    "TechPowerUp only supports CPU and GPU lookups"
+                ))
+            }
         };
 
         // Try direct URL patterns first (TechPowerUp uses predictable slugs)
@@ -966,7 +1045,12 @@ impl InternetFetcher {
                     let url_final = direct_url.clone();
                     return tokio::task::spawn_blocking(move || {
                         let document = Html::parse_document(&product_html);
-                        Self::parse_techpowerup_page_static(&document, &model_final, &device_type_final, &url_final)
+                        Self::parse_techpowerup_page_static(
+                            &document,
+                            &model_final,
+                            &device_type_final,
+                            &url_final,
+                        )
                     })
                     .await
                     .context("Spawn blocking failed")?;
@@ -999,7 +1083,10 @@ impl InternetFetcher {
                 // Fetch the actual product page
                 let product_response = self.client.get(&product_url).send().await?;
                 if !product_response.status().is_success() {
-                    return Err(anyhow::anyhow!("TechPowerUp product page returned {}", product_response.status()));
+                    return Err(anyhow::anyhow!(
+                        "TechPowerUp product page returned {}",
+                        product_response.status()
+                    ));
                 }
 
                 let product_html = product_response.text().await?;
@@ -1008,7 +1095,12 @@ impl InternetFetcher {
                 let url_final = product_url.clone();
                 tokio::task::spawn_blocking(move || {
                     let document = Html::parse_document(&product_html);
-                    Self::parse_techpowerup_page_static(&document, &model_final, &device_type_final, &url_final)
+                    Self::parse_techpowerup_page_static(
+                        &document,
+                        &model_final,
+                        &device_type_final,
+                        &url_final,
+                    )
                 })
                 .await
                 .context("Spawn blocking failed")?
@@ -1018,14 +1110,24 @@ impl InternetFetcher {
     }
 
     /// Extract the product URL from TechPowerUp search results.
-    fn extract_techpowerup_product_url(document: &Html, model: &str, db_type: &str) -> Result<String> {
+    fn extract_techpowerup_product_url(
+        document: &Html,
+        model: &str,
+        db_type: &str,
+    ) -> Result<String> {
         // TechPowerUp search results have links in a table
         // Look for links that match the model name
-        let link_selector = Selector::parse("table.processors a, table a[href*='specs/'], a[href*='-specs/']").unwrap();
+        let link_selector =
+            Selector::parse("table.processors a, table a[href*='specs/'], a[href*='-specs/']")
+                .unwrap();
         let model_lower = model.to_lowercase();
         let model_parts: Vec<&str> = model_lower.split('-').collect();
 
-        log::debug!("Looking for TechPowerUp product link matching: {} (parts: {:?})", model, model_parts);
+        log::debug!(
+            "Looking for TechPowerUp product link matching: {} (parts: {:?})",
+            model,
+            model_parts
+        );
 
         for element in document.select(&link_selector) {
             if let Some(href) = element.value().attr("href") {
@@ -1034,12 +1136,17 @@ impl InternetFetcher {
 
                 // Check if the link text or href contains the key model parts
                 // For "ryzen-9-9900x", check for "ryzen", "9900x"
-                let key_parts: Vec<&str> = model_parts.iter()
-                    .filter(|p| p.len() > 1 && !["amd", "intel", "nvidia", "9", "7", "5", "3"].contains(p))
+                let key_parts: Vec<&str> = model_parts
+                    .iter()
+                    .filter(|p| {
+                        p.len() > 1 && !["amd", "intel", "nvidia", "9", "7", "5", "3"].contains(p)
+                    })
                     .cloned()
                     .collect();
 
-                let matches = key_parts.iter().all(|part| text.contains(part) || href_lower.contains(part));
+                let matches = key_parts
+                    .iter()
+                    .all(|part| text.contains(part) || href_lower.contains(part));
 
                 if matches && !key_parts.is_empty() {
                     let full_url = if href.starts_with("http") {
@@ -1049,13 +1156,20 @@ impl InternetFetcher {
                     } else {
                         format!("https://www.techpowerup.com/{}/{}", db_type, href)
                     };
-                    log::debug!("Found TechPowerUp product URL: {} (matched text: {})", full_url, text.trim());
+                    log::debug!(
+                        "Found TechPowerUp product URL: {} (matched text: {})",
+                        full_url,
+                        text.trim()
+                    );
                     return Ok(full_url);
                 }
             }
         }
 
-        Err(anyhow::anyhow!("Could not find product link for {} on TechPowerUp search results", model))
+        Err(anyhow::anyhow!(
+            "Could not find product link for {} on TechPowerUp search results",
+            model
+        ))
     }
 
     /// Parse TechPowerUp specification page (static version for spawn_blocking).
@@ -1066,7 +1180,8 @@ impl InternetFetcher {
         source_url: &str,
     ) -> Result<DeviceDeepInfo> {
         // Check for bot verification page indicators
-        let body_text = document.root_element()
+        let body_text = document
+            .root_element()
             .text()
             .collect::<String>()
             .to_lowercase();
@@ -1075,8 +1190,11 @@ impl InternetFetcher {
             || body_text.contains("verify you are human")
             || body_text.contains("please wait")
             || body_text.contains("ddos protection")
-            || body_text.contains("cloudflare") {
-            return Err(anyhow::anyhow!("TechPowerUp returned bot verification page"));
+            || body_text.contains("cloudflare")
+        {
+            return Err(anyhow::anyhow!(
+                "TechPowerUp returned bot verification page"
+            ));
         }
 
         let mut specs = HashMap::new();
@@ -1108,13 +1226,19 @@ impl InternetFetcher {
         }
 
         // Extract manufacturer from specs or model name
-        let manufacturer = specs.get("Manufacturer")
+        let manufacturer = specs
+            .get("Manufacturer")
             .cloned()
             .or_else(|| {
-                if model.to_lowercase().contains("intel") { Some("Intel".to_string()) }
-                else if model.to_lowercase().contains("amd") { Some("AMD".to_string()) }
-                else if model.to_lowercase().contains("nvidia") { Some("NVIDIA".to_string()) }
-                else { None }
+                if model.to_lowercase().contains("intel") {
+                    Some("Intel".to_string())
+                } else if model.to_lowercase().contains("amd") {
+                    Some("AMD".to_string())
+                } else if model.to_lowercase().contains("nvidia") {
+                    Some("NVIDIA".to_string())
+                } else {
+                    None
+                }
             })
             .unwrap_or_else(|| "Unknown".to_string());
 
@@ -1140,11 +1264,14 @@ impl InternetFetcher {
                 specs: specs.clone(),
                 categories: vec![SpecCategory {
                     name: "Specifications".to_string(),
-                    specs: specs.iter().map(|(k, v)| SpecItem {
-                        label: k.clone(),
-                        value: v.clone(),
-                        unit: None,
-                    }).collect(),
+                    specs: specs
+                        .iter()
+                        .map(|(k, v)| SpecItem {
+                            label: k.clone(),
+                            value: v.clone(),
+                            unit: None,
+                        })
+                        .collect(),
                 }],
                 description: None,
                 release_date: specs.get("Release Date").cloned(),

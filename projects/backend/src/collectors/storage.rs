@@ -61,8 +61,8 @@ impl StorageCollector {
             device_id: Option<String>,
             friendly_name: Option<String>,
             firmware_version: Option<String>,
-            media_type: Option<u16>,        // 0=Unspecified, 3=HDD, 4=SSD, 5=SCM
-            bus_type: Option<u16>,          // 17=NVMe, 11=SATA, 7=USB
+            media_type: Option<u16>, // 0=Unspecified, 3=HDD, 4=SSD, 5=SCM
+            bus_type: Option<u16>,   // 17=NVMe, 11=SATA, 7=USB
             health_status: Option<u16>,
             operational_status: Option<Vec<u16>>,
         }
@@ -121,7 +121,9 @@ impl StorageCollector {
                         "SATA" | "IDE" => InterfaceType::SATA,
                         "USB" => InterfaceType::USB,
                         "SCSI" => {
-                            if model.to_uppercase().contains("NVME") || media_type == MediaType::NVMe {
+                            if model.to_uppercase().contains("NVME")
+                                || media_type == MediaType::NVMe
+                            {
                                 InterfaceType::NVMe
                             } else {
                                 InterfaceType::SCSI
@@ -149,7 +151,9 @@ impl StorageCollector {
                         .unwrap_or(PartitionStyle::GPT);
 
                     // Extract manufacturer from model if not provided
-                    let manufacturer = disk.manufacturer.clone()
+                    let manufacturer = disk
+                        .manufacturer
+                        .clone()
                         .filter(|m| !m.is_empty() && m != "(Standard disk drives)")
                         .unwrap_or_else(|| Self::extract_manufacturer(&model));
 
@@ -157,7 +161,12 @@ impl StorageCollector {
                     let firmware = msft_data
                         .and_then(|m| m.firmware_version.clone())
                         .filter(|s| !s.trim().is_empty())
-                        .or_else(|| disk.firmware_revision.clone().map(|s| s.trim().to_string()).filter(|s| !s.is_empty()))
+                        .or_else(|| {
+                            disk.firmware_revision
+                                .clone()
+                                .map(|s| s.trim().to_string())
+                                .filter(|s| !s.is_empty())
+                        })
                         .unwrap_or_else(|| "N/A".to_string());
 
                     // Get status - check MSFT health status
@@ -166,13 +175,16 @@ impl StorageCollector {
                             Some(0) => "Healthy".to_string(),
                             Some(1) => "Warning".to_string(),
                             Some(2) => "Unhealthy".to_string(),
-                            _ => disk.status.clone()
+                            _ => disk
+                                .status
+                                .clone()
                                 .map(|s| s.trim().to_string())
                                 .filter(|s| !s.is_empty())
                                 .unwrap_or_else(|| "OK".to_string()),
                         }
                     } else {
-                        disk.status.clone()
+                        disk.status
+                            .clone()
                             .map(|s| s.trim().to_string())
                             .filter(|s| !s.is_empty())
                             .unwrap_or_else(|| "OK".to_string())
@@ -182,7 +194,9 @@ impl StorageCollector {
                         device_id,
                         model: model.trim().to_string(),
                         manufacturer,
-                        serial_number: disk.serial_number.clone()
+                        serial_number: disk
+                            .serial_number
+                            .clone()
                             .map(|s| s.trim().to_string())
                             .filter(|s| !s.is_empty())
                             .unwrap_or_default(),
@@ -223,18 +237,23 @@ impl StorageCollector {
             .or_else(|_| COMLibrary::without_security())
             .unwrap_or_else(|_| unsafe { COMLibrary::assume_initialized() });
 
-        if let Ok(wmi_con) = WMIConnection::with_namespace_path("ROOT\\Microsoft\\Windows\\Storage", com) {
+        if let Ok(wmi_con) =
+            WMIConnection::with_namespace_path("ROOT\\Microsoft\\Windows\\Storage", com)
+        {
             let query = "SELECT DeviceId, FriendlyName, FirmwareVersion, MediaType, BusType, HealthStatus FROM MSFT_PhysicalDisk";
             if let Ok(results) = wmi_con.raw_query::<MsftPhysicalDisk>(query) {
                 for disk in results {
                     if let Some(id_str) = &disk.device_id {
                         if let Ok(id) = id_str.parse::<u32>() {
-                            disks.insert(id, MsftPhysicalDiskData {
-                                firmware_version: disk.firmware_version,
-                                media_type: disk.media_type,
-                                bus_type: disk.bus_type,
-                                health_status: disk.health_status,
-                            });
+                            disks.insert(
+                                id,
+                                MsftPhysicalDiskData {
+                                    firmware_version: disk.firmware_version,
+                                    media_type: disk.media_type,
+                                    bus_type: disk.bus_type,
+                                    health_status: disk.health_status,
+                                },
+                            );
                         }
                     }
                 }
@@ -263,7 +282,9 @@ impl StorageCollector {
             .unwrap_or_else(|_| unsafe { COMLibrary::assume_initialized() });
 
         // Connect to Storage namespace for MSFT_Disk
-        if let Ok(wmi_con) = WMIConnection::with_namespace_path("ROOT\\Microsoft\\Windows\\Storage", com) {
+        if let Ok(wmi_con) =
+            WMIConnection::with_namespace_path("ROOT\\Microsoft\\Windows\\Storage", com)
+        {
             let query = "SELECT Number, PartitionStyle FROM MSFT_Disk";
             if let Ok(results) = wmi_con.raw_query::<MsftDisk>(query) {
                 for disk in results {
@@ -283,7 +304,11 @@ impl StorageCollector {
     }
 
     #[cfg(target_os = "windows")]
-    fn detect_media_type_from_info(model: &str, interface: &str, media_type_str: Option<&str>) -> MediaType {
+    fn detect_media_type_from_info(
+        model: &str,
+        interface: &str,
+        media_type_str: Option<&str>,
+    ) -> MediaType {
         let model_upper = model.to_uppercase();
         let interface_upper = interface.to_uppercase();
 
@@ -305,7 +330,10 @@ impl StorageCollector {
             }
             if mt_upper.contains("FIXED") {
                 // Could be HDD or SSD - check for known SSD brands
-                let ssd_brands = ["SAMSUNG", "CRUCIAL", "SANDISK", "WD_BLACK", "KINGSTON", "INTEL", "MICRON", "SK HYNIX"];
+                let ssd_brands = [
+                    "SAMSUNG", "CRUCIAL", "SANDISK", "WD_BLACK", "KINGSTON", "INTEL", "MICRON",
+                    "SK HYNIX",
+                ];
                 for brand in ssd_brands {
                     if model_upper.contains(brand) {
                         return MediaType::SSD;
@@ -376,7 +404,10 @@ impl StorageCollector {
 
             // Extract drive letter from mount point
             let mount_point = disk.mount_point().to_string_lossy();
-            let drive_letter = mount_point.chars().next().filter(|c| c.is_ascii_alphabetic());
+            let drive_letter = mount_point
+                .chars()
+                .next()
+                .filter(|c| c.is_ascii_alphabetic());
 
             let volume = Volume {
                 drive_letter,
@@ -429,7 +460,7 @@ impl StorageCollector {
         #[allow(dead_code)]
         struct MsftPhysicalDisk {
             device_id: Option<String>,
-            health_status: Option<u16>,       // 0=Healthy, 1=Warning, 2=Unhealthy
+            health_status: Option<u16>, // 0=Healthy, 1=Warning, 2=Unhealthy
             operational_status: Option<Vec<u16>>,
         }
 
@@ -438,8 +469,8 @@ impl StorageCollector {
         #[allow(dead_code)]
         struct MsftStorageReliabilityCounter {
             device_id: Option<String>,
-            temperature: Option<u16>,         // Kelvin
-            wear: Option<u8>,                 // Percentage used (0-100)
+            temperature: Option<u16>, // Kelvin
+            wear: Option<u8>,         // Percentage used (0-100)
             power_on_hours: Option<u32>,
             start_stop_cycle_count: Option<u32>,
         }
@@ -459,7 +490,9 @@ impl StorageCollector {
             .unwrap_or_else(|_| unsafe { COMLibrary::assume_initialized() });
 
         // Try to get health from MSFT_PhysicalDisk
-        if let Ok(wmi_con) = WMIConnection::with_namespace_path("ROOT\\Microsoft\\Windows\\Storage", com) {
+        if let Ok(wmi_con) =
+            WMIConnection::with_namespace_path("ROOT\\Microsoft\\Windows\\Storage", com)
+        {
             // Get health status
             let query = format!(
                 "SELECT DeviceId, HealthStatus, OperationalStatus FROM MSFT_PhysicalDisk WHERE DeviceId = '{}'",
@@ -533,12 +566,12 @@ impl StorageCollector {
         #[serde(rename_all = "PascalCase")]
         #[allow(dead_code)]
         struct Win32LogicalDisk {
-            device_id: Option<String>,       // Drive letter (e.g., "Z:")
-            drive_type: Option<u32>,         // 4 = Network Drive (used in WHERE clause)
-            provider_name: Option<String>,   // UNC path (e.g., "\\\\server\\share")
-            volume_name: Option<String>,     // Volume label
-            size: Option<u64>,               // Total size in bytes
-            free_space: Option<u64>,         // Free space in bytes
+            device_id: Option<String>,     // Drive letter (e.g., "Z:")
+            drive_type: Option<u32>,       // 4 = Network Drive (used in WHERE clause)
+            provider_name: Option<String>, // UNC path (e.g., "\\\\server\\share")
+            volume_name: Option<String>,   // Volume label
+            size: Option<u64>,             // Total size in bytes
+            free_space: Option<u64>,       // Free space in bytes
         }
 
         let mut network_drives = Vec::new();
@@ -552,7 +585,8 @@ impl StorageCollector {
             let query = "SELECT DeviceID, DriveType, ProviderName, VolumeName, Size, FreeSpace FROM Win32_LogicalDisk WHERE DriveType = 4";
             if let Ok(results) = wmi_con.raw_query::<Win32LogicalDisk>(query) {
                 for disk in results {
-                    let drive_letter = disk.device_id
+                    let drive_letter = disk
+                        .device_id
                         .map(|d| d.trim_end_matches(':').to_string())
                         .unwrap_or_default();
 

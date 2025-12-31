@@ -34,7 +34,10 @@ impl StorageSource {
 
         if combined.contains("samsung") {
             Some(StorageManufacturer::Samsung)
-        } else if combined.contains("western digital") || combined.contains("wd") || combined.contains("sandisk") {
+        } else if combined.contains("western digital")
+            || combined.contains("wd")
+            || combined.contains("sandisk")
+        {
             Some(StorageManufacturer::WesternDigital)
         } else if combined.contains("seagate") {
             Some(StorageManufacturer::Seagate)
@@ -61,11 +64,20 @@ impl StorageSource {
     fn detect_storage_type(model: &str) -> StorageType {
         let model_lower = model.to_lowercase();
 
-        if model_lower.contains("nvme") || model_lower.contains("m.2") || model_lower.contains("pcie") {
+        if model_lower.contains("nvme")
+            || model_lower.contains("m.2")
+            || model_lower.contains("pcie")
+        {
             StorageType::NVMe
         } else if model_lower.contains("sata") || model_lower.contains("ssd") {
             StorageType::SataSsd
-        } else if model_lower.contains("hdd") || model_lower.contains("barracuda") || model_lower.contains("ironwolf") || model_lower.contains("wd red") || model_lower.contains("wd blue") || model_lower.contains("wd black") {
+        } else if model_lower.contains("hdd")
+            || model_lower.contains("barracuda")
+            || model_lower.contains("ironwolf")
+            || model_lower.contains("wd red")
+            || model_lower.contains("wd blue")
+            || model_lower.contains("wd black")
+        {
             StorageType::Hdd
         } else {
             // Default to NVMe for modern drives
@@ -78,7 +90,9 @@ impl StorageSource {
         let model_upper = model.to_uppercase();
 
         // Look for TB patterns
-        let tb_patterns = ["16TB", "14TB", "12TB", "10TB", "8TB", "6TB", "4TB", "2TB", "1TB"];
+        let tb_patterns = [
+            "16TB", "14TB", "12TB", "10TB", "8TB", "6TB", "4TB", "2TB", "1TB",
+        ];
         for pattern in tb_patterns {
             if model_upper.contains(pattern) {
                 return Some(pattern.to_string());
@@ -86,7 +100,9 @@ impl StorageSource {
         }
 
         // Look for GB patterns
-        let gb_patterns = ["960GB", "512GB", "500GB", "480GB", "256GB", "250GB", "240GB", "128GB", "120GB"];
+        let gb_patterns = [
+            "960GB", "512GB", "500GB", "480GB", "256GB", "250GB", "240GB", "128GB", "120GB",
+        ];
         for pattern in gb_patterns {
             if model_upper.contains(pattern) {
                 return Some(pattern.to_string());
@@ -102,11 +118,20 @@ impl StorageSource {
 
         match storage_type {
             StorageType::NVMe => {
-                if model_lower.contains("pcie 5") || model_lower.contains("gen5") || model_lower.contains("gen 5") {
+                if model_lower.contains("pcie 5")
+                    || model_lower.contains("gen5")
+                    || model_lower.contains("gen 5")
+                {
                     "PCIe 5.0 x4 NVMe".to_string()
-                } else if model_lower.contains("pcie 4") || model_lower.contains("gen4") || model_lower.contains("gen 4") {
+                } else if model_lower.contains("pcie 4")
+                    || model_lower.contains("gen4")
+                    || model_lower.contains("gen 4")
+                {
                     "PCIe 4.0 x4 NVMe".to_string()
-                } else if model_lower.contains("pcie 3") || model_lower.contains("gen3") || model_lower.contains("gen 3") {
+                } else if model_lower.contains("pcie 3")
+                    || model_lower.contains("gen3")
+                    || model_lower.contains("gen 3")
+                {
                     "PCIe 3.0 x4 NVMe".to_string()
                 } else {
                     "NVMe".to_string()
@@ -124,7 +149,10 @@ impl StorageSource {
     }
 
     /// Build specs from model name parsing.
-    fn build_specs(manufacturer: &str, model: &str) -> (HashMap<String, String>, Vec<SpecCategory>) {
+    fn build_specs(
+        manufacturer: &str,
+        model: &str,
+    ) -> (HashMap<String, String>, Vec<SpecCategory>) {
         let mut specs = HashMap::new();
         let mut general_specs = Vec::new();
         let mut performance_specs = Vec::new();
@@ -230,30 +258,70 @@ impl StorageSource {
         if model_lower.contains("990 pro") {
             specs.insert("seq_read".to_string(), "7,450 MB/s".to_string());
             specs.insert("seq_write".to_string(), "6,900 MB/s".to_string());
-            performance_specs.push(SpecItem { label: "Sequential Read".to_string(), value: "7,450".to_string(), unit: Some("MB/s".to_string()) });
-            performance_specs.push(SpecItem { label: "Sequential Write".to_string(), value: "6,900".to_string(), unit: Some("MB/s".to_string()) });
+            performance_specs.push(SpecItem {
+                label: "Sequential Read".to_string(),
+                value: "7,450".to_string(),
+                unit: Some("MB/s".to_string()),
+            });
+            performance_specs.push(SpecItem {
+                label: "Sequential Write".to_string(),
+                value: "6,900".to_string(),
+                unit: Some("MB/s".to_string()),
+            });
         } else if model_lower.contains("980 pro") {
             specs.insert("seq_read".to_string(), "7,000 MB/s".to_string());
             specs.insert("seq_write".to_string(), "5,100 MB/s".to_string());
-            performance_specs.push(SpecItem { label: "Sequential Read".to_string(), value: "7,000".to_string(), unit: Some("MB/s".to_string()) });
-            performance_specs.push(SpecItem { label: "Sequential Write".to_string(), value: "5,100".to_string(), unit: Some("MB/s".to_string()) });
+            performance_specs.push(SpecItem {
+                label: "Sequential Read".to_string(),
+                value: "7,000".to_string(),
+                unit: Some("MB/s".to_string()),
+            });
+            performance_specs.push(SpecItem {
+                label: "Sequential Write".to_string(),
+                value: "5,100".to_string(),
+                unit: Some("MB/s".to_string()),
+            });
         } else if model_lower.contains("970 evo") {
             specs.insert("seq_read".to_string(), "3,500 MB/s".to_string());
             specs.insert("seq_write".to_string(), "3,300 MB/s".to_string());
-            performance_specs.push(SpecItem { label: "Sequential Read".to_string(), value: "3,500".to_string(), unit: Some("MB/s".to_string()) });
-            performance_specs.push(SpecItem { label: "Sequential Write".to_string(), value: "3,300".to_string(), unit: Some("MB/s".to_string()) });
+            performance_specs.push(SpecItem {
+                label: "Sequential Read".to_string(),
+                value: "3,500".to_string(),
+                unit: Some("MB/s".to_string()),
+            });
+            performance_specs.push(SpecItem {
+                label: "Sequential Write".to_string(),
+                value: "3,300".to_string(),
+                unit: Some("MB/s".to_string()),
+            });
         }
         // WD Black SN850X / SN770
         else if model_lower.contains("sn850x") {
             specs.insert("seq_read".to_string(), "7,300 MB/s".to_string());
             specs.insert("seq_write".to_string(), "6,600 MB/s".to_string());
-            performance_specs.push(SpecItem { label: "Sequential Read".to_string(), value: "7,300".to_string(), unit: Some("MB/s".to_string()) });
-            performance_specs.push(SpecItem { label: "Sequential Write".to_string(), value: "6,600".to_string(), unit: Some("MB/s".to_string()) });
+            performance_specs.push(SpecItem {
+                label: "Sequential Read".to_string(),
+                value: "7,300".to_string(),
+                unit: Some("MB/s".to_string()),
+            });
+            performance_specs.push(SpecItem {
+                label: "Sequential Write".to_string(),
+                value: "6,600".to_string(),
+                unit: Some("MB/s".to_string()),
+            });
         } else if model_lower.contains("sn770") {
             specs.insert("seq_read".to_string(), "5,150 MB/s".to_string());
             specs.insert("seq_write".to_string(), "4,900 MB/s".to_string());
-            performance_specs.push(SpecItem { label: "Sequential Read".to_string(), value: "5,150".to_string(), unit: Some("MB/s".to_string()) });
-            performance_specs.push(SpecItem { label: "Sequential Write".to_string(), value: "4,900".to_string(), unit: Some("MB/s".to_string()) });
+            performance_specs.push(SpecItem {
+                label: "Sequential Read".to_string(),
+                value: "5,150".to_string(),
+                unit: Some("MB/s".to_string()),
+            });
+            performance_specs.push(SpecItem {
+                label: "Sequential Write".to_string(),
+                value: "4,900".to_string(),
+                unit: Some("MB/s".to_string()),
+            });
         }
         // Generic estimates by type
         else {
@@ -261,21 +329,41 @@ impl StorageSource {
                 StorageType::NVMe => {
                     if model_lower.contains("gen5") || model_lower.contains("pcie 5") {
                         specs.insert("seq_read".to_string(), "~10,000 MB/s".to_string());
-                        performance_specs.push(SpecItem { label: "Sequential Read (est.)".to_string(), value: "~10,000".to_string(), unit: Some("MB/s".to_string()) });
+                        performance_specs.push(SpecItem {
+                            label: "Sequential Read (est.)".to_string(),
+                            value: "~10,000".to_string(),
+                            unit: Some("MB/s".to_string()),
+                        });
                     } else if model_lower.contains("gen4") || model_lower.contains("pcie 4") {
                         specs.insert("seq_read".to_string(), "~7,000 MB/s".to_string());
-                        performance_specs.push(SpecItem { label: "Sequential Read (est.)".to_string(), value: "~7,000".to_string(), unit: Some("MB/s".to_string()) });
+                        performance_specs.push(SpecItem {
+                            label: "Sequential Read (est.)".to_string(),
+                            value: "~7,000".to_string(),
+                            unit: Some("MB/s".to_string()),
+                        });
                     }
                 }
                 StorageType::SataSsd => {
                     specs.insert("seq_read".to_string(), "~550 MB/s".to_string());
                     specs.insert("seq_write".to_string(), "~520 MB/s".to_string());
-                    performance_specs.push(SpecItem { label: "Sequential Read (est.)".to_string(), value: "~550".to_string(), unit: Some("MB/s".to_string()) });
-                    performance_specs.push(SpecItem { label: "Sequential Write (est.)".to_string(), value: "~520".to_string(), unit: Some("MB/s".to_string()) });
+                    performance_specs.push(SpecItem {
+                        label: "Sequential Read (est.)".to_string(),
+                        value: "~550".to_string(),
+                        unit: Some("MB/s".to_string()),
+                    });
+                    performance_specs.push(SpecItem {
+                        label: "Sequential Write (est.)".to_string(),
+                        value: "~520".to_string(),
+                        unit: Some("MB/s".to_string()),
+                    });
                 }
                 StorageType::Hdd => {
                     specs.insert("seq_read".to_string(), "~200 MB/s".to_string());
-                    performance_specs.push(SpecItem { label: "Sequential Read (est.)".to_string(), value: "~200".to_string(), unit: Some("MB/s".to_string()) });
+                    performance_specs.push(SpecItem {
+                        label: "Sequential Read (est.)".to_string(),
+                        value: "~200".to_string(),
+                        unit: Some("MB/s".to_string()),
+                    });
                 }
             }
         }
@@ -284,16 +372,34 @@ impl StorageSource {
     /// Get manufacturer support URL.
     fn get_support_url(mfr: Option<StorageManufacturer>) -> Option<String> {
         match mfr {
-            Some(StorageManufacturer::Samsung) => Some("https://www.samsung.com/us/support/".to_string()),
-            Some(StorageManufacturer::WesternDigital) => Some("https://support-en.wd.com/".to_string()),
-            Some(StorageManufacturer::Seagate) => Some("https://www.seagate.com/support/".to_string()),
-            Some(StorageManufacturer::Crucial) => Some("https://www.crucial.com/support".to_string()),
-            Some(StorageManufacturer::Kingston) => Some("https://www.kingston.com/support".to_string()),
+            Some(StorageManufacturer::Samsung) => {
+                Some("https://www.samsung.com/us/support/".to_string())
+            }
+            Some(StorageManufacturer::WesternDigital) => {
+                Some("https://support-en.wd.com/".to_string())
+            }
+            Some(StorageManufacturer::Seagate) => {
+                Some("https://www.seagate.com/support/".to_string())
+            }
+            Some(StorageManufacturer::Crucial) => {
+                Some("https://www.crucial.com/support".to_string())
+            }
+            Some(StorageManufacturer::Kingston) => {
+                Some("https://www.kingston.com/support".to_string())
+            }
             Some(StorageManufacturer::SKHynix) => Some("https://ssd.skhynix.com/".to_string()),
-            Some(StorageManufacturer::Intel) => Some("https://www.solidigm.com/support.html".to_string()),
-            Some(StorageManufacturer::Toshiba) => Some("https://personal.kioxia.com/support/".to_string()),
-            Some(StorageManufacturer::Corsair) => Some("https://www.corsair.com/support".to_string()),
-            Some(StorageManufacturer::Sabrent) => Some("https://www.sabrent.com/support".to_string()),
+            Some(StorageManufacturer::Intel) => {
+                Some("https://www.solidigm.com/support.html".to_string())
+            }
+            Some(StorageManufacturer::Toshiba) => {
+                Some("https://personal.kioxia.com/support/".to_string())
+            }
+            Some(StorageManufacturer::Corsair) => {
+                Some("https://www.corsair.com/support".to_string())
+            }
+            Some(StorageManufacturer::Sabrent) => {
+                Some("https://www.sabrent.com/support".to_string())
+            }
             None => None,
         }
     }
@@ -374,15 +480,33 @@ mod tests {
 
     #[test]
     fn test_detect_storage_type() {
-        assert!(matches!(StorageSource::detect_storage_type("Samsung 990 Pro NVMe"), StorageType::NVMe));
-        assert!(matches!(StorageSource::detect_storage_type("Crucial MX500 SATA SSD"), StorageType::SataSsd));
-        assert!(matches!(StorageSource::detect_storage_type("Seagate Barracuda 2TB"), StorageType::Hdd));
+        assert!(matches!(
+            StorageSource::detect_storage_type("Samsung 990 Pro NVMe"),
+            StorageType::NVMe
+        ));
+        assert!(matches!(
+            StorageSource::detect_storage_type("Crucial MX500 SATA SSD"),
+            StorageType::SataSsd
+        ));
+        assert!(matches!(
+            StorageSource::detect_storage_type("Seagate Barracuda 2TB"),
+            StorageType::Hdd
+        ));
     }
 
     #[test]
     fn test_extract_capacity() {
-        assert_eq!(StorageSource::extract_capacity("Samsung 990 Pro 2TB"), Some("2TB".to_string()));
-        assert_eq!(StorageSource::extract_capacity("WD Black SN850X 1TB"), Some("1TB".to_string()));
-        assert_eq!(StorageSource::extract_capacity("Crucial MX500 500GB"), Some("500GB".to_string()));
+        assert_eq!(
+            StorageSource::extract_capacity("Samsung 990 Pro 2TB"),
+            Some("2TB".to_string())
+        );
+        assert_eq!(
+            StorageSource::extract_capacity("WD Black SN850X 1TB"),
+            Some("1TB".to_string())
+        );
+        assert_eq!(
+            StorageSource::extract_capacity("Crucial MX500 500GB"),
+            Some("500GB".to_string())
+        );
     }
 }

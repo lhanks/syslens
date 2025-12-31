@@ -2,8 +2,8 @@
 
 use crate::collectors::HardwareCollector;
 use crate::models::{
-    AudioDevice, CpuInfo, CpuMetrics, GpuInfo, GpuMetrics, MemoryInfo, MemoryMetrics,
-    Monitor, MotherboardInfo, UsbDevice,
+    AudioDevice, CpuInfo, CpuMetrics, GpuInfo, GpuMetrics, MemoryInfo, MemoryMetrics, Monitor,
+    MotherboardInfo, UsbDevice,
 };
 use crate::state::SysInfoState;
 use sysinfo::Components;

@@ -1,18 +1,17 @@
 //! Network information collector
 
 use crate::models::{
-    AdapterStats, AdapterStatus, AdapterType, ConnectionState,
-    DnsConfig, Ipv4Config, Ipv6Config, NetworkAdapter, NetworkConnection, Route, RouteType,
+    AdapterStats, AdapterStatus, AdapterType, ConnectionState, DnsConfig, Ipv4Config, Ipv6Config,
+    NetworkAdapter, NetworkConnection, Route, RouteType,
 };
-use sysinfo::Networks;
-use std::time::{SystemTime, UNIX_EPOCH};
 use std::collections::HashMap;
+use std::time::{SystemTime, UNIX_EPOCH};
+use sysinfo::Networks;
 
 #[cfg(target_os = "windows")]
 use windows::Win32::NetworkManagement::IpHelper::{
-    GetAdaptersAddresses, GAA_FLAG_INCLUDE_PREFIX, GAA_FLAG_INCLUDE_GATEWAYS,
-    IP_ADAPTER_ADDRESSES_LH,
-    GetIpForwardTable, MIB_IPFORWARDTABLE,
+    GetAdaptersAddresses, GetIpForwardTable, GAA_FLAG_INCLUDE_GATEWAYS, GAA_FLAG_INCLUDE_PREFIX,
+    IP_ADAPTER_ADDRESSES_LH, MIB_IPFORWARDTABLE,
 };
 
 // IF_OPER_STATUS values (from Windows SDK)
@@ -90,13 +89,7 @@ impl NetworkCollector {
 
         // Get required buffer size
         unsafe {
-            GetAdaptersAddresses(
-                AF_UNSPEC.0 as u32,
-                flags,
-                None,
-                None,
-                &mut buffer_size,
-            );
+            GetAdaptersAddresses(AF_UNSPEC.0 as u32, flags, None, None, &mut buffer_size);
         }
 
         if buffer_size == 0 {
@@ -185,13 +178,14 @@ impl NetworkCollector {
                 let mtu = adapter.Mtu;
 
                 // Extract IPv4 and IPv6 configuration
-                let (ipv4_config, ipv6_config) = Self::extract_ip_configs(adapter, &wmi_data, &description);
+                let (ipv4_config, ipv6_config) =
+                    Self::extract_ip_configs(adapter, &wmi_data, &description);
 
                 // Extract DNS configuration
                 let dns_config = Self::extract_dns_config(adapter, &wmi_data, &description);
 
                 let network_adapter = NetworkAdapter {
-                    id: friendly_name.clone(),  // Use friendly_name as ID to match sysinfo's Networks
+                    id: friendly_name.clone(), // Use friendly_name as ID to match sysinfo's Networks
                     name: friendly_name,
                     description,
                     adapter_type,
@@ -215,10 +209,10 @@ impl NetworkCollector {
     #[cfg(target_os = "windows")]
     fn if_type_to_adapter_type(if_type: u32) -> AdapterType {
         match if_type {
-            6 => AdapterType::Ethernet,    // IF_TYPE_ETHERNET_CSMACD
-            71 => AdapterType::WiFi,       // IF_TYPE_IEEE80211
-            24 => AdapterType::Loopback,   // IF_TYPE_SOFTWARE_LOOPBACK
-            131 | 53 => AdapterType::Virtual,  // Virtual/Tunnel types
+            6 => AdapterType::Ethernet,       // IF_TYPE_ETHERNET_CSMACD
+            71 => AdapterType::WiFi,          // IF_TYPE_IEEE80211
+            24 => AdapterType::Loopback,      // IF_TYPE_SOFTWARE_LOOPBACK
+            131 | 53 => AdapterType::Virtual, // Virtual/Tunnel types
             _ => AdapterType::Unknown,
         }
     }
@@ -271,8 +265,10 @@ impl NetworkCollector {
                 if sockaddr.sa_family == AF_INET {
                     let sockaddr_in = &*(addr.Address.lpSockaddr as *const SOCKADDR_IN);
                     let ip_bytes = sockaddr_in.sin_addr.S_un.S_un_b;
-                    let ip_address = format!("{}.{}.{}.{}",
-                        ip_bytes.s_b1, ip_bytes.s_b2, ip_bytes.s_b3, ip_bytes.s_b4);
+                    let ip_address = format!(
+                        "{}.{}.{}.{}",
+                        ip_bytes.s_b1, ip_bytes.s_b2, ip_bytes.s_b3, ip_bytes.s_b4
+                    );
 
                     // Calculate subnet mask from prefix length
                     let prefix_len = addr.OnLinkPrefixLength;
@@ -356,11 +352,13 @@ impl NetworkCollector {
         } else {
             !0u32 << (32 - prefix)
         };
-        format!("{}.{}.{}.{}",
+        format!(
+            "{}.{}.{}.{}",
             (mask >> 24) & 0xff,
             (mask >> 16) & 0xff,
             (mask >> 8) & 0xff,
-            mask & 0xff)
+            mask & 0xff
+        )
     }
 
     #[cfg(target_os = "windows")]
@@ -373,8 +371,10 @@ impl NetworkCollector {
                 if sockaddr.sa_family == AF_INET {
                     let sockaddr_in = &*(gw.Address.lpSockaddr as *const SOCKADDR_IN);
                     let ip_bytes = sockaddr_in.sin_addr.S_un.S_un_b;
-                    return Some(format!("{}.{}.{}.{}",
-                        ip_bytes.s_b1, ip_bytes.s_b2, ip_bytes.s_b3, ip_bytes.s_b4));
+                    return Some(format!(
+                        "{}.{}.{}.{}",
+                        ip_bytes.s_b1, ip_bytes.s_b2, ip_bytes.s_b3, ip_bytes.s_b4
+                    ));
                 }
             }
             gateway = gw.Next;
@@ -408,7 +408,8 @@ impl NetworkCollector {
             .collect();
 
         // Simple formatting without zero compression for clarity
-        words.iter()
+        words
+            .iter()
             .map(|w| format!("{:x}", w))
             .collect::<Vec<_>>()
             .join(":")
@@ -434,8 +435,10 @@ impl NetworkCollector {
                 if sockaddr.sa_family == AF_INET {
                     let sockaddr_in = &*(dns_addr.Address.lpSockaddr as *const SOCKADDR_IN);
                     let ip_bytes = sockaddr_in.sin_addr.S_un.S_un_b;
-                    servers.push(format!("{}.{}.{}.{}",
-                        ip_bytes.s_b1, ip_bytes.s_b2, ip_bytes.s_b3, ip_bytes.s_b4));
+                    servers.push(format!(
+                        "{}.{}.{}.{}",
+                        ip_bytes.s_b1, ip_bytes.s_b2, ip_bytes.s_b3, ip_bytes.s_b4
+                    ));
                 } else if sockaddr.sa_family == AF_INET6 {
                     let sockaddr_in6 = &*(dns_addr.Address.lpSockaddr as *const SOCKADDR_IN6);
                     let ip_bytes = sockaddr_in6.sin6_addr.u.Byte;
@@ -567,11 +570,13 @@ impl NetworkCollector {
 
     #[cfg(target_os = "windows")]
     fn u32_to_ip(addr: u32) -> String {
-        format!("{}.{}.{}.{}",
+        format!(
+            "{}.{}.{}.{}",
             addr & 0xff,
             (addr >> 8) & 0xff,
             (addr >> 16) & 0xff,
-            (addr >> 24) & 0xff)
+            (addr >> 24) & 0xff
+        )
     }
 
     #[cfg(target_os = "windows")]
@@ -596,8 +601,8 @@ impl NetworkCollector {
     #[cfg(target_os = "windows")]
     #[allow(dead_code)]
     fn get_process_name(pid: u32) -> Option<String> {
-        use windows::Win32::System::Threading::{OpenProcess, PROCESS_QUERY_LIMITED_INFORMATION};
         use windows::Win32::System::ProcessStatus::GetModuleBaseNameW;
+        use windows::Win32::System::Threading::{OpenProcess, PROCESS_QUERY_LIMITED_INFORMATION};
 
         if pid == 0 {
             return Some("System Idle Process".to_string());
@@ -690,13 +695,19 @@ impl NetworkCollector {
     #[allow(dead_code)]
     fn detect_adapter_type(name: &str) -> AdapterType {
         let name_lower = name.to_lowercase();
-        if name_lower.contains("wi-fi") || name_lower.contains("wireless") || name_lower.contains("wlan") {
+        if name_lower.contains("wi-fi")
+            || name_lower.contains("wireless")
+            || name_lower.contains("wlan")
+        {
             AdapterType::WiFi
         } else if name_lower.contains("ethernet") || name_lower.contains("eth") {
             AdapterType::Ethernet
         } else if name_lower.contains("loopback") || name_lower.contains("lo") {
             AdapterType::Loopback
-        } else if name_lower.contains("virtual") || name_lower.contains("veth") || name_lower.contains("docker") {
+        } else if name_lower.contains("virtual")
+            || name_lower.contains("veth")
+            || name_lower.contains("docker")
+        {
             AdapterType::Virtual
         } else {
             AdapterType::Unknown
@@ -727,8 +738,17 @@ mod tests {
 
     #[test]
     fn test_detect_adapter_type() {
-        assert!(matches!(NetworkCollector::detect_adapter_type("Wi-Fi"), AdapterType::WiFi));
-        assert!(matches!(NetworkCollector::detect_adapter_type("Ethernet"), AdapterType::Ethernet));
-        assert!(matches!(NetworkCollector::detect_adapter_type("Loopback"), AdapterType::Loopback));
+        assert!(matches!(
+            NetworkCollector::detect_adapter_type("Wi-Fi"),
+            AdapterType::WiFi
+        ));
+        assert!(matches!(
+            NetworkCollector::detect_adapter_type("Ethernet"),
+            AdapterType::Ethernet
+        ));
+        assert!(matches!(
+            NetworkCollector::detect_adapter_type("Loopback"),
+            AdapterType::Loopback
+        ));
     }
 }

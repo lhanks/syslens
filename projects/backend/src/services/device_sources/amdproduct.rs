@@ -112,7 +112,11 @@ impl AMDProductSource {
     }
 
     /// Search for product and get the product page URL.
-    async fn search_product(&self, model: &str, device_type: &DeviceType) -> Result<Option<String>> {
+    async fn search_product(
+        &self,
+        model: &str,
+        device_type: &DeviceType,
+    ) -> Result<Option<String>> {
         // First try direct URL construction
         let direct_url = Self::build_direct_url(model, device_type);
         log::debug!("Trying direct AMD URL: {}", direct_url);
@@ -143,7 +147,8 @@ impl AMDProductSource {
         let document = Html::parse_document(&html);
 
         // Look for search results
-        let result_selector = Selector::parse("a.search-result, div.search-result a, .product-link").unwrap();
+        let result_selector =
+            Selector::parse("a.search-result, div.search-result a, .product-link").unwrap();
         let normalized_model = Self::normalize_model(model).to_lowercase();
         let model_number = Self::extract_model_number(model);
 
@@ -161,7 +166,8 @@ impl AMDProductSource {
             let is_match = if let Some(ref num) = model_number {
                 text.contains(&num.to_lowercase())
             } else {
-                text.contains(&normalized_model) || normalized_model.split('-').all(|part| text.contains(part))
+                text.contains(&normalized_model)
+                    || normalized_model.split('-').all(|part| text.contains(part))
             };
 
             if is_match {
@@ -186,7 +192,11 @@ impl AMDProductSource {
     }
 
     /// Fetch and parse product page.
-    async fn fetch_product_page(&self, url: &str, _device_type: &DeviceType) -> Result<ProductPageData> {
+    async fn fetch_product_page(
+        &self,
+        url: &str,
+        _device_type: &DeviceType,
+    ) -> Result<ProductPageData> {
         let response = self
             .client
             .get(url)
@@ -214,13 +224,21 @@ impl AMDProductSource {
         for selector_str in img_selectors {
             if let Ok(selector) = Selector::parse(selector_str) {
                 if let Some(img) = document.select(&selector).next() {
-                    let src = img.value().attr("src")
+                    let src = img
+                        .value()
+                        .attr("src")
                         .or_else(|| img.value().attr("srcset"))
                         .or_else(|| img.value().attr("data-src"));
 
                     if let Some(src) = src {
                         // Get the first URL from srcset if present
-                        let src = src.split(',').next().unwrap_or(src).split(' ').next().unwrap_or(src);
+                        let src = src
+                            .split(',')
+                            .next()
+                            .unwrap_or(src)
+                            .split(' ')
+                            .next()
+                            .unwrap_or(src);
                         data.image_url = Some(if src.starts_with("//") {
                             format!("https:{}", src)
                         } else if src.starts_with('/') {
@@ -315,7 +333,9 @@ impl AMDProductSource {
     }
 
     /// Convert raw specs to categorized specs for CPUs.
-    fn categorize_cpu_specs(raw_specs: &HashMap<String, String>) -> (HashMap<String, String>, Vec<SpecCategory>) {
+    fn categorize_cpu_specs(
+        raw_specs: &HashMap<String, String>,
+    ) -> (HashMap<String, String>, Vec<SpecCategory>) {
         let mut specs = HashMap::new();
         let mut general = Vec::new();
         let mut performance = Vec::new();
@@ -330,7 +350,6 @@ impl AMDProductSource {
             ("Product Line", "product_line", "General"),
             ("Launch Date", "launch_date", "General"),
             ("OS Support", "os_support", "General"),
-
             // Performance
             ("# of CPU Cores", "cores", "Performance"),
             ("Cores", "cores", "Performance"),
@@ -345,18 +364,15 @@ impl AMDProductSource {
             ("Total L3 Cache", "l3_cache", "Performance"),
             ("Unlocked for Overclocking", "unlocked", "Performance"),
             ("CPU Socket", "socket", "Performance"),
-
             // Memory
             ("Max Memory Speed", "max_memory_speed", "Memory"),
             ("System Memory Type", "memory_type", "Memory"),
             ("Memory Channels", "memory_channels", "Memory"),
             ("Max Memory", "max_memory", "Memory"),
-
             // Connectivity
             ("PCI Express Version", "pcie_version", "Connectivity"),
             ("PCIe Lanes", "pcie_lanes", "Connectivity"),
             ("USB Ports", "usb_ports", "Connectivity"),
-
             // Thermal
             ("Default TDP", "tdp", "Thermal"),
             ("TDP", "tdp", "Thermal"),
@@ -387,26 +403,43 @@ impl AMDProductSource {
 
         let mut categories = Vec::new();
         if !general.is_empty() {
-            categories.push(SpecCategory { name: "General Specifications".to_string(), specs: general });
+            categories.push(SpecCategory {
+                name: "General Specifications".to_string(),
+                specs: general,
+            });
         }
         if !performance.is_empty() {
-            categories.push(SpecCategory { name: "CPU Specifications".to_string(), specs: performance });
+            categories.push(SpecCategory {
+                name: "CPU Specifications".to_string(),
+                specs: performance,
+            });
         }
         if !memory.is_empty() {
-            categories.push(SpecCategory { name: "Memory Specifications".to_string(), specs: memory });
+            categories.push(SpecCategory {
+                name: "Memory Specifications".to_string(),
+                specs: memory,
+            });
         }
         if !connectivity.is_empty() {
-            categories.push(SpecCategory { name: "Connectivity".to_string(), specs: connectivity });
+            categories.push(SpecCategory {
+                name: "Connectivity".to_string(),
+                specs: connectivity,
+            });
         }
         if !thermal.is_empty() {
-            categories.push(SpecCategory { name: "Thermal".to_string(), specs: thermal });
+            categories.push(SpecCategory {
+                name: "Thermal".to_string(),
+                specs: thermal,
+            });
         }
 
         (specs, categories)
     }
 
     /// Convert raw specs to categorized specs for GPUs.
-    fn categorize_gpu_specs(raw_specs: &HashMap<String, String>) -> (HashMap<String, String>, Vec<SpecCategory>) {
+    fn categorize_gpu_specs(
+        raw_specs: &HashMap<String, String>,
+    ) -> (HashMap<String, String>, Vec<SpecCategory>) {
         let mut specs = HashMap::new();
         let mut general = Vec::new();
         let mut gpu_engine = Vec::new();
@@ -419,7 +452,6 @@ impl AMDProductSource {
             ("Graphics Card Series", "series", "General"),
             ("Launch Date", "launch_date", "General"),
             ("Product Family", "product_family", "General"),
-
             // GPU Engine
             ("Compute Units", "compute_units", "GPU Engine"),
             ("Stream Processors", "stream_processors", "GPU Engine"),
@@ -433,7 +465,6 @@ impl AMDProductSource {
             ("Peak Half Precision", "peak_half", "GPU Engine"),
             ("Peak Single Precision", "peak_single", "GPU Engine"),
             ("Peak Texture Fill-Rate", "texture_fill", "GPU Engine"),
-
             // Memory
             ("Memory Size", "memory_size", "Memory"),
             ("Memory Type", "memory_type", "Memory"),
@@ -441,14 +472,12 @@ impl AMDProductSource {
             ("Memory Bandwidth", "memory_bandwidth", "Memory"),
             ("Effective Memory Clock", "memory_clock", "Memory"),
             ("Infinity Cache", "infinity_cache", "Memory"),
-
             // Display
             ("Max Displays", "max_displays", "Display"),
             ("Max Resolution", "max_resolution", "Display"),
             ("DisplayPort", "displayport", "Display"),
             ("HDMI", "hdmi", "Display"),
             ("USB Type-C", "usb_c", "Display"),
-
             // Board
             ("Typical Board Power", "tdp", "Board"),
             ("TDP", "tdp", "Board"),
@@ -482,19 +511,34 @@ impl AMDProductSource {
 
         let mut categories = Vec::new();
         if !general.is_empty() {
-            categories.push(SpecCategory { name: "General".to_string(), specs: general });
+            categories.push(SpecCategory {
+                name: "General".to_string(),
+                specs: general,
+            });
         }
         if !gpu_engine.is_empty() {
-            categories.push(SpecCategory { name: "GPU Engine".to_string(), specs: gpu_engine });
+            categories.push(SpecCategory {
+                name: "GPU Engine".to_string(),
+                specs: gpu_engine,
+            });
         }
         if !memory.is_empty() {
-            categories.push(SpecCategory { name: "Memory".to_string(), specs: memory });
+            categories.push(SpecCategory {
+                name: "Memory".to_string(),
+                specs: memory,
+            });
         }
         if !display.is_empty() {
-            categories.push(SpecCategory { name: "Display".to_string(), specs: display });
+            categories.push(SpecCategory {
+                name: "Display".to_string(),
+                specs: display,
+            });
         }
         if !board.is_empty() {
-            categories.push(SpecCategory { name: "Board Design".to_string(), specs: board });
+            categories.push(SpecCategory {
+                name: "Board Design".to_string(),
+                specs: board,
+            });
         }
 
         (specs, categories)
@@ -502,7 +546,9 @@ impl AMDProductSource {
 
     /// Extract unit from a value string.
     fn extract_unit(value: &str) -> Option<String> {
-        let units = ["GHz", "MHz", "MB", "GB", "TB", "W", "nm", "GT/s", "GB/s", "bit", "mm"];
+        let units = [
+            "GHz", "MHz", "MB", "GB", "TB", "W", "nm", "GT/s", "GB/s", "bit", "mm",
+        ];
         for unit in units {
             if value.contains(unit) {
                 return Some(unit.to_string());
@@ -600,19 +646,37 @@ mod tests {
 
     #[test]
     fn test_normalize_for_slug() {
-        assert_eq!(AMDProductSource::normalize_for_slug("AMD Ryzen 9 7950X"), "ryzen-9-7950x");
-        assert_eq!(AMDProductSource::normalize_for_slug("Radeon RX 7900 XTX"), "rx-7900-xtx");
+        assert_eq!(
+            AMDProductSource::normalize_for_slug("AMD Ryzen 9 7950X"),
+            "ryzen-9-7950x"
+        );
+        assert_eq!(
+            AMDProductSource::normalize_for_slug("Radeon RX 7900 XTX"),
+            "rx-7900-xtx"
+        );
     }
 
     #[test]
     fn test_extract_model_number() {
-        assert_eq!(AMDProductSource::extract_model_number("AMD Ryzen 9 7950X"), Some("9 7950X".to_string()));
-        assert_eq!(AMDProductSource::extract_model_number("Radeon RX 7900 XTX"), Some("7900 XTX".to_string()));
+        assert_eq!(
+            AMDProductSource::extract_model_number("AMD Ryzen 9 7950X"),
+            Some("9 7950X".to_string())
+        );
+        assert_eq!(
+            AMDProductSource::extract_model_number("Radeon RX 7900 XTX"),
+            Some("7900 XTX".to_string())
+        );
     }
 
     #[test]
     fn test_normalize_model() {
-        assert_eq!(AMDProductSource::normalize_model("AMD Ryzen 9 7950X"), "ryzen 9 7950x");
-        assert_eq!(AMDProductSource::normalize_model("AMD(R) Radeon(TM) RX 7900 XTX"), "radeon rx 7900 xtx");
+        assert_eq!(
+            AMDProductSource::normalize_model("AMD Ryzen 9 7950X"),
+            "ryzen 9 7950x"
+        );
+        assert_eq!(
+            AMDProductSource::normalize_model("AMD(R) Radeon(TM) RX 7900 XTX"),
+            "radeon rx 7900 xtx"
+        );
     }
 }

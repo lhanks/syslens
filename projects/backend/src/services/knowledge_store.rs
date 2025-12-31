@@ -4,8 +4,8 @@
 //! learned from various internet sources with confidence scoring.
 
 use crate::models::{
-    DataMetadata, DataSource, DeviceDeepInfo, DeviceIdentifier, DeviceSpecifications,
-    DeviceType, SpecCategory, SpecItem,
+    DataMetadata, DataSource, DeviceDeepInfo, DeviceIdentifier, DeviceSpecifications, DeviceType,
+    SpecCategory, SpecItem,
 };
 use anyhow::{Context, Result};
 use chrono::{DateTime, Duration, Utc};
@@ -143,8 +143,7 @@ impl KnowledgeStore {
         }
 
         let content = std::fs::read_to_string(path).context("Failed to read knowledge database")?;
-        let db =
-            serde_json::from_str(&content).context("Failed to parse knowledge database")?;
+        let db = serde_json::from_str(&content).context("Failed to parse knowledge database")?;
         Ok(db)
     }
 
@@ -171,18 +170,13 @@ impl KnowledgeStore {
     }
 
     /// Look up a device by model name (fuzzy match).
-    pub fn find_by_model(
-        &self,
-        model: &str,
-        device_type: &DeviceType,
-    ) -> Option<DeviceDeepInfo> {
+    pub fn find_by_model(&self, model: &str, device_type: &DeviceType) -> Option<DeviceDeepInfo> {
         let db = self.database.read().ok()?;
         let model_lower = model.to_lowercase();
 
         // Try exact match first
         if let Some(learned) = db.devices.iter().find(|d| {
-            &d.device_type == device_type
-                && d.identifier.model.to_lowercase() == model_lower
+            &d.device_type == device_type && d.identifier.model.to_lowercase() == model_lower
         }) {
             return Some(self.convert_to_device_deep_info(learned));
         }
@@ -268,7 +262,11 @@ impl KnowledgeStore {
             }
 
             // Add source
-            if !existing.sources.iter().any(|s| s.name == partial.source_name) {
+            if !existing
+                .sources
+                .iter()
+                .any(|s| s.name == partial.source_name)
+            {
                 existing.sources.push(source_info);
             }
 
@@ -338,8 +336,7 @@ impl KnowledgeStore {
         let avg_confidence = if learned.specs.is_empty() {
             0.5
         } else {
-            learned.specs.values().map(|s| s.confidence).sum::<f32>()
-                / learned.specs.len() as f32
+            learned.specs.values().map(|s| s.confidence).sum::<f32>() / learned.specs.len() as f32
         };
 
         // Get best source URL
@@ -400,7 +397,11 @@ impl KnowledgeStore {
                         || key.contains("frequency")
                     {
                         core_specs.push(item);
-                    } else if key.contains("cache") || key.contains("l1") || key.contains("l2") || key.contains("l3") {
+                    } else if key.contains("cache")
+                        || key.contains("l1")
+                        || key.contains("l2")
+                        || key.contains("l3")
+                    {
                         cache_specs.push(item);
                     } else if key.contains("tdp") || key.contains("power") || key.contains("watt") {
                         power_specs.push(item);
@@ -585,7 +586,10 @@ mod tests {
     #[test]
     fn test_normalize_spec_key() {
         assert_eq!(KnowledgeStore::normalize_spec_key("Base Clock"), "baseclk");
-        assert_eq!(KnowledgeStore::normalize_spec_key("CUDA Cores"), "cudacores");
+        assert_eq!(
+            KnowledgeStore::normalize_spec_key("CUDA Cores"),
+            "cudacores"
+        );
         assert_eq!(
             KnowledgeStore::normalize_spec_key("Memory Bandwidth"),
             "memorybandwidth"

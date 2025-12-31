@@ -1,11 +1,11 @@
 //! System configuration collector
 
 use crate::models::{
-    ActivationStatus, BiosInfo, BootConfig, BootMode, DeviceInfo, DomainInfo, DomainRole,
-    OsInfo, RestorePoint, RestorePointType, SystemUptime, TpmStatus, UserInfo,
+    ActivationStatus, BiosInfo, BootConfig, BootMode, DeviceInfo, DomainInfo, DomainRole, OsInfo,
+    RestorePoint, RestorePointType, SystemUptime, TpmStatus, UserInfo,
 };
-use sysinfo::System;
 use chrono::{DateTime, Local, Utc};
+use sysinfo::System;
 
 #[cfg(target_os = "windows")]
 use wmi::{COMLibrary, WMIConnection};
@@ -139,10 +139,10 @@ impl SystemCollector {
     /// Get Windows product ID
     #[cfg(target_os = "windows")]
     fn get_product_id() -> Option<String> {
+        use windows::core::PCWSTR;
         use windows::Win32::System::Registry::{
             RegOpenKeyExW, RegQueryValueExW, HKEY_LOCAL_MACHINE, KEY_READ, REG_VALUE_TYPE,
         };
-        use windows::core::PCWSTR;
 
         unsafe {
             let mut key = windows::Win32::System::Registry::HKEY::default();
@@ -156,7 +156,9 @@ impl SystemCollector {
                 0,
                 KEY_READ,
                 &mut key,
-            ).is_ok() {
+            )
+            .is_ok()
+            {
                 let value_name: Vec<u16> = "ProductId\0".encode_utf16().collect();
                 let mut value_type = REG_VALUE_TYPE::default();
                 let mut data = [0u8; 512];
@@ -169,7 +171,9 @@ impl SystemCollector {
                     Some(&mut value_type),
                     Some(data.as_mut_ptr()),
                     Some(&mut data_size),
-                ).is_ok() {
+                )
+                .is_ok()
+                {
                     let wide_slice = std::slice::from_raw_parts(
                         data.as_ptr() as *const u16,
                         (data_size as usize / 2).saturating_sub(1),
@@ -249,7 +253,11 @@ impl SystemCollector {
             .unwrap_or_else(|| "Unknown".to_string());
 
         BootConfig {
-            boot_mode: if Self::is_uefi() { BootMode::UEFI } else { BootMode::Legacy },
+            boot_mode: if Self::is_uefi() {
+                BootMode::UEFI
+            } else {
+                BootMode::Legacy
+            },
             secure_boot_enabled: Self::is_secure_boot_enabled(),
             boot_device: Self::get_boot_device(),
             boot_order: Vec::new(),
@@ -341,7 +349,8 @@ impl SystemCollector {
                         sequence_number: p.sequence_number.unwrap_or(0),
                         description: p.description.unwrap_or_else(|| "Unknown".to_string()),
                         restore_point_type: Self::parse_restore_point_type(p.restore_point_type),
-                        creation_time: p.creation_time
+                        creation_time: p
+                            .creation_time
                             .map(|dt| Self::parse_wmi_datetime(&dt))
                             .unwrap_or_else(|| "Unknown".to_string()),
                     })
@@ -393,7 +402,9 @@ impl SystemCollector {
     fn get_computer_system_info() -> Option<Win32ComputerSystem> {
         let wmi = get_wmi_connection()?;
         let results: Vec<Win32ComputerSystem> = wmi
-            .raw_query("SELECT Manufacturer, Model, SystemType, SystemSKUNumber FROM Win32_ComputerSystem")
+            .raw_query(
+                "SELECT Manufacturer, Model, SystemType, SystemSKUNumber FROM Win32_ComputerSystem",
+            )
             .ok()?;
         results.into_iter().next()
     }
@@ -550,10 +561,10 @@ impl SystemCollector {
 
     #[cfg(target_os = "windows")]
     fn is_secure_boot_enabled() -> bool {
+        use windows::core::PCWSTR;
         use windows::Win32::System::Registry::{
             RegOpenKeyExW, RegQueryValueExW, HKEY_LOCAL_MACHINE, KEY_READ, REG_VALUE_TYPE,
         };
-        use windows::core::PCWSTR;
 
         unsafe {
             let mut key = windows::Win32::System::Registry::HKEY::default();
@@ -567,7 +578,9 @@ impl SystemCollector {
                 0,
                 KEY_READ,
                 &mut key,
-            ).is_ok() {
+            )
+            .is_ok()
+            {
                 let value_name: Vec<u16> = "UEFISecureBootEnabled\0".encode_utf16().collect();
                 let mut value_type = REG_VALUE_TYPE::default();
                 let mut data: u32 = 0;
@@ -580,7 +593,9 @@ impl SystemCollector {
                     Some(&mut value_type),
                     Some(&mut data as *mut u32 as *mut u8),
                     Some(&mut data_size),
-                ).is_ok() {
+                )
+                .is_ok()
+                {
                     return data == 1;
                 }
             }
@@ -591,9 +606,11 @@ impl SystemCollector {
     #[cfg(not(target_os = "windows"))]
     fn is_secure_boot_enabled() -> bool {
         // Check EFI variable for secure boot status
-        std::fs::read_to_string("/sys/firmware/efi/efivars/SecureBoot-8be4df61-93ca-11d2-aa0d-00e098032b8c")
-            .map(|s| s.contains('\x01'))
-            .unwrap_or(false)
+        std::fs::read_to_string(
+            "/sys/firmware/efi/efivars/SecureBoot-8be4df61-93ca-11d2-aa0d-00e098032b8c",
+        )
+        .map(|s| s.contains('\x01'))
+        .unwrap_or(false)
     }
 
     #[cfg(target_os = "windows")]
@@ -603,16 +620,19 @@ impl SystemCollector {
             .or_else(|_| COMLibrary::without_security())
             .unwrap_or_else(|_| unsafe { COMLibrary::assume_initialized() });
 
-        if let Ok(wmi) = WMIConnection::with_namespace_path("root\\cimv2\\Security\\MicrosoftTpm", com) {
+        if let Ok(wmi) =
+            WMIConnection::with_namespace_path("root\\cimv2\\Security\\MicrosoftTpm", com)
+        {
             let results: Result<Vec<Win32TPM>, _> = wmi.raw_query("SELECT SpecVersion, IsActivated_InitialValue, IsEnabled_InitialValue FROM Win32_Tpm");
             if let Ok(mut tpms) = results {
                 if let Some(tpm) = tpms.pop() {
-                    let status = match (tpm.is_enabled_initial_value, tpm.is_activated_initial_value) {
-                        (Some(true), Some(true)) => TpmStatus::Enabled,
-                        (Some(true), _) => TpmStatus::Enabled,
-                        (Some(false), _) => TpmStatus::Disabled,
-                        _ => TpmStatus::Unknown,
-                    };
+                    let status =
+                        match (tpm.is_enabled_initial_value, tpm.is_activated_initial_value) {
+                            (Some(true), Some(true)) => TpmStatus::Enabled,
+                            (Some(true), _) => TpmStatus::Enabled,
+                            (Some(false), _) => TpmStatus::Disabled,
+                            _ => TpmStatus::Unknown,
+                        };
                     return (tpm.spec_version, status);
                 }
             }
@@ -653,10 +673,10 @@ impl SystemCollector {
 
     #[cfg(target_os = "windows")]
     fn get_boot_device() -> String {
+        use windows::core::PCWSTR;
         use windows::Win32::System::Registry::{
             RegOpenKeyExW, RegQueryValueExW, HKEY_LOCAL_MACHINE, KEY_READ, REG_VALUE_TYPE,
         };
-        use windows::core::PCWSTR;
 
         unsafe {
             let mut key = windows::Win32::System::Registry::HKEY::default();
@@ -670,7 +690,9 @@ impl SystemCollector {
                 0,
                 KEY_READ,
                 &mut key,
-            ).is_ok() {
+            )
+            .is_ok()
+            {
                 let value_name: Vec<u16> = "SystemBootDevice\0".encode_utf16().collect();
                 let mut value_type = REG_VALUE_TYPE::default();
                 let mut data = [0u8; 512];
@@ -683,7 +705,9 @@ impl SystemCollector {
                     Some(&mut value_type),
                     Some(data.as_mut_ptr()),
                     Some(&mut data_size),
-                ).is_ok() {
+                )
+                .is_ok()
+                {
                     // Convert wide string to Rust string
                     let wide_slice = std::slice::from_raw_parts(
                         data.as_ptr() as *const u16,
@@ -711,10 +735,8 @@ impl SystemCollector {
 
     #[cfg(target_os = "windows")]
     fn is_restart_pending() -> bool {
-        use windows::Win32::System::Registry::{
-            RegOpenKeyExW, HKEY_LOCAL_MACHINE, KEY_READ,
-        };
         use windows::core::PCWSTR;
+        use windows::Win32::System::Registry::{RegOpenKeyExW, HKEY_LOCAL_MACHINE, KEY_READ};
 
         // Check common registry keys that indicate pending restart
         let keys_to_check = [
@@ -734,7 +756,9 @@ impl SystemCollector {
                     0,
                     KEY_READ,
                     &mut key,
-                ).is_ok() {
+                )
+                .is_ok()
+                {
                     return true;
                 }
             }
@@ -750,11 +774,11 @@ impl SystemCollector {
 
     #[cfg(target_os = "windows")]
     fn is_admin() -> bool {
+        use windows::Win32::Foundation::HANDLE;
         use windows::Win32::Security::{
             GetTokenInformation, TokenElevation, TOKEN_ELEVATION, TOKEN_QUERY,
         };
         use windows::Win32::System::Threading::{GetCurrentProcess, OpenProcessToken};
-        use windows::Win32::Foundation::HANDLE;
 
         unsafe {
             let mut token_handle = HANDLE::default();
@@ -768,7 +792,9 @@ impl SystemCollector {
                     Some(&mut elevation as *mut _ as *mut std::ffi::c_void),
                     std::mem::size_of::<TOKEN_ELEVATION>() as u32,
                     &mut return_length,
-                ).is_ok() {
+                )
+                .is_ok()
+                {
                     return elevation.TokenIsElevated != 0;
                 }
             }

@@ -1,8 +1,8 @@
 //! Process information collector
 
-use sysinfo::{System, Process, ProcessStatus, Users};
 use crate::models::process::{ProcessInfo, ProcessSummary};
 use crate::services::ICON_CACHE;
+use sysinfo::{Process, ProcessStatus, System, Users};
 
 /// Collector for process information
 pub struct ProcessCollector;
@@ -36,22 +36,21 @@ impl ProcessCollector {
         let processes: Vec<&Process> = sys.processes().values().collect();
         let cpu_count = sys.cpus().len() as f32;
 
-        let running_count = processes.iter()
+        let running_count = processes
+            .iter()
             .filter(|p| matches!(p.status(), ProcessStatus::Run))
             .count();
 
-        let sleeping_count = processes.iter()
+        let sleeping_count = processes
+            .iter()
             .filter(|p| matches!(p.status(), ProcessStatus::Sleep))
             .count();
 
         // Normalize CPU usage by dividing by core count (sysinfo reports per-core %)
-        let total_cpu_usage: f32 = processes.iter()
-            .map(|p| p.cpu_usage())
-            .sum::<f32>() / cpu_count.max(1.0);
+        let total_cpu_usage: f32 =
+            processes.iter().map(|p| p.cpu_usage()).sum::<f32>() / cpu_count.max(1.0);
 
-        let total_memory_bytes: u64 = processes.iter()
-            .map(|p| p.memory())
-            .sum();
+        let total_memory_bytes: u64 = processes.iter().map(|p| p.memory()).sum();
 
         ProcessSummary {
             total_count: processes.len(),
@@ -62,10 +61,15 @@ impl ProcessCollector {
         }
     }
 
-    fn process_to_info(pid: sysinfo::Pid, process: &Process, users: &Users, cpu_count: f32) -> ProcessInfo {
-        let user = process.user_id().and_then(|uid| {
-            users.get_user_by_id(uid).map(|u| u.name().to_string())
-        });
+    fn process_to_info(
+        pid: sysinfo::Pid,
+        process: &Process,
+        users: &Users,
+        cpu_count: f32,
+    ) -> ProcessInfo {
+        let user = process
+            .user_id()
+            .and_then(|uid| users.get_user_by_id(uid).map(|u| u.name().to_string()));
 
         let disk_usage = process.disk_usage();
 
@@ -74,10 +78,8 @@ impl ProcessCollector {
 
         // Get executable path and icon
         let exe_path = process.exe().map(|p| p.to_string_lossy().to_string());
-        let icon_base64 = ICON_CACHE.get_icon_for_process(
-            &process.name().to_string_lossy(),
-            exe_path.as_deref(),
-        );
+        let icon_base64 =
+            ICON_CACHE.get_icon_for_process(&process.name().to_string_lossy(), exe_path.as_deref());
 
         ProcessInfo {
             pid: pid.as_u32(),
@@ -88,7 +90,12 @@ impl ProcessCollector {
             virtual_memory_bytes: process.virtual_memory(),
             status: format!("{:?}", process.status()),
             user,
-            command: process.cmd().iter().map(|s| s.to_string_lossy()).collect::<Vec<_>>().join(" "),
+            command: process
+                .cmd()
+                .iter()
+                .map(|s| s.to_string_lossy())
+                .collect::<Vec<_>>()
+                .join(" "),
             start_time: process.start_time(),
             disk_read_bytes: disk_usage.read_bytes,
             disk_write_bytes: disk_usage.written_bytes,
@@ -130,11 +137,20 @@ mod tests {
         );
 
         // CPU usage should be within valid range (0-100%)
-        assert!(summary.total_cpu_usage >= 0.0, "CPU usage should be non-negative");
-        assert!(summary.total_cpu_usage <= 100.0, "CPU usage should not exceed 100%");
+        assert!(
+            summary.total_cpu_usage >= 0.0,
+            "CPU usage should be non-negative"
+        );
+        assert!(
+            summary.total_cpu_usage <= 100.0,
+            "CPU usage should not exceed 100%"
+        );
 
         // Memory should be positive
-        assert!(summary.total_memory_bytes > 0, "Total memory should be positive");
+        assert!(
+            summary.total_memory_bytes > 0,
+            "Total memory should be positive"
+        );
     }
 
     #[test]
@@ -144,7 +160,7 @@ mod tests {
             parent_pid: Some(1000),
             name: "test_process".to_string(),
             cpu_usage: 5.5,
-            memory_bytes: 1024 * 1024 * 100, // 100 MB
+            memory_bytes: 1024 * 1024 * 100,         // 100 MB
             virtual_memory_bytes: 1024 * 1024 * 500, // 500 MB
             status: "Run".to_string(),
             user: Some("testuser".to_string()),

@@ -198,6 +198,9 @@ mod tests {
     fn test_get_service_summary() {
         let summary = ServiceCollector::get_service_summary();
         assert!(summary.total > 0, "Should have at least one service");
-        assert!(summary.running > 0, "Should have at least one running service");
+        assert!(
+            summary.running > 0,
+            "Should have at least one running service"
+        );
     }
 }

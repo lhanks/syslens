@@ -16,8 +16,7 @@ impl CacheManager {
     /// Create a new CacheManager, loading existing cache from disk.
     pub fn new() -> Result<Self> {
         let cache_dir = Self::get_app_data_dir()?;
-        std::fs::create_dir_all(&cache_dir)
-            .context("Failed to create cache directory")?;
+        std::fs::create_dir_all(&cache_dir).context("Failed to create cache directory")?;
 
         let cache_file = cache_dir.join("device_cache.json");
         let cache = Self::load_cache_file(&cache_file).unwrap_or_default();
@@ -41,21 +40,19 @@ impl CacheManager {
             return Ok(DeviceCache::default());
         }
 
-        let content = std::fs::read_to_string(path)
-            .context("Failed to read cache file")?;
-        let cache = serde_json::from_str(&content)
-            .context("Failed to parse cache file")?;
+        let content = std::fs::read_to_string(path).context("Failed to read cache file")?;
+        let cache = serde_json::from_str(&content).context("Failed to parse cache file")?;
         Ok(cache)
     }
 
     /// Save cache to disk.
     fn save_cache(&self) -> Result<()> {
-        let cache = self.cache.read()
+        let cache = self
+            .cache
+            .read()
             .map_err(|_| anyhow::anyhow!("Failed to acquire read lock"))?;
-        let content = serde_json::to_string_pretty(&*cache)
-            .context("Failed to serialize cache")?;
-        std::fs::write(&self.cache_file, content)
-            .context("Failed to write cache file")?;
+        let content = serde_json::to_string_pretty(&*cache).context("Failed to serialize cache")?;
+        std::fs::write(&self.cache_file, content).context("Failed to write cache file")?;
         Ok(())
     }
 
@@ -64,7 +61,9 @@ impl CacheManager {
         let cache = self.cache.read().ok()?;
         let now = Utc::now();
 
-        cache.entries.iter()
+        cache
+            .entries
+            .iter()
             .find(|e| e.device_id == device_id && &e.device_type == device_type)
             .filter(|e| e.expires_at > now)
             .map(|e| e.data.clone())
@@ -85,13 +84,15 @@ impl CacheManager {
         data.metadata.last_updated = now;
         data.metadata.expires_at = expires_at;
 
-        let mut cache = self.cache.write()
+        let mut cache = self
+            .cache
+            .write()
             .map_err(|_| anyhow::anyhow!("Failed to acquire write lock"))?;
 
         // Remove existing entry for this device
-        cache.entries.retain(|e|
-            !(e.device_id == device_id && e.device_type == device_type)
-        );
+        cache
+            .entries
+            .retain(|e| !(e.device_id == device_id && e.device_type == device_type));
 
         // Add new entry
         cache.entries.push(CacheEntry {
@@ -108,12 +109,14 @@ impl CacheManager {
 
     /// Remove a specific device from cache.
     pub fn remove(&self, device_id: &str, device_type: &DeviceType) -> Result<()> {
-        let mut cache = self.cache.write()
+        let mut cache = self
+            .cache
+            .write()
             .map_err(|_| anyhow::anyhow!("Failed to acquire write lock"))?;
 
-        cache.entries.retain(|e|
-            !(e.device_id == device_id && &e.device_type == device_type)
-        );
+        cache
+            .entries
+            .retain(|e| !(e.device_id == device_id && &e.device_type == device_type));
 
         drop(cache);
         self.save_cache()
@@ -121,7 +124,9 @@ impl CacheManager {
 
     /// Clear all cache entries.
     pub fn clear(&self) -> Result<()> {
-        let mut cache = self.cache.write()
+        let mut cache = self
+            .cache
+            .write()
             .map_err(|_| anyhow::anyhow!("Failed to acquire write lock"))?;
 
         cache.entries.clear();
@@ -133,7 +138,9 @@ impl CacheManager {
     /// Remove all expired entries.
     pub fn cleanup_expired(&self) -> Result<usize> {
         let now = Utc::now();
-        let mut cache = self.cache.write()
+        let mut cache = self
+            .cache
+            .write()
             .map_err(|_| anyhow::anyhow!("Failed to acquire write lock"))?;
 
         let before_count = cache.entries.len();
@@ -154,9 +161,7 @@ impl CacheManager {
             Err(_) => return Vec::new(),
         };
 
-        cache.entries.iter()
-            .map(|e| e.data.clone())
-            .collect()
+        cache.entries.iter().map(|e| e.data.clone()).collect()
     }
 
     /// Get cache statistics.
@@ -168,9 +173,7 @@ impl CacheManager {
 
         let now = Utc::now();
         let total = cache.entries.len();
-        let expired = cache.entries.iter()
-            .filter(|e| e.expires_at <= now)
-            .count();
+        let expired = cache.entries.iter().filter(|e| e.expires_at <= now).count();
 
         CacheStats {
             total_entries: total,
@@ -223,12 +226,14 @@ mod tests {
         let cache = CacheManager::new().unwrap();
         let device_info = create_test_device_info("test-cpu-1");
 
-        cache.set(
-            "test-cpu-1".to_string(),
-            DeviceType::Cpu,
-            device_info.clone(),
-            7,
-        ).unwrap();
+        cache
+            .set(
+                "test-cpu-1".to_string(),
+                DeviceType::Cpu,
+                device_info.clone(),
+                7,
+            )
+            .unwrap();
 
         let retrieved = cache.get("test-cpu-1", &DeviceType::Cpu);
         assert!(retrieved.is_some());

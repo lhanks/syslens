@@ -30,7 +30,11 @@ pub fn get_processes(state: State<SysInfoState>) -> Vec<ProcessInfo> {
 
     // Log icon cache stats
     let (cache_total, cache_hits) = ICON_CACHE.stats();
-    log::info!("Icon cache: {} entries, {} with icons", cache_total, cache_hits);
+    log::info!(
+        "Icon cache: {} entries, {} with icons",
+        cache_total,
+        cache_hits
+    );
 
     processes
 }
@@ -86,10 +90,8 @@ fn process_to_info(
 
     // Get executable path and icon
     let exe_path = process.exe().map(|p| p.to_string_lossy().to_string());
-    let icon_base64 = ICON_CACHE.get_icon_for_process(
-        &process.name().to_string_lossy(),
-        exe_path.as_deref(),
-    );
+    let icon_base64 =
+        ICON_CACHE.get_icon_for_process(&process.name().to_string_lossy(), exe_path.as_deref());
 
     ProcessInfo {
         pid: pid.as_u32(),
@@ -132,7 +134,10 @@ pub fn kill_process(pid: u32) -> Result<bool, String> {
             Ok(true)
         } else {
             log::warn!("Failed to kill process: {} (PID: {})", name, pid);
-            Err(format!("Failed to kill process {} (PID: {}). Access may be denied.", name, pid))
+            Err(format!(
+                "Failed to kill process {} (PID: {}). Access may be denied.",
+                name, pid
+            ))
         }
     } else {
         log::warn!("Process not found: PID {}", pid);

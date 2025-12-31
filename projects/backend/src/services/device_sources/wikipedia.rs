@@ -139,9 +139,17 @@ impl WikipediaSource {
     /// Extract AMD GPU series from model string.
     fn extract_amd_gpu_series(model: &str) -> Option<&str> {
         let model_lower = model.to_lowercase();
-        if model_lower.contains("7900") || model_lower.contains("7800") || model_lower.contains("7700") || model_lower.contains("7600") {
+        if model_lower.contains("7900")
+            || model_lower.contains("7800")
+            || model_lower.contains("7700")
+            || model_lower.contains("7600")
+        {
             Some("7000")
-        } else if model_lower.contains("6900") || model_lower.contains("6800") || model_lower.contains("6700") || model_lower.contains("6600") {
+        } else if model_lower.contains("6900")
+            || model_lower.contains("6800")
+            || model_lower.contains("6700")
+            || model_lower.contains("6600")
+        {
             Some("6000")
         } else {
             None
@@ -179,9 +187,14 @@ impl WikipediaSource {
             .await
             .context("Failed to search Wikipedia")?;
 
-        let search: SearchResponse = response.json().await.context("Failed to parse search response")?;
+        let search: SearchResponse = response
+            .json()
+            .await
+            .context("Failed to parse search response")?;
 
-        Ok(search.query.and_then(|q| q.search.into_iter().next().map(|r| r.title)))
+        Ok(search
+            .query
+            .and_then(|q| q.search.into_iter().next().map(|r| r.title)))
     }
 
     /// Fetch page content from Wikipedia.
@@ -234,7 +247,10 @@ impl WikipediaSource {
             .await
             .context("Failed to fetch Wikipedia page")?;
 
-        let page_resp: PageResponse = response.json().await.context("Failed to parse page response")?;
+        let page_resp: PageResponse = response
+            .json()
+            .await
+            .context("Failed to parse page response")?;
 
         let pages = page_resp.query.context("No query result")?.pages;
         for (_, page) in pages {
@@ -360,7 +376,12 @@ impl WikipediaSource {
                 // Check if it's a unit template like {{nowrap|123 MHz}}
                 let template_content = &cleaned[start + 2..start + end];
                 if let Some(inner) = template_content.strip_prefix("nowrap|") {
-                    cleaned = format!("{}{}{}", &cleaned[..start], inner, &cleaned[start + end + 2..]);
+                    cleaned = format!(
+                        "{}{}{}",
+                        &cleaned[..start],
+                        inner,
+                        &cleaned[start + end + 2..]
+                    );
                 } else {
                     cleaned = format!("{}{}", &cleaned[..start], &cleaned[start + end + 2..]);
                 }
@@ -448,7 +469,11 @@ impl WikipediaSource {
                     unit: Self::extract_unit_from_value(value),
                 };
 
-                if wiki_key.contains("cache") || wiki_key.contains("l1") || wiki_key.contains("l2") || wiki_key.contains("l3") {
+                if wiki_key.contains("cache")
+                    || wiki_key.contains("l1")
+                    || wiki_key.contains("l2")
+                    || wiki_key.contains("l3")
+                {
                     cache_specs.push(item);
                 } else if wiki_key == "tdp" {
                     power_specs.push(item);
@@ -524,7 +549,10 @@ impl WikipediaSource {
                     unit: Self::extract_unit_from_value(value),
                 };
 
-                if wiki_key.contains("memory") || wiki_key.contains("bandwidth") || wiki_key.contains("bus") {
+                if wiki_key.contains("memory")
+                    || wiki_key.contains("bandwidth")
+                    || wiki_key.contains("bus")
+                {
                     memory_specs.push(item);
                 } else if wiki_key == "tdp" {
                     power_specs.push(item);
@@ -569,7 +597,13 @@ impl WikipediaSource {
 
     /// Extract release date from raw specs.
     fn extract_release_date(raw: &HashMap<String, String>) -> Option<String> {
-        for key in ["released", "release_date", "launch_date", "date", "first_released"] {
+        for key in [
+            "released",
+            "release_date",
+            "launch_date",
+            "date",
+            "first_released",
+        ] {
             if let Some(value) = raw.get(key) {
                 return Some(value.clone());
             }
@@ -673,8 +707,8 @@ impl WikipediaSource {
 
         // Prefer product-related images
         let prefer_patterns = [
-            ".jpg", ".jpeg", ".png", "photo", "product", "chip", "die", "gpu", "cpu",
-            "geforce", "radeon", "ryzen", "core i", "nvidia", "amd", "intel",
+            ".jpg", ".jpeg", ".png", "photo", "product", "chip", "die", "gpu", "cpu", "geforce",
+            "radeon", "ryzen", "core i", "nvidia", "amd", "intel",
         ];
 
         prefer_patterns.iter().any(|p| title_lower.contains(p))
@@ -814,20 +848,20 @@ impl DeviceSource for WikipediaSource {
         let raw_specs = self.parse_infobox(&content);
 
         if raw_specs.is_empty() {
-            return Err(anyhow::anyhow!("No specifications found in Wikipedia article"));
+            return Err(anyhow::anyhow!(
+                "No specifications found in Wikipedia article"
+            ));
         }
 
         // Extract device-specific specs
-        let (specs, categories) = self.extract_device_specs(&raw_specs, device_type, &identifier.model);
+        let (specs, categories) =
+            self.extract_device_specs(&raw_specs, device_type, &identifier.model);
 
         // Get release date
         let release_date = Self::extract_release_date(&raw_specs);
 
         // Build Wikipedia URL
-        let wiki_url = format!(
-            "https://en.wikipedia.org/wiki/{}",
-            title.replace(' ', "_")
-        );
+        let wiki_url = format!("https://en.wikipedia.org/wiki/{}", title.replace(' ', "_"));
 
         // Try to extract infobox image first
         let infobox_image = self.extract_infobox_image(&content);
@@ -887,10 +921,7 @@ mod tests {
             WikipediaSource::clean_wiki_value("[[GDDR6X|GDDR6X]]"),
             "GDDR6X"
         );
-        assert_eq!(
-            WikipediaSource::clean_wiki_value("[[GDDR6]]"),
-            "GDDR6"
-        );
+        assert_eq!(WikipediaSource::clean_wiki_value("[[GDDR6]]"), "GDDR6");
         assert_eq!(
             WikipediaSource::clean_wiki_value("{{nowrap|2520 MHz}}"),
             "2520 MHz"
@@ -899,16 +930,34 @@ mod tests {
 
     #[test]
     fn test_extract_intel_generation() {
-        assert_eq!(WikipediaSource::extract_intel_generation("Core i9-13900K"), Some(13));
-        assert_eq!(WikipediaSource::extract_intel_generation("Core i7-12700K"), Some(12));
-        assert_eq!(WikipediaSource::extract_intel_generation("Core i5-9600K"), Some(9));
+        assert_eq!(
+            WikipediaSource::extract_intel_generation("Core i9-13900K"),
+            Some(13)
+        );
+        assert_eq!(
+            WikipediaSource::extract_intel_generation("Core i7-12700K"),
+            Some(12)
+        );
+        assert_eq!(
+            WikipediaSource::extract_intel_generation("Core i5-9600K"),
+            Some(9)
+        );
     }
 
     #[test]
     fn test_extract_nvidia_series() {
-        assert_eq!(WikipediaSource::extract_nvidia_series("GeForce RTX 5070"), Some("50"));
-        assert_eq!(WikipediaSource::extract_nvidia_series("GeForce RTX 4090"), Some("40"));
-        assert_eq!(WikipediaSource::extract_nvidia_series("GeForce RTX 3080"), Some("30"));
+        assert_eq!(
+            WikipediaSource::extract_nvidia_series("GeForce RTX 5070"),
+            Some("50")
+        );
+        assert_eq!(
+            WikipediaSource::extract_nvidia_series("GeForce RTX 4090"),
+            Some("40")
+        );
+        assert_eq!(
+            WikipediaSource::extract_nvidia_series("GeForce RTX 3080"),
+            Some("30")
+        );
     }
 
     #[test]
