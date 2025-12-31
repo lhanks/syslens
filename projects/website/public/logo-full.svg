@@ -1,59 +1,31 @@
-<svg width="512" height="160" viewBox="0 0 512 160" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <title>Syslens Full Logo</title>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 100">
+  <title>Syslens Logo - Horizontal</title>
   <defs>
-    <linearGradient id="logo-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#3B82F6;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#8B5CF6;stop-opacity:1" />
+    <linearGradient id="grad2" x1="0%" y1="100%" x2="0%" y2="0%">
+      <stop offset="0%" style="stop-color:#22c55e"/>
+      <stop offset="100%" style="stop-color:#06b6d4"/>
     </linearGradient>
   </defs>
 
-  <!-- Icon portion (scaled down) -->
-  <g transform="translate(10, 10)">
-    <!-- Outer lens ring -->
-    <circle cx="70" cy="70" r="54" fill="none" stroke="url(#logo-gradient)" stroke-width="5" opacity="0.4"/>
-
-    <!-- Inner lens ring -->
-    <circle cx="70" cy="70" r="45" fill="none" stroke="url(#logo-gradient)" stroke-width="2.5"/>
-
-    <!-- Graph lines -->
-    <g opacity="0.9">
-      <path d="M 35 78 Q 45 68, 55 75 T 77 70 T 100 62"
-            fill="none" stroke="#3B82F6" stroke-width="2" stroke-linecap="round"/>
-      <path d="M 35 86 Q 45 80, 55 84 T 77 80 T 100 75"
-            fill="none" stroke="#8B5CF6" stroke-width="2" stroke-linecap="round"/>
-      <path d="M 35 94 Q 45 88, 55 92 T 77 86 T 100 83"
-            fill="none" stroke="#06B6D4" stroke-width="2" stroke-linecap="round"/>
-    </g>
-
-    <!-- Data points -->
-    <circle cx="55" cy="75" r="2.5" fill="#3B82F6"/>
-    <circle cx="77" cy="70" r="2.5" fill="#3B82F6"/>
-    <circle cx="100" cy="62" r="2.5" fill="#3B82F6"/>
-
-    <!-- Center focal point -->
-    <circle cx="70" cy="50" r="4" fill="url(#logo-gradient)"/>
-    <circle cx="70" cy="50" r="2" fill="#FFFFFF"/>
-
-    <!-- Crosshair -->
-    <g opacity="0.3" stroke="#3B82F6" stroke-width="1">
-      <line x1="70" y1="35" x2="70" y2="47"/>
-      <line x1="70" y1="108" x2="70" y2="120"/>
-      <line x1="35" y1="70" x2="47" y2="70"/>
-      <line x1="108" y1="70" x2="120" y2="70"/>
-    </g>
+  <!-- Logo Icon (option-2 scaled) -->
+  <g transform="translate(5, 5) scale(0.35)">
+    <circle cx="128" cy="128" r="110" fill="#1e293b" opacity="0.3"/>
+    <path d="M 20 128 L 60 128 L 75 90 L 90 165 L 105 75 L 120 128 L 140 128 L 155 100 L 170 155 L 185 128 L 236 128"
+          fill="none" stroke="url(#grad2)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+    <line x1="20" y1="90" x2="236" y2="90" stroke="#3b82f6" stroke-width="1" opacity="0.2"/>
+    <line x1="20" y1="165" x2="236" y2="165" stroke="#3b82f6" stroke-width="1" opacity="0.2"/>
+    <line x1="64" y1="60" x2="64" y2="196" stroke="#8b5cf6" stroke-width="1" opacity="0.2"/>
+    <line x1="128" y1="60" x2="128" y2="196" stroke="#8b5cf6" stroke-width="1" opacity="0.2"/>
+    <line x1="192" y1="60" x2="192" y2="196" stroke="#8b5cf6" stroke-width="1" opacity="0.2"/>
+    <circle cx="105" cy="75" r="5" fill="#22c55e"/>
+    <circle cx="170" cy="155" r="5" fill="#06b6d4"/>
+    <rect x="15" y="55" width="226" height="146" fill="none" stroke="#3b82f6" stroke-width="3" rx="8"/>
+    <line x1="15" y1="70" x2="35" y2="70" stroke="#22c55e" stroke-width="4"/>
+    <line x1="221" y1="186" x2="241" y2="186" stroke="#22c55e" stroke-width="4"/>
   </g>
 
-  <!-- Wordmark "SYSLENS" -->
-  <g transform="translate(170, 50)">
-    <text x="0" y="50" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
-          font-size="60" font-weight="700" fill="#E2E8F0" letter-spacing="-0.02em">
-      SYSLENS
-    </text>
-
-    <!-- Tagline -->
-    <text x="2" y="75" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
-          font-size="14" font-weight="500" fill="#94A3B8" letter-spacing="0.05em">
-      CLARITY FOR YOUR SYSTEM
-    </text>
-  </g>
+  <!-- Wordmark: Sys (green) + lens (blue) -->
+  <text x="120" y="65" font-family="Inter, -apple-system, system-ui, sans-serif" font-size="48" font-weight="700" letter-spacing="-1">
+    <tspan fill="#22c55e">Sys</tspan><tspan fill="#3b82f6">lens</tspan>
+  </text>
 </svg>

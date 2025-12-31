@@ -1,11 +1,19 @@
 @import "tailwindcss";
 
 :root {
-  /* Syslens Brand Colors */
+  /* Syslens Brand Colors - Primary */
   --syslens-deep-space: #0F172A;
   --syslens-electric-blue: #3B82F6;
   --syslens-cyber-purple: #8B5CF6;
+
+  /* Syslens Brand Colors - Pulse (from logo) */
+  --syslens-pulse-green: #22c55e;
+  --syslens-pulse-cyan: #06B6D4;
+
+  /* Data Visualization Colors */
   --syslens-success-green: #10B981;
+  --syslens-warning-amber: #F59E0B;
+  --syslens-critical-red: #EF4444;
   --syslens-info-cyan: #06B6D4;
 
   /* Neutral Scale */
@@ -13,12 +21,19 @@
   --syslens-slate-900: #0F172A;
   --syslens-slate-800: #1E293B;
   --syslens-slate-700: #334155;
+  --syslens-slate-600: #475569;
+  --syslens-slate-500: #64748B;
   --syslens-slate-400: #94A3B8;
+  --syslens-slate-300: #CBD5E1;
   --syslens-slate-200: #E2E8F0;
 
   /* Theme colors */
   --background: #0F172A;
   --foreground: #E2E8F0;
+
+  /* Gradients */
+  --gradient-pulse: linear-gradient(135deg, #22c55e 0%, #06B6D4 100%);
+  --gradient-brand: linear-gradient(135deg, #3B82F6 0%, #8B5CF6 100%);
 }
 
 @theme inline {
@@ -34,9 +49,17 @@ body {
   font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
-/* Gradient text utility */
+/* Gradient text utility - matches logo pulse colors */
 .gradient-text {
-  background: linear-gradient(135deg, #3B82F6 0%, #8B5CF6 100%);
+  background: var(--gradient-pulse);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Alternative gradient using brand blue/purple */
+.gradient-text-brand {
+  background: var(--gradient-brand);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
