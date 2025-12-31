@@ -82,15 +82,29 @@ jobs:
       - name: Build
         run: npm run build:prod
 
+      - name: Upload frontend dist
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: projects/ui/dist/
+          retention-days: 1
+
   # Backend linting with Clippy
   backend-lint:
     name: Backend Lint (Clippy)
     runs-on: windows-latest
+    needs: frontend-build
     defaults:
       run:
         working-directory: projects/backend
     steps:
       - uses: actions/checkout@v4
+
+      - name: Download frontend dist
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-dist
+          path: projects/ui/dist/
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
@@ -117,11 +131,18 @@ jobs:
   backend-build:
     name: Backend Build
     runs-on: windows-latest
+    needs: frontend-build
     defaults:
       run:
         working-directory: projects/backend
     steps:
       - uses: actions/checkout@v4
+
+      - name: Download frontend dist
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-dist
+          path: projects/ui/dist/
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
