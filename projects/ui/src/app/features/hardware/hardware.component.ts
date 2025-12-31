@@ -2,21 +2,21 @@ import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subject, takeUntil } from 'rxjs';
 
-import { HardwareService, StatusService } from '@core/services';
+import { HardwareService, StatusService, DeviceInfoService } from '@core/services';
 import {
   CpuInfo, CpuMetrics,
   MemoryInfo, MemoryMetrics, MemoryModule,
   GpuInfo, GpuMetrics,
   MotherboardInfo, Monitor
 } from '@core/models';
-import { DeviceType } from '@core/models/device-info.model';
-import { ProgressRingComponent, DeviceDetailModalComponent } from '@shared/components';
+import { DeviceType, ProductImages } from '@core/models/device-info.model';
+import { ProgressRingComponent, DeviceDetailModalComponent, DeviceImageComponent } from '@shared/components';
 import { BytesPipe, DecimalPipe } from '@shared/pipes';
 
 @Component({
   selector: 'app-hardware',
   standalone: true,
-  imports: [CommonModule, ProgressRingComponent, DeviceDetailModalComponent, BytesPipe, DecimalPipe],
+  imports: [CommonModule, ProgressRingComponent, DeviceDetailModalComponent, DeviceImageComponent, BytesPipe, DecimalPipe],
   template: `
     <div class="p-6 space-y-6">
       <!-- Header -->
@@ -42,7 +42,19 @@ import { BytesPipe, DecimalPipe } from '@shared/pipes';
           <div class="flex flex-col lg:flex-row gap-6">
             <!-- CPU Info -->
             <div class="flex-1">
-              <h3 class="text-lg font-medium text-syslens-text-primary mb-4">{{ cpuInfo.name }}</h3>
+              <div class="flex items-center gap-3 mb-4">
+                @if (cpuImages?.primaryImage || cpuImages?.primaryImageCached) {
+                  <app-device-image
+                    [src]="cpuImages?.primaryImage"
+                    [cachedPath]="cpuImages?.primaryImageCached"
+                    alt="CPU"
+                    width="48px"
+                    height="48px"
+                    containerClass="rounded-lg bg-syslens-bg-tertiary flex-shrink-0"
+                  />
+                }
+                <h3 class="text-lg font-medium text-syslens-text-primary">{{ cpuInfo.name }}</h3>
+              </div>
               <div class="grid grid-cols-2 gap-4">
                 <div>
                   <p class="text-xs text-syslens-text-muted">Manufacturer</p>
@@ -211,9 +223,23 @@ import { BytesPipe, DecimalPipe } from '@shared/pipes';
               <div class="flex flex-col lg:flex-row gap-4">
                 <div class="flex-1">
                   <div class="flex items-start justify-between">
-                    <div>
-                      <h3 class="font-medium text-syslens-text-primary">{{ gpu.name }}</h3>
-                      <p class="text-sm text-syslens-text-muted">{{ gpu.manufacturer }}</p>
+                    <div class="flex items-center gap-3">
+                      @if (gpuImagesMap[gpu.id]; as images) {
+                        @if (images.primaryImage || images.primaryImageCached) {
+                          <app-device-image
+                            [src]="images.primaryImage"
+                            [cachedPath]="images.primaryImageCached"
+                            alt="GPU"
+                            width="48px"
+                            height="48px"
+                            containerClass="rounded-lg bg-syslens-bg-secondary flex-shrink-0"
+                          />
+                        }
+                      }
+                      <div>
+                        <h3 class="font-medium text-syslens-text-primary">{{ gpu.name }}</h3>
+                        <p class="text-sm text-syslens-text-muted">{{ gpu.manufacturer }}</p>
+                      </div>
                     </div>
                     <button
                       (click)="openDeviceDetails(getGpuDeviceId(gpu), 'Gpu')"
@@ -464,6 +490,7 @@ import { BytesPipe, DecimalPipe } from '@shared/pipes';
 export class HardwareComponent implements OnInit, OnDestroy {
   private hardwareService = inject(HardwareService);
   private statusService = inject(StatusService);
+  private deviceInfoService = inject(DeviceInfoService);
   private destroy$ = new Subject<void>();
 
   cpuInfo: CpuInfo | null = null;
@@ -474,6 +501,10 @@ export class HardwareComponent implements OnInit, OnDestroy {
   gpuMetricsMap: Record<string, GpuMetrics> = {};
   motherboardInfo: MotherboardInfo | null = null;
   monitors: Monitor[] = [];
+
+  // Device images
+  cpuImages: ProductImages | null = null;
+  gpuImagesMap: Record<string, ProductImages> = {};
 
   // Modal state
   modalOpen = false;
@@ -498,6 +529,8 @@ export class HardwareComponent implements OnInit, OnDestroy {
       .subscribe(info => {
         this.cpuInfo = info;
         this.statusService.endOperation('hardware-init');
+        // Fetch CPU images
+        this.fetchDeviceImages('Cpu', info.manufacturer, info.name);
       });
 
     this.hardwareService.getMemoryInfo()
@@ -506,7 +539,11 @@ export class HardwareComponent implements OnInit, OnDestroy {
 
     this.hardwareService.getGpuInfo()
       .pipe(takeUntil(this.destroy$))
-      .subscribe(gpus => this.gpuInfoList = gpus);
+      .subscribe(gpus => {
+        this.gpuInfoList = gpus;
+        // Fetch GPU images for each GPU
+        gpus.forEach(gpu => this.fetchGpuImages(gpu));
+      });
 
     this.hardwareService.getMotherboardInfo()
       .pipe(takeUntil(this.destroy$))
@@ -515,6 +552,36 @@ export class HardwareComponent implements OnInit, OnDestroy {
     this.hardwareService.getMonitors()
       .pipe(takeUntil(this.destroy$))
       .subscribe(monitors => this.monitors = monitors);
+  }
+
+  private fetchDeviceImages(deviceType: DeviceType, manufacturer: string, model: string): void {
+    this.deviceInfoService.enrichDevice(deviceType, manufacturer, model)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (enriched) => {
+          if (enriched.images) {
+            this.cpuImages = enriched.images;
+          }
+        },
+        error: () => {
+          // Silently fail - images are optional
+        }
+      });
+  }
+
+  private fetchGpuImages(gpu: GpuInfo): void {
+    this.deviceInfoService.enrichDevice('Gpu', gpu.manufacturer, gpu.name)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (enriched) => {
+          if (enriched.images) {
+            this.gpuImagesMap = { ...this.gpuImagesMap, [gpu.id]: enriched.images };
+          }
+        },
+        error: () => {
+          // Silently fail - images are optional
+        }
+      });
   }
 
   private startRealtimeUpdates(): void {

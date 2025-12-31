@@ -3,11 +3,9 @@
 ** IMPORTANT ** Process the tasks below (in this section). Expand them if needed and put them in the appropriate sections below.
 ** IMPORTANT ** Do not remove this section. Just clear out the tasks once processed.
 
-- We need to display the image of a device next to its name on the card.
+(none)
 
 ## Pending
-
-(none)
 
 - [ ] Hardware Device Images & Documentation System - [Spec](./../___ai_files/specs/_spec-hardware-images.md)
   - [x] Phase 1: Core infrastructure (ImageCache, data models, custom DB schema)
@@ -17,6 +15,13 @@
   - [x] Phase 5: Additional devices (motherboard, storage, memory, monitors)
   - [x] Phase 6: Polish & optimization
   - Phase 7: AI image generation fallback (future)
+
+## Completed (Hardware UI)
+
+- [x] Display device image next to device name on hardware cards
+  - [x] Identified hardware card components (CPU, GPU sections)
+  - [x] Added device image thumbnail to card layout using DeviceImageComponent
+  - [x] Fetch images using existing enrichment service (DeviceInfoService.enrichDevice)
 
 ## Completed (Website)
 
