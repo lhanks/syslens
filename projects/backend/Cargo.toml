@@ -12,8 +12,9 @@ tauri-build = { version = "2", features = [] }
 
 [dependencies]
 # Tauri framework
-tauri = { version = "2", features = [] }
+tauri = { version = "2", features = ["protocol-asset"] }
 tauri-plugin-shell = "2"
+tauri-plugin-fs = "2"
 
 # Serialization
 serde = { version = "1", features = ["derive"] }

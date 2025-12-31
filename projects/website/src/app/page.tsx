@@ -68,6 +68,7 @@ export default function Home() {
           <div className="flex items-center gap-6">
             <a href="#features" className="text-[#94A3B8] hover:text-white transition-colors">Features</a>
             <a href="#gallery" className="text-[#94A3B8] hover:text-white transition-colors">Gallery</a>
+            <a href="/resources" className="text-[#94A3B8] hover:text-white transition-colors">Resources</a>
             <a href="https://github.com/lhanks/syslens" className="text-[#94A3B8] hover:text-white transition-colors">GitHub</a>
             <a
               href="#download"
@@ -451,8 +452,8 @@ export default function Home() {
             <a href="https://github.com/lhanks/syslens/releases" className="text-[#94A3B8] hover:text-white transition-colors">
               Releases
             </a>
-            <a href="https://github.com/lhanks/syslens#readme" className="text-[#94A3B8] hover:text-white transition-colors">
-              Documentation
+            <a href="/resources" className="text-[#94A3B8] hover:text-white transition-colors">
+              Resources
             </a>
           </div>
         </div>

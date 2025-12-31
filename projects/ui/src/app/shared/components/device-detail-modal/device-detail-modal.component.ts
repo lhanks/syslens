@@ -493,11 +493,50 @@ export class DeviceDetailModalComponent implements OnChanges {
         next: (info) => {
           this.deviceInfo = info;
           this.loading = false;
+
+          // If no images available, try to enrich the device with web sources
+          const hasImages = info.images?.primaryImage || (info.images?.gallery?.length ?? 0) > 0;
+          if (!hasImages && info.identifier?.manufacturer && info.identifier?.model) {
+            console.log('[DeviceDetailModal] No images found, attempting enrichment...');
+            this.enrichDeviceImages(info.identifier.manufacturer, info.identifier.model);
+          }
         },
         error: (err) => {
           console.error('Failed to load device info:', err);
           this.error = err?.message || 'Failed to load device information';
           this.loading = false;
+        },
+      });
+  }
+
+  /**
+   * Attempt to enrich device with images from web sources.
+   * This runs in the background after the main device info is loaded.
+   */
+  private enrichDeviceImages(manufacturer: string, model: string): void {
+    this.deviceInfoService
+      .enrichDevice(this.deviceType, manufacturer, model, false)
+      .subscribe({
+        next: (enrichedInfo) => {
+          console.log('[DeviceDetailModal] Enrichment result:', enrichedInfo);
+          console.log('[DeviceDetailModal] Enrichment images:', enrichedInfo.images);
+          // Update images if enrichment found any
+          const hasImages = enrichedInfo.images?.primaryImage || (enrichedInfo.images?.gallery?.length ?? 0) > 0;
+          console.log('[DeviceDetailModal] Has images:', hasImages);
+          if (hasImages) {
+            if (this.deviceInfo) {
+              console.log('[DeviceDetailModal] Updating deviceInfo.images with:', enrichedInfo.images);
+              this.deviceInfo = {
+                ...this.deviceInfo,
+                images: enrichedInfo.images,
+              };
+              console.log('[DeviceDetailModal] Updated deviceInfo:', this.deviceInfo);
+            }
+          }
+        },
+        error: (err) => {
+          // Don't show error to user, enrichment is optional enhancement
+          console.warn('[DeviceDetailModal] Enrichment failed:', err);
         },
       });
   }

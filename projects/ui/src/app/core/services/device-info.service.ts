@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable, shareReplay, map } from 'rxjs';
+import { Observable, shareReplay, map, tap } from 'rxjs';
 import { TauriService } from './tauri.service';
 import {
   DeviceDeepInfo,
@@ -42,13 +42,21 @@ export class DeviceInfoService {
       return this.deviceCache.get(cacheKey)!;
     }
 
+    console.log('[DeviceInfoService] Fetching device info:', { deviceId, deviceType, forceRefresh });
+
     const request$ = this.tauri
       .invoke<DeviceDeepInfo>('get_device_deep_info', {
         deviceId,
         deviceType,
         forceRefresh,
       })
-      .pipe(shareReplay(1));
+      .pipe(
+        tap({
+          next: (info) => console.log('[DeviceInfoService] Got device info:', info),
+          error: (err) => console.error('[DeviceInfoService] Error fetching device info:', err),
+        }),
+        shareReplay(1)
+      );
 
     // Cache the observable
     this.deviceCache.set(cacheKey, request$);

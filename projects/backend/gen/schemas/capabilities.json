@@ -1,1 +1,1 @@
-{"default":{"identifier":"default","description":"Default capabilities for Syslens","local":true,"windows":["main","sidebar-float"],"permissions":["core:default","shell:allow-open","core:webview:allow-create-webview-window"]}}
+{"default":{"identifier":"default","description":"Default capabilities for Syslens","local":true,"windows":["main","sidebar-float"],"permissions":["core:default","shell:allow-open","core:webview:allow-create-webview-window",{"identifier":"fs:allow-read-file","allow":[{"path":"$APPDATA/**"},{"path":"$APPCONFIG/**"},{"path":"$CACHE/**"}]}]}}

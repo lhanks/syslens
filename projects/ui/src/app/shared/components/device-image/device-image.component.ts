@@ -1,4 +1,4 @@
-import { Component, Input, OnChanges, SimpleChanges, signal, computed } from '@angular/core';
+import { Component, Input, OnChanges, OnInit, SimpleChanges, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { convertFileSrc } from '@tauri-apps/api/core';
 import { ImageEntry } from '@core/models/device-info.model';
@@ -65,7 +65,7 @@ import { ImageEntry } from '@core/models/device-info.model';
     </div>
   `,
 })
-export class DeviceImageComponent implements OnChanges {
+export class DeviceImageComponent implements OnInit, OnChanges {
   /** Image URL (remote) */
   @Input() src?: string;
 
@@ -100,8 +100,11 @@ export class DeviceImageComponent implements OnChanges {
   loading = signal(true);
   hasError = signal(false);
 
-  // Computed image source
-  imageSrc = computed(() => {
+  // Track computed source as a signal for reactivity
+  private _imageSrc = signal<string | null>(null);
+  imageSrc = this._imageSrc.asReadonly();
+
+  private computeImageSrc(): string | null {
     const entry = this.imageEntry;
     const cached = entry?.cachedPath || this.cachedPath;
     const remote = entry?.url || this.src;
@@ -120,13 +123,19 @@ export class DeviceImageComponent implements OnChanges {
     }
 
     return null;
-  });
+  }
+
+  ngOnInit(): void {
+    // Initial computation
+    this._imageSrc.set(this.computeImageSrc());
+  }
 
   ngOnChanges(changes: SimpleChanges): void {
-    // Reset state when inputs change
+    // Reset state and recompute when inputs change
     if (changes['src'] || changes['cachedPath'] || changes['imageEntry']) {
       this.loading.set(true);
       this.hasError.set(false);
+      this._imageSrc.set(this.computeImageSrc());
     }
   }
 
