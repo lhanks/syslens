@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useState } from "react";
+import { useGitHubRelease } from "../hooks/useGitHubRelease";
 
 // Screenshot data for the gallery
 const screenshots = [
@@ -16,6 +17,7 @@ const screenshots = [
 export default function Home() {
   const [lightboxImage, setLightboxImage] = useState<string | null>(null);
   const [lightboxAlt, setLightboxAlt] = useState<string>("");
+  const release = useGitHubRelease();
 
   const openLightbox = (src: string, alt: string) => {
     setLightboxImage(src);
@@ -66,7 +68,7 @@ export default function Home() {
           <div className="flex items-center gap-6">
             <a href="#features" className="text-[#94A3B8] hover:text-white transition-colors">Features</a>
             <a href="#gallery" className="text-[#94A3B8] hover:text-white transition-colors">Gallery</a>
-            <a href="https://github.com/syslens/syslens" className="text-[#94A3B8] hover:text-white transition-colors">GitHub</a>
+            <a href="https://github.com/lhanks/syslens" className="text-[#94A3B8] hover:text-white transition-colors">GitHub</a>
             <a
               href="#download"
               className="px-4 py-2 bg-[#3B82F6] hover:bg-[#60A5FA] text-white rounded-lg transition-colors"
@@ -98,13 +100,16 @@ export default function Home() {
           </p>
           <div className="flex justify-center gap-4">
             <a
-              href="#download"
-              className="px-8 py-4 bg-gradient-to-r from-[#3B82F6] to-[#8B5CF6] hover:opacity-90 text-white rounded-xl font-semibold transition-opacity glow"
+              href={release.downloadUrl || "#download"}
+              className="px-8 py-4 bg-gradient-to-r from-[#3B82F6] to-[#8B5CF6] hover:opacity-90 text-white rounded-xl font-semibold transition-opacity glow flex items-center gap-3"
             >
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
               Download for Windows
             </a>
             <a
-              href="https://github.com/syslens/syslens"
+              href="https://github.com/lhanks/syslens"
               className="px-8 py-4 border border-[#334155] hover:border-[#3B82F6] text-white rounded-xl font-semibold transition-colors"
             >
               View on GitHub
@@ -391,22 +396,43 @@ export default function Home() {
           <p className="text-[#94A3B8] mb-8">
             Download Syslens for free. Open source and available for Windows 10/11.
           </p>
+
+          {/* Version badge */}
+          {release.version && (
+            <div className="mb-6">
+              <span className="inline-flex items-center gap-2 px-4 py-2 bg-[#1E293B] rounded-full text-sm">
+                <span className="w-2 h-2 bg-[#10B981] rounded-full animate-pulse"></span>
+                <span className="text-[#94A3B8]">Latest:</span>
+                <span className="text-white font-mono">v{release.version}</span>
+                {release.publishedAt && (
+                  <span className="text-[#64748B]">&bull; {release.publishedAt}</span>
+                )}
+              </span>
+            </div>
+          )}
+
           <div className="flex justify-center gap-4 flex-wrap">
             <a
-              href="https://github.com/syslens/syslens/releases/latest"
-              className="px-8 py-4 bg-gradient-to-r from-[#3B82F6] to-[#8B5CF6] hover:opacity-90 text-white rounded-xl font-semibold transition-opacity"
+              href={release.downloadUrl || release.releaseUrl}
+              className="px-8 py-4 bg-gradient-to-r from-[#3B82F6] to-[#8B5CF6] hover:opacity-90 text-white rounded-xl font-semibold transition-opacity flex items-center gap-3"
             >
-              Download Latest Release
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+              {release.isLoading ? "Loading..." : release.version ? `Download v${release.version}` : "View Releases"}
             </a>
             <a
-              href="https://github.com/syslens/syslens/releases"
+              href="https://github.com/lhanks/syslens/releases"
               className="px-8 py-4 border border-[#334155] hover:border-[#3B82F6] text-white rounded-xl font-semibold transition-colors"
             >
               All Releases
             </a>
           </div>
+
           <p className="text-sm text-[#64748B] mt-6">
-            Windows 10/11 &bull; 64-bit &bull; ~8 MB
+            Windows 10/11 &bull; 64-bit
+            {release.fileSize && <> &bull; {release.fileSize}</>}
+            {release.downloadCount > 0 && <> &bull; {release.downloadCount.toLocaleString()} downloads</>}
           </p>
         </div>
       </section>
@@ -419,13 +445,13 @@ export default function Home() {
             <span className="text-[#94A3B8]">&copy; 2025 Syslens</span>
           </div>
           <div className="flex items-center gap-6">
-            <a href="https://github.com/syslens/syslens" className="text-[#94A3B8] hover:text-white transition-colors">
+            <a href="https://github.com/lhanks/syslens" className="text-[#94A3B8] hover:text-white transition-colors">
               GitHub
             </a>
-            <a href="https://github.com/syslens/syslens/releases" className="text-[#94A3B8] hover:text-white transition-colors">
+            <a href="https://github.com/lhanks/syslens/releases" className="text-[#94A3B8] hover:text-white transition-colors">
               Releases
             </a>
-            <a href="https://github.com/syslens/syslens#readme" className="text-[#94A3B8] hover:text-white transition-colors">
+            <a href="https://github.com/lhanks/syslens#readme" className="text-[#94A3B8] hover:text-white transition-colors">
               Documentation
             </a>
           </div>
