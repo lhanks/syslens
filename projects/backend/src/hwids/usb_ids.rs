@@ -2,9 +2,16 @@
 //!
 //! This module provides lookup functionality for USB Vendor IDs (VID) and
 //! Product IDs (PID) to resolve human-readable names.
+//!
+//! Data is loaded from:
+//! 1. Bundled usb.ids file (25K+ entries)
+//! 2. Embedded fallback data for common devices
 
 use std::collections::HashMap;
 use std::sync::OnceLock;
+
+/// Bundled USB IDs database - included at compile time
+const BUNDLED_USB_IDS: &str = include_str!("../../resources/ids/usb.ids");
 
 /// USB ID Database for looking up vendor and product names
 pub struct UsbIdDatabase {
@@ -22,9 +29,69 @@ impl UsbIdDatabase {
     pub fn global() -> &'static UsbIdDatabase {
         USB_DATABASE.get_or_init(|| {
             let mut db = UsbIdDatabase::new();
+            // Load bundled database first (comprehensive)
+            db.load_bundled_data();
+            // Add embedded fallback data (ensures critical devices are present)
             db.load_embedded_data();
+            log::info!(
+                "USB database loaded: {} vendors, {} products",
+                db.vendors.len(),
+                db.products.len()
+            );
             db
         })
+    }
+
+    /// Load data from the bundled usb.ids file.
+    fn load_bundled_data(&mut self) {
+        let mut current_vendor: Option<u16> = None;
+
+        for line in BUNDLED_USB_IDS.lines() {
+            // Skip comments and empty lines
+            if line.starts_with('#') || line.is_empty() {
+                continue;
+            }
+
+            // Stop at class definitions (lines starting with "C " for device classes)
+            if line.starts_with("C ") {
+                break;
+            }
+
+            // Product line (starts with single tab, not double tab for interfaces)
+            if line.starts_with('\t') && !line.starts_with("\t\t") {
+                if let Some(vid) = current_vendor {
+                    let trimmed = line.trim_start_matches('\t');
+                    if let Some((pid, name)) = Self::parse_id_line(trimmed) {
+                        self.products.insert((vid, pid), name);
+                    }
+                }
+            } else if !line.starts_with('\t') {
+                // Vendor line
+                if let Some((vid, name)) = Self::parse_id_line(line) {
+                    self.vendors.insert(vid, name);
+                    current_vendor = Some(vid);
+                }
+            }
+            // Skip interface lines (double tab)
+        }
+    }
+
+    /// Parse a line in format "xxxx  Name" where xxxx is a 4-digit hex ID.
+    fn parse_id_line(line: &str) -> Option<(u16, String)> {
+        let trimmed = line.trim();
+        if trimmed.len() < 5 {
+            return None;
+        }
+
+        let id_str = &trimmed[..4];
+        let rest = trimmed[4..].trim_start();
+
+        if let Ok(id) = u16::from_str_radix(id_str, 16) {
+            if !rest.is_empty() {
+                return Some((id, rest.to_string()));
+            }
+        }
+        None
     }
 
     /// Create a new empty USB ID database
@@ -396,5 +463,15 @@ mod tests {
         let (vendors, products) = db.stats();
         assert!(vendors > 100, "Should have many vendors");
         assert!(products > 50, "Should have many products");
+    }
+
+    #[test]
+    fn test_bundled_database_loaded() {
+        let db = UsbIdDatabase::global();
+        let (vendors, products) = db.stats();
+        // Verify bundled database was loaded (should have thousands of entries)
+        // With embedded data alone, we'd have ~150 vendors; with usb.ids, we have ~3500+
+        assert!(vendors > 2000, "Expected 2000+ vendors from bundled usb.ids, got {}", vendors);
+        assert!(products > 10000, "Expected 10000+ products from bundled usb.ids, got {}", products);
     }
 }

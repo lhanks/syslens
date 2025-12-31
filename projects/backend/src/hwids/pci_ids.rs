@@ -3,11 +3,15 @@
 //! This module provides lookup services for PCI vendor and device names
 //! based on Vendor ID and Device ID.
 //!
-//! Data is embedded at compile time for common vendors and can be
-//! supplemented with external pci.ids file updates.
+//! Data is loaded from:
+//! 1. Bundled pci.ids file (41K+ entries)
+//! 2. Embedded fallback data for common devices
 
 use std::collections::HashMap;
 use std::sync::OnceLock;
+
+/// Bundled PCI IDs database - included at compile time
+const BUNDLED_PCI_IDS: &str = include_str!("../../resources/ids/pci.ids");
 
 /// PCI ID database for vendor and device name lookup.
 pub struct PciIdDatabase {
@@ -26,9 +30,69 @@ impl PciIdDatabase {
                 vendors: HashMap::new(),
                 devices: HashMap::new(),
             };
+            // Load bundled database first (comprehensive)
+            db.load_bundled_data();
+            // Add embedded fallback data (ensures critical devices are present)
             db.load_embedded_data();
+            log::info!(
+                "PCI database loaded: {} vendors, {} devices",
+                db.vendors.len(),
+                db.devices.len()
+            );
             db
         })
+    }
+
+    /// Load data from the bundled pci.ids file.
+    fn load_bundled_data(&mut self) {
+        let mut current_vendor: Option<u16> = None;
+
+        for line in BUNDLED_PCI_IDS.lines() {
+            // Skip comments and empty lines
+            if line.starts_with('#') || line.is_empty() {
+                continue;
+            }
+
+            // Stop at class definitions
+            if line.starts_with('C') && line.len() > 1 && line.chars().nth(1) == Some(' ') {
+                break;
+            }
+
+            // Device line (starts with single tab, not double tab for subsystems)
+            if line.starts_with('\t') && !line.starts_with("\t\t") {
+                if let Some(vid) = current_vendor {
+                    let trimmed = line.trim_start_matches('\t');
+                    if let Some((did, name)) = Self::parse_id_line(trimmed) {
+                        self.devices.insert((vid, did), name);
+                    }
+                }
+            } else if !line.starts_with('\t') {
+                // Vendor line
+                if let Some((vid, name)) = Self::parse_id_line(line) {
+                    self.vendors.insert(vid, name);
+                    current_vendor = Some(vid);
+                }
+            }
+            // Skip subsystem lines (double tab)
+        }
+    }
+
+    /// Parse a line in format "xxxx  Name" where xxxx is a 4-digit hex ID.
+    fn parse_id_line(line: &str) -> Option<(u16, String)> {
+        let trimmed = line.trim();
+        if trimmed.len() < 5 {
+            return None;
+        }
+
+        let id_str = &trimmed[..4];
+        let rest = trimmed[4..].trim_start();
+
+        if let Ok(id) = u16::from_str_radix(id_str, 16) {
+            if !rest.is_empty() {
+                return Some((id, rest.to_string()));
+            }
+        }
+        None
     }
 
     /// Load embedded vendor and device data.
@@ -344,7 +408,18 @@ mod tests {
     #[test]
     fn test_unknown_device() {
         let db = PciIdDatabase::global();
-        let desc = db.format_device(0xFFFF, 0xFFFF);
-        assert_eq!(desc, "FFFF:FFFF");
+        // Database is comprehensive (41K+ entries), test that unknown returns hex format
+        // Use vendor 0x0000 which is reserved/invalid
+        let desc = db.format_device(0x0000, 0x0000);
+        assert_eq!(desc, "0000:0000");
+    }
+
+    #[test]
+    fn test_bundled_database_loaded() {
+        let db = PciIdDatabase::global();
+        // Verify bundled database was loaded (should have thousands of entries)
+        // With embedded data alone, we'd have ~60 vendors; with pci.ids, we have ~3000+
+        assert!(db.vendors.len() > 1000, "Expected 1000+ vendors from bundled pci.ids");
+        assert!(db.devices.len() > 5000, "Expected 5000+ devices from bundled pci.ids");
     }
 }

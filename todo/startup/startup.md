@@ -16,6 +16,17 @@
   - [x] Phase 6: Polish & optimization
   - Phase 7: AI image generation fallback (future)
 
+## Completed (Hardware ID Databases)
+
+- [x] Integrate comprehensive PCI/USB ID databases
+  - [x] Downloaded pci.ids (41K lines, 1.5MB) from pci-ids.ucw.cz
+  - [x] Downloaded usb.ids (25K lines, 730KB) from linux-usb.org
+  - [x] Fixed UTF-8 encoding issues in usb.ids
+  - [x] Integrated databases via include_str! at compile time
+  - [x] PCI: 3000+ vendors, 5000+ devices loaded at startup
+  - [x] USB: 3500+ vendors, 15000+ products loaded at startup
+  - [x] Updated tests to verify comprehensive database loading
+
 ## Completed (Hardware UI)
 
 - [x] Display device image next to device name on hardware cards
