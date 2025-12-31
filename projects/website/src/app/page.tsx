@@ -42,7 +42,7 @@ export default function Home() {
           >
             &times;
           </button>
-          <div className="max-w-[95vw] max-h-[95vh]" onClick={(e) => e.stopPropagation()}>
+          <div className="max-w-[95vw] max-h-[95vh] cursor-pointer">
             <Image
               src={lightboxImage}
               alt={lightboxAlt}
