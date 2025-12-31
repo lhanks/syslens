@@ -36,6 +36,20 @@ pub struct ProcessInfo {
     pub icon_base64: Option<String>,
 }
 
+/// Metrics for the current Syslens process itself
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SelfMetrics {
+    /// Process ID
+    pub pid: u32,
+    /// CPU usage percentage (0-100)
+    pub cpu_usage: f32,
+    /// Memory usage in bytes
+    pub memory_bytes: u64,
+    /// Virtual memory usage in bytes
+    pub virtual_memory_bytes: u64,
+}
+
 /// Summary of system processes
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]

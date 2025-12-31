@@ -56,6 +56,13 @@ import { getVersion } from '@tauri-apps/api/app';
           </div>
         }
 
+        <!-- Syslens Process Usage -->
+        <div class="flex items-center gap-1.5 border-l border-syslens-border-primary pl-4">
+          <span class="text-syslens-text-muted">App</span>
+          <span class="font-mono w-10 text-right text-syslens-accent-purple">{{ selfCpuUsage().toFixed(1) }}%</span>
+          <span class="font-mono w-16 text-right text-syslens-accent-purple">{{ selfMemoryBytes() | bytes }}</span>
+        </div>
+
         <!-- App Version -->
         <div class="flex items-center gap-1.5 border-l border-syslens-border-primary pl-4">
           <span class="text-syslens-text-muted">v{{ appVersion() }}</span>
@@ -79,6 +86,10 @@ export class StatusBarComponent implements OnInit {
   diskActivity = computed(() => this.metricsService.diskActivity());
   networkDown = computed(() => this.metricsService.networkDownSpeed());
   networkUp = computed(() => this.metricsService.networkUpSpeed());
+
+  // Syslens process metrics
+  selfCpuUsage = computed(() => this.metricsService.selfCpuUsage());
+  selfMemoryBytes = computed(() => this.metricsService.selfMemoryBytes());
 
   // Color classes based on usage levels
   cpuColorClass = computed(() => {

@@ -5,7 +5,7 @@
 
 use crate::models::{
     DataMetadata, DataSource, DeviceDeepInfo, DeviceIdentifier, DeviceSpecifications, DeviceType,
-    SpecCategory, SpecItem,
+    ProductImages, SpecCategory, SpecItem,
 };
 use anyhow::{Context, Result};
 use chrono::{DateTime, Duration, Utc};
@@ -303,6 +303,31 @@ impl KnowledgeStore {
                 documentation: partial.documentation,
                 drivers: partial.driver_info,
             });
+        }
+
+        drop(db);
+        self.save_database()
+    }
+
+    /// Update images for a device.
+    pub fn update_images(
+        &self,
+        device_id: &str,
+        device_type: &DeviceType,
+        images: Option<ProductImages>,
+    ) -> Result<()> {
+        let mut db = self
+            .database
+            .write()
+            .map_err(|_| anyhow::anyhow!("Failed to acquire write lock"))?;
+
+        if let Some(device) = db
+            .devices
+            .iter_mut()
+            .find(|d| d.device_id == device_id && &d.device_type == device_type)
+        {
+            device.images = images;
+            device.last_verified = Utc::now();
         }
 
         drop(db);

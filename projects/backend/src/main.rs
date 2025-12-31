@@ -190,6 +190,7 @@ fn main() {
             // Process commands
             commands::get_processes,
             commands::get_process_summary,
+            commands::get_self_metrics,
             commands::kill_process,
             // Service commands
             commands::get_services,

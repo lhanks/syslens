@@ -236,7 +236,7 @@ impl DeviceEnrichmentService {
         let enriched = EnrichedDeviceInfo {
             identifier: identifier.clone(),
             device_type: device_type.clone(),
-            images,
+            images: images.clone(),
             specs: partial.specs.clone(),
             categories: partial.categories.clone(),
             description: partial.description.clone(),
@@ -251,8 +251,8 @@ impl DeviceEnrichmentService {
             from_cache: false,
         };
 
-        // Store in knowledge store
-        self.store_in_cache(&device_id, &device_type, &identifier, &partial)
+        // Store in knowledge store (including images)
+        self.store_in_cache(&device_id, &device_type, &identifier, &partial, images)
             .await?;
 
         Ok(enriched)
@@ -452,6 +452,7 @@ impl DeviceEnrichmentService {
         device_type: &DeviceType,
         identifier: &DeviceIdentifier,
         partial: &PartialDeviceInfo,
+        images: Option<ProductImages>,
     ) -> Result<()> {
         self.knowledge_store.store_or_merge(
             device_id.to_string(),
@@ -459,6 +460,12 @@ impl DeviceEnrichmentService {
             identifier.clone(),
             partial.clone(),
         )?;
+
+        // Store images separately since they're processed after fetch
+        if images.is_some() {
+            self.knowledge_store
+                .update_images(device_id, device_type, images)?;
+        }
 
         Ok(())
     }

@@ -24,3 +24,11 @@ export interface ProcessSummary {
   totalCpuUsage: number;
   totalMemoryBytes: number;
 }
+
+/** Metrics for the current Syslens process itself */
+export interface SelfMetrics {
+  pid: number;
+  cpuUsage: number;
+  memoryBytes: number;
+  virtualMemoryBytes: number;
+}

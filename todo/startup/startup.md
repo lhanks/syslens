@@ -3,9 +3,11 @@
 ** IMPORTANT ** Process the tasks below (in this section). Expand them if needed and put them in the appropriate sections below.
 ** IMPORTANT ** Do not remove this section. Just clear out the tasks once processed.
 
-
+- We need to display the image of a device next to its name on the card.
 
 ## Pending
+
+(none)
 
 - [ ] Hardware Device Images & Documentation System - [Spec](./../___ai_files/specs/_spec-hardware-images.md)
   - [x] Phase 1: Core infrastructure (ImageCache, data models, custom DB schema)
@@ -15,6 +17,21 @@
   - [x] Phase 5: Additional devices (motherboard, storage, memory, monitors)
   - [x] Phase 6: Polish & optimization
   - Phase 7: AI image generation fallback (future)
+
+## Completed (Website)
+
+- [x] Add website links/resources page
+  - [x] Created `/resources` page with categorized links
+  - [x] Added navigation link in header and footer
+  - [x] Includes: GitHub, Releases, Vercel, Technology docs
+
+## Completed (Status Bar)
+
+- [x] Add current process CPU/MEM usage to status bar
+  - [x] Created `SelfMetrics` model and `get_self_metrics` Rust command
+  - [x] Added polling in MetricsHistoryService (1s interval)
+  - [x] Status bar displays "App" with CPU % and memory usage
+  - [x] Real-time updates alongside other system metrics
 
 ## Completed (Phase 6)
 

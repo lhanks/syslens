@@ -6,7 +6,7 @@ import { HardwareService } from './hardware.service';
 import { StorageService } from './storage.service';
 import { NetworkService } from './network.service';
 import { TauriService } from './tauri.service';
-import { NetworkAdapter, AdapterStats, MemoryInfo, GpuMetrics } from '../models';
+import { NetworkAdapter, AdapterStats, MemoryInfo, GpuMetrics, SelfMetrics } from '../models';
 
 const MAX_HISTORY_POINTS = 60; // 60 seconds of history
 const NETWORK_EMA_ALPHA = 0.3; // Smoothing factor for network speeds (0-1, lower = smoother)
@@ -56,6 +56,10 @@ export class MetricsHistoryService implements OnDestroy {
   private _gpuUsage = signal(0);
   private _gpuMetrics = signal<GpuMetrics[]>([]);
 
+  // Self (Syslens process) metrics
+  private _selfCpuUsage = signal(0);
+  private _selfMemoryBytes = signal(0);
+
   // Network tracking state
   private activeAdapters: NetworkAdapter[] = [];
   private previousNetworkStats = new Map<string, { bytesReceived: number; bytesSent: number; timestamp: number }>();
@@ -93,6 +97,10 @@ export class MetricsHistoryService implements OnDestroy {
   networkUpSpeed = computed(() => this._networkUpSpeed());
   gpuUsage = computed(() => this._gpuUsage());
   gpuMetrics = computed(() => this._gpuMetrics());
+
+  // Self (Syslens process) metrics
+  selfCpuUsage = computed(() => this._selfCpuUsage());
+  selfMemoryBytes = computed(() => this._selfMemoryBytes());
 
   // Use smoothed max for stable graph scaling (prevents jitter from scale changes)
   networkMaxSpeed = computed(() => this._smoothedNetworkMax());
@@ -242,6 +250,18 @@ export class MetricsHistoryService implements OnDestroy {
         const primaryUsage = metrics.length > 0 ? metrics[0].usagePercent : 0;
         this._gpuUsage.set(primaryUsage);
       });
+
+    // Self (Syslens process) metrics - every second
+    interval(1000).pipe(
+      startWith(0),
+      takeUntil(this.destroy$),
+      switchMap(() => this.tauriService.invoke<SelfMetrics>('get_self_metrics').pipe(
+        catchError(() => of({ pid: 0, cpuUsage: 0, memoryBytes: 0, virtualMemoryBytes: 0 }))
+      ))
+    ).subscribe(metrics => {
+      this._selfCpuUsage.set(metrics.cpuUsage);
+      this._selfMemoryBytes.set(metrics.memoryBytes);
+    });
 
     // Network stats - every second
     interval(1000).pipe(

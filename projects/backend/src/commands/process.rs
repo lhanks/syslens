@@ -1,6 +1,6 @@
 //! Process-related Tauri commands
 
-use crate::models::{ProcessInfo, ProcessSummary};
+use crate::models::{ProcessInfo, ProcessSummary, SelfMetrics};
 use crate::services::ICON_CACHE;
 use crate::state::SysInfoState;
 use sysinfo::{Pid, Process, ProcessStatus, System, Users};
@@ -114,6 +114,35 @@ fn process_to_info(
         exe_path,
         icon_base64,
     }
+}
+
+/// Get metrics for the current Syslens process itself
+#[tauri::command]
+pub fn get_self_metrics(state: State<SysInfoState>) -> SelfMetrics {
+    let current_pid = std::process::id();
+    log::debug!("Command: get_self_metrics (pid={})", current_pid);
+
+    state.with_processes(|sys, _users, cpu_count| {
+        if let Some(process) = sys.process(Pid::from_u32(current_pid)) {
+            // Normalize CPU usage by dividing by core count
+            let normalized_cpu = process.cpu_usage() / cpu_count.max(1.0);
+
+            SelfMetrics {
+                pid: current_pid,
+                cpu_usage: normalized_cpu,
+                memory_bytes: process.memory(),
+                virtual_memory_bytes: process.virtual_memory(),
+            }
+        } else {
+            // Fallback if process not found (shouldn't happen)
+            SelfMetrics {
+                pid: current_pid,
+                cpu_usage: 0.0,
+                memory_bytes: 0,
+                virtual_memory_bytes: 0,
+            }
+        }
+    })
 }
 
 /// Kill a process by PID
