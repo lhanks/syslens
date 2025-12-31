@@ -1,8 +1,61 @@
+"use client";
+
 import Image from "next/image";
+import { useState } from "react";
+
+// Screenshot data for the gallery
+const screenshots = [
+  { src: "/screenshots/hardware-page.png", alt: "Hardware Dashboard", title: "Hardware Dashboard", desc: "CPU, GPU, memory specs with vendor badges", color: "#3B82F6" },
+  { src: "/screenshots/system-page.png", alt: "System Overview", title: "System Overview", desc: "OS info, uptime, and BIOS details", color: "#8B5CF6" },
+  { src: "/screenshots/processes-page.png", alt: "Process Manager", title: "Process Manager", desc: "App icons, grouping, and resource usage", color: "#10B981" },
+  { src: "/screenshots/services-page.png", alt: "Services Manager", title: "Services Manager", desc: "Windows services with status and filters", color: "#A855F7" },
+  { src: "/screenshots/network-page.png", alt: "Network Adapters", title: "Network Adapters", desc: "Per-adapter graphs and IP configuration", color: "#F59E0B" },
+  { src: "/screenshots/storage-page.png", alt: "Storage Health", title: "Storage Health", desc: "Disk usage, volumes, and S.M.A.R.T. status", color: "#06B6D4" },
+];
 
 export default function Home() {
+  const [lightboxImage, setLightboxImage] = useState<string | null>(null);
+  const [lightboxAlt, setLightboxAlt] = useState<string>("");
+
+  const openLightbox = (src: string, alt: string) => {
+    setLightboxImage(src);
+    setLightboxAlt(alt);
+  };
+
+  const closeLightbox = () => {
+    setLightboxImage(null);
+    setLightboxAlt("");
+  };
+
   return (
     <div className="min-h-screen">
+      {/* Lightbox Modal */}
+      {lightboxImage && (
+        <div
+          className="fixed inset-0 z-[100] bg-black/90 flex items-center justify-center p-4 cursor-pointer"
+          onClick={closeLightbox}
+        >
+          <button
+            className="absolute top-4 right-4 text-white text-4xl hover:text-[#3B82F6] transition-colors"
+            onClick={closeLightbox}
+            aria-label="Close"
+          >
+            &times;
+          </button>
+          <div className="max-w-[95vw] max-h-[95vh]" onClick={(e) => e.stopPropagation()}>
+            <Image
+              src={lightboxImage}
+              alt={lightboxAlt}
+              width={1920}
+              height={1080}
+              className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl"
+              priority
+            />
+            <p className="text-center text-white/80 mt-4 text-lg">{lightboxAlt}</p>
+          </div>
+        </div>
+      )}
+
       {/* Navigation */}
       <nav className="fixed top-0 left-0 right-0 z-50 bg-[#0F172A]/80 backdrop-blur-md border-b border-[#334155]">
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
@@ -72,8 +125,11 @@ export default function Home() {
                 transformStyle: 'preserve-3d'
               }}
             >
-              {/* Main screenshot */}
-              <div className="card p-2 glow shadow-2xl">
+              {/* Main screenshot - clickable */}
+              <div
+                className="card p-2 glow shadow-2xl cursor-pointer hover:scale-[1.02] transition-transform"
+                onClick={() => openLightbox("/screenshots/hardware-page.png", "Hardware Dashboard")}
+              >
                 <Image
                   src="/screenshots/hardware-page.png"
                   alt="Syslens Hardware Dashboard"
@@ -82,11 +138,14 @@ export default function Home() {
                   className="rounded-lg"
                   priority
                 />
+                <div className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity bg-black/20 rounded-lg">
+                  <span className="bg-white/90 text-black px-4 py-2 rounded-lg font-medium">Click to enlarge</span>
+                </div>
               </div>
 
               {/* Secondary screenshots fading into distance */}
               <div
-                className="absolute -right-32 top-16 w-72 opacity-40 blur-[1px]"
+                className="absolute -right-32 top-16 w-72 opacity-40 blur-[1px] pointer-events-none"
                 style={{
                   transform: 'translateZ(-100px) rotateY(15deg)',
                   transformStyle: 'preserve-3d'
@@ -104,7 +163,7 @@ export default function Home() {
               </div>
 
               <div
-                className="absolute -left-24 top-24 w-64 opacity-30 blur-[2px]"
+                className="absolute -left-24 top-24 w-64 opacity-30 blur-[2px] pointer-events-none"
                 style={{
                   transform: 'translateZ(-150px) rotateY(-20deg)',
                   transformStyle: 'preserve-3d'
@@ -264,100 +323,42 @@ export default function Home() {
       <section id="gallery" className="py-20 px-6 bg-[#020617]">
         <div className="max-w-6xl mx-auto">
           <h2 className="text-3xl font-bold text-center mb-4">See it in action</h2>
-          <p className="text-[#94A3B8] text-center mb-12 max-w-2xl mx-auto">
+          <p className="text-[#94A3B8] text-center mb-4 max-w-2xl mx-auto">
             Explore every corner of the application with these feature screenshots.
+          </p>
+          <p className="text-[#64748B] text-center mb-12 text-sm">
+            Click any image to view full size
           </p>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {/* Hardware */}
-            <div className="group">
-              <div className="card p-2 transition-all group-hover:border-[#3B82F6]/50">
-                <Image
-                  src="/screenshots/hardware-page.png"
-                  alt="Hardware Dashboard"
-                  width={640}
-                  height={400}
-                  className="rounded-lg"
-                />
+            {screenshots.map((shot, index) => (
+              <div key={index} className="group">
+                <div
+                  className="card p-2 transition-all cursor-pointer hover:scale-[1.02]"
+                  style={{ borderColor: 'transparent' }}
+                  onMouseEnter={(e) => (e.currentTarget.style.borderColor = `${shot.color}80`)}
+                  onMouseLeave={(e) => (e.currentTarget.style.borderColor = 'transparent')}
+                  onClick={() => openLightbox(shot.src, shot.alt)}
+                >
+                  <div className="relative">
+                    <Image
+                      src={shot.src}
+                      alt={shot.alt}
+                      width={640}
+                      height={400}
+                      className="rounded-lg"
+                    />
+                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/30 rounded-lg">
+                      <span className="bg-white/90 text-black px-3 py-1.5 rounded-lg text-sm font-medium">
+                        View full size
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <h3 className="text-lg font-semibold mt-3 text-center">{shot.title}</h3>
+                <p className="text-sm text-[#64748B] text-center">{shot.desc}</p>
               </div>
-              <h3 className="text-lg font-semibold mt-3 text-center">Hardware Dashboard</h3>
-              <p className="text-sm text-[#64748B] text-center">CPU, GPU, memory specs with vendor badges</p>
-            </div>
-
-            {/* System */}
-            <div className="group">
-              <div className="card p-2 transition-all group-hover:border-[#8B5CF6]/50">
-                <Image
-                  src="/screenshots/system-page.png"
-                  alt="System Overview"
-                  width={640}
-                  height={400}
-                  className="rounded-lg"
-                />
-              </div>
-              <h3 className="text-lg font-semibold mt-3 text-center">System Overview</h3>
-              <p className="text-sm text-[#64748B] text-center">OS info, uptime, and resource graphs</p>
-            </div>
-
-            {/* Processes */}
-            <div className="group">
-              <div className="card p-2 transition-all group-hover:border-[#10B981]/50">
-                <Image
-                  src="/screenshots/processes-page.png"
-                  alt="Process Manager"
-                  width={640}
-                  height={400}
-                  className="rounded-lg"
-                />
-              </div>
-              <h3 className="text-lg font-semibold mt-3 text-center">Process Manager</h3>
-              <p className="text-sm text-[#64748B] text-center">App icons, grouping, and resource usage</p>
-            </div>
-
-            {/* Services */}
-            <div className="group">
-              <div className="card p-2 transition-all group-hover:border-[#A855F7]/50">
-                <Image
-                  src="/screenshots/services-page.png"
-                  alt="Services Manager"
-                  width={640}
-                  height={400}
-                  className="rounded-lg"
-                />
-              </div>
-              <h3 className="text-lg font-semibold mt-3 text-center">Services Manager</h3>
-              <p className="text-sm text-[#64748B] text-center">Windows services with status and filters</p>
-            </div>
-
-            {/* Network */}
-            <div className="group">
-              <div className="card p-2 transition-all group-hover:border-[#F59E0B]/50">
-                <Image
-                  src="/screenshots/network-page.png"
-                  alt="Network Adapters"
-                  width={640}
-                  height={400}
-                  className="rounded-lg"
-                />
-              </div>
-              <h3 className="text-lg font-semibold mt-3 text-center">Network Adapters</h3>
-              <p className="text-sm text-[#64748B] text-center">Per-adapter graphs and IP configuration</p>
-            </div>
-
-            {/* Storage */}
-            <div className="group">
-              <div className="card p-2 transition-all group-hover:border-[#06B6D4]/50">
-                <Image
-                  src="/screenshots/storage-page.png"
-                  alt="Storage Health"
-                  width={640}
-                  height={400}
-                  className="rounded-lg"
-                />
-              </div>
-              <h3 className="text-lg font-semibold mt-3 text-center">Storage Health</h3>
-              <p className="text-sm text-[#64748B] text-center">Disk usage, volumes, and S.M.A.R.T. status</p>
-            </div>
+            ))}
           </div>
         </div>
       </section>
