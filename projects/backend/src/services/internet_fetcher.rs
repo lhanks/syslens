@@ -479,6 +479,74 @@ impl InternetFetcher {
 
         let device_id = format!("cpu-amd-{}", model.to_lowercase().replace(" ", "-"));
 
+        // Extract product image - first try og:image meta tag (most reliable)
+        let mut image_url: Option<String> = None;
+        let og_image_selector = Selector::parse("meta[property='og:image']").unwrap();
+        if let Some(og_img) = document.select(&og_image_selector).next() {
+            if let Some(content) = og_img.value().attr("content") {
+                if !content.is_empty() {
+                    image_url = Some(if content.starts_with("//") {
+                        format!("https:{}", content)
+                    } else if content.starts_with('/') {
+                        format!("https://www.amd.com{}", content)
+                    } else {
+                        content.to_string()
+                    });
+                }
+            }
+        }
+
+        // Fall back to various image selectors if og:image not found
+        if image_url.is_none() {
+            let img_selectors = [
+                "img.cmp-image__image",
+                "div.cmp-image img",
+                ".cmp-imagethumbnailcarousel__mainimage img",
+                "img.product-image",
+                "div.product-hero img",
+                ".product-media img",
+                "img[alt*='AMD']",
+                "img[alt*='Ryzen']",
+            ];
+
+            for selector_str in img_selectors {
+                if let Ok(selector) = Selector::parse(selector_str) {
+                    if let Some(img) = document.select(&selector).next() {
+                        let src = img
+                            .value()
+                            .attr("src")
+                            .or_else(|| img.value().attr("srcset"))
+                            .or_else(|| img.value().attr("data-src"));
+
+                        if let Some(src) = src {
+                            // Get the first URL from srcset if present
+                            let src = src
+                                .split(',')
+                                .next()
+                                .unwrap_or(src)
+                                .split(' ')
+                                .next()
+                                .unwrap_or(src);
+                            image_url = Some(if src.starts_with("//") {
+                                format!("https:{}", src)
+                            } else if src.starts_with('/') {
+                                format!("https://www.amd.com{}", src)
+                            } else {
+                                src.to_string()
+                            });
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        // Build ProductImages if we found an image
+        let images = image_url.map(|url| ProductImages {
+            primary_image: Some(url),
+            ..Default::default()
+        });
+
         Ok(DeviceDeepInfo {
             device_id,
             device_type: DeviceType::Cpu,
@@ -514,7 +582,7 @@ impl InternetFetcher {
                 datasheets: vec![],
                 firmware_updates: vec![],
             }),
-            images: None,
+            images,
             metadata: DataMetadata {
                 source: DataSource::ManufacturerWebsite,
                 last_updated: Utc::now(),

@@ -41,7 +41,8 @@
       "Bash(netstat:*)",
       "Bash(start /c/dev/syslens/projects/branding/syslens/v1/index.html)",
       "Bash(\"/c/Users/lesli/.cargo/bin/cargo\" tauri build)",
-      "Bash(tasklist:*)"
+      "Bash(tasklist:*)",
+      "Bash(\"/c/Users/lesli/.cargo/bin/cargo\" test amdproduct -- --nocapture)"
     ],
     "deny": []
   }

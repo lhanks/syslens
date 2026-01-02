@@ -33,8 +33,20 @@ impl AMDProductSource {
 
     /// Normalize AMD model name for URL slug generation.
     fn normalize_for_slug(model: &str) -> String {
-        model
-            .to_lowercase()
+        let mut cleaned = model.to_lowercase();
+
+        // Remove common CPU suffixes like "12-Core Processor", "6-Core Processor", etc.
+        // Pattern: \d+-core\s*processor$
+        if let Ok(re) = regex::Regex::new(r"(?i)\s*\d+-core\s*processor\s*$") {
+            cleaned = re.replace(&cleaned, "").to_string();
+        }
+
+        // Also remove standalone "processor" suffix
+        if let Ok(re) = regex::Regex::new(r"(?i)\s+processor\s*$") {
+            cleaned = re.replace(&cleaned, "").to_string();
+        }
+
+        cleaned
             .replace("amd ", "")
             .replace("radeon ", "")
             .replace("ryzen ", "ryzen-")
@@ -93,15 +105,61 @@ impl AMDProductSource {
         None
     }
 
-    /// Try to construct direct product URL.
-    fn build_direct_url(model: &str, device_type: &DeviceType) -> String {
+    /// Try to construct direct product URLs (returns multiple possibilities).
+    fn build_direct_urls(model: &str, device_type: &DeviceType) -> Vec<String> {
         let slug = Self::normalize_for_slug(model);
-        let product_type = match device_type {
-            DeviceType::Cpu => "cpu",
-            DeviceType::Gpu => "graphics",
-            _ => "processors",
-        };
-        format!("{}/en/products/{}/amd-{}", AMD_BASE, product_type, slug)
+        let mut urls = Vec::new();
+
+        match device_type {
+            DeviceType::Cpu => {
+                // Extract series number for Ryzen CPUs (e.g., "9900X" -> "9000")
+                if let Some(series) = Self::extract_ryzen_series(&slug) {
+                    // Desktop Ryzen pattern: /processors/desktops/ryzen/{series}-series/
+                    urls.push(format!(
+                        "{}/en/products/processors/desktops/ryzen/{}-series/amd-{}.html",
+                        AMD_BASE, series, slug
+                    ));
+                }
+                // Also try Threadripper pattern
+                if slug.contains("threadripper") {
+                    urls.push(format!(
+                        "{}/en/products/processors/desktops/threadripper/amd-{}.html",
+                        AMD_BASE, slug
+                    ));
+                }
+                // EPYC pattern
+                if slug.contains("epyc") {
+                    urls.push(format!(
+                        "{}/en/products/processors/server/epyc/amd-{}.html",
+                        AMD_BASE, slug
+                    ));
+                }
+                // Fallback to old pattern
+                urls.push(format!("{}/en/products/cpu/amd-{}", AMD_BASE, slug));
+            }
+            DeviceType::Gpu => {
+                urls.push(format!("{}/en/products/graphics/amd-{}", AMD_BASE, slug));
+            }
+            _ => {
+                urls.push(format!("{}/en/products/processors/amd-{}", AMD_BASE, slug));
+            }
+        }
+
+        urls
+    }
+
+    /// Extract Ryzen series (e.g., "9000" from "ryzen-9-9900x").
+    fn extract_ryzen_series(slug: &str) -> Option<String> {
+        // Pattern: ryzen-X-NNNNY where NNN is the first digits of the 4-digit model
+        // e.g., ryzen-9-9900x -> 9000, ryzen-5-7600x -> 7000
+        if let Ok(re) = regex::Regex::new(r"ryzen-\d-(\d)\d{3}") {
+            if let Some(caps) = re.captures(slug) {
+                if let Some(first_digit) = caps.get(1) {
+                    return Some(format!("{}000", first_digit.as_str()));
+                }
+            }
+        }
+        None
     }
 
     /// Build search URL.
@@ -117,17 +175,24 @@ impl AMDProductSource {
         model: &str,
         device_type: &DeviceType,
     ) -> Result<Option<String>> {
-        // First try direct URL construction
-        let direct_url = Self::build_direct_url(model, device_type);
-        log::debug!("Trying direct AMD URL: {}", direct_url);
+        // Try multiple direct URL patterns
+        let direct_urls = Self::build_direct_urls(model, device_type);
+        for direct_url in &direct_urls {
+            log::debug!("Trying direct AMD URL: {}", direct_url);
 
-        let response = self.client.get(&direct_url).send().await;
-        if let Ok(resp) = response {
-            if resp.status().is_success() {
-                let html = resp.text().await?;
-                // Verify it's a real product page
-                if html.contains("product-specs") || html.contains("amd-product") {
-                    return Ok(Some(direct_url));
+            if let Ok(resp) = self.client.get(direct_url).send().await {
+                if resp.status().is_success() {
+                    if let Ok(html) = resp.text().await {
+                        // Verify it's a real product page (check for AMD product indicators)
+                        if html.contains("product-specs")
+                            || html.contains("amd-product")
+                            || html.contains("specifications")
+                            || html.contains("product-details")
+                        {
+                            log::info!("Found AMD product page: {}", direct_url);
+                            return Ok(Some(direct_url.clone()));
+                        }
+                    }
                 }
             }
         }
@@ -212,41 +277,65 @@ impl AMDProductSource {
             ..Default::default()
         };
 
-        // Extract product image
+        // Extract product image - first try og:image meta tag (most reliable)
+        let og_image_selector = Selector::parse("meta[property='og:image']").unwrap();
+        if let Some(og_img) = document.select(&og_image_selector).next() {
+            if let Some(content) = og_img.value().attr("content") {
+                if !content.is_empty() {
+                    data.image_url = Some(if content.starts_with("//") {
+                        format!("https:{}", content)
+                    } else if content.starts_with('/') {
+                        format!("{}{}", AMD_BASE, content)
+                    } else {
+                        content.to_string()
+                    });
+                }
+            }
+        }
+
+        // Fall back to various image selectors if og:image not found
         let img_selectors = [
+            "img.cmp-image__image",
+            "div.cmp-image img",
+            ".cmp-imagethumbnailcarousel__mainimage img",
             "img.product-image",
             "div.product-hero img",
             ".product-media img",
             "picture.product-image source",
             "img[alt*='AMD']",
+            "img[alt*='Ryzen']",
+            "img[alt*='Radeon']",
         ];
 
-        for selector_str in img_selectors {
-            if let Ok(selector) = Selector::parse(selector_str) {
-                if let Some(img) = document.select(&selector).next() {
-                    let src = img
-                        .value()
-                        .attr("src")
-                        .or_else(|| img.value().attr("srcset"))
-                        .or_else(|| img.value().attr("data-src"));
+        // Only use fallback selectors if og:image wasn't found
+        if data.image_url.is_none() {
+            for selector_str in img_selectors {
+                if let Ok(selector) = Selector::parse(selector_str) {
+                    if let Some(img) = document.select(&selector).next() {
+                        let src = img
+                            .value()
+                            .attr("src")
+                            .or_else(|| img.value().attr("srcset"))
+                            .or_else(|| img.value().attr("data-src"));
 
-                    if let Some(src) = src {
-                        // Get the first URL from srcset if present
-                        let src = src
-                            .split(',')
-                            .next()
-                            .unwrap_or(src)
-                            .split(' ')
-                            .next()
-                            .unwrap_or(src);
-                        data.image_url = Some(if src.starts_with("//") {
-                            format!("https:{}", src)
-                        } else if src.starts_with('/') {
-                            format!("{}{}", AMD_BASE, src)
-                        } else {
-                            src.to_string()
-                        });
-                        break;
+                        if let Some(src) = src {
+                            // Get the first URL from srcset if present
+                            let src = src
+                                .split(',')
+                                .next()
+                                .unwrap_or(src)
+                                .split(' ')
+                                .next()
+                                .unwrap_or(src);
+                            data.image_url = Some(if src.starts_with("//") {
+                                format!("https:{}", src)
+                            } else if src.starts_with('/') {
+                                format!("{}{}", AMD_BASE, src)
+                            } else {
+                                src.to_string()
+                            });
+                            break;
+                        }
                     }
                 }
             }
@@ -654,6 +743,15 @@ mod tests {
             AMDProductSource::normalize_for_slug("Radeon RX 7900 XTX"),
             "rx-7900-xtx"
         );
+        // Test stripping "-Core Processor" suffix
+        assert_eq!(
+            AMDProductSource::normalize_for_slug("AMD Ryzen 9 9900X 12-Core Processor"),
+            "ryzen-9-9900x"
+        );
+        assert_eq!(
+            AMDProductSource::normalize_for_slug("AMD Ryzen 5 7600X 6-Core Processor"),
+            "ryzen-5-7600x"
+        );
     }
 
     #[test]
@@ -670,13 +768,36 @@ mod tests {
 
     #[test]
     fn test_normalize_model() {
+        // normalize_model removes "amd " prefix but keeps rest lowercase
         assert_eq!(
             AMDProductSource::normalize_model("AMD Ryzen 9 7950X"),
             "ryzen 9 7950x"
         );
+        // Removes (R) and (TM) trademark symbols
         assert_eq!(
             AMDProductSource::normalize_model("AMD(R) Radeon(TM) RX 7900 XTX"),
-            "radeon rx 7900 xtx"
+            "amd radeon rx 7900 xtx"
         );
+    }
+
+    #[test]
+    fn test_extract_ryzen_series() {
+        // 9000 series
+        assert_eq!(
+            AMDProductSource::extract_ryzen_series("ryzen-9-9900x"),
+            Some("9000".to_string())
+        );
+        // 7000 series
+        assert_eq!(
+            AMDProductSource::extract_ryzen_series("ryzen-5-7600x"),
+            Some("7000".to_string())
+        );
+        // 5000 series
+        assert_eq!(
+            AMDProductSource::extract_ryzen_series("ryzen-7-5800x"),
+            Some("5000".to_string())
+        );
+        // Non-Ryzen should return None
+        assert_eq!(AMDProductSource::extract_ryzen_series("rx-7900-xtx"), None);
     }
 }

@@ -80,16 +80,29 @@ pub async fn fetch_from_all_sources(
 ) -> Vec<SourceResult> {
     use futures::future::join_all;
 
-    let futures = sources
+    let supporting_sources: Vec<_> = sources
         .iter()
         .filter(|s| s.supports(device_type, identifier))
-        .map(|source| async {
-            let name = source.name().to_string();
-            match source.fetch(device_type, identifier).await {
-                Ok(info) => SourceResult::success(name, info),
-                Err(e) => SourceResult::failure(name, e.to_string()),
+        .collect();
+
+    log::debug!(
+        "Fetching {:?} {} {} from {} sources",
+        device_type,
+        identifier.manufacturer,
+        identifier.model,
+        supporting_sources.len()
+    );
+
+    let futures = supporting_sources.into_iter().map(|source| async {
+        let name = source.name().to_string();
+        match source.fetch(device_type, identifier).await {
+            Ok(info) => SourceResult::success(name, info),
+            Err(e) => {
+                log::debug!("Source '{}' failed: {}", name, e);
+                SourceResult::failure(name, e.to_string())
             }
-        });
+        }
+    });
 
     join_all(futures).await
 }
