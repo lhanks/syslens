@@ -1,6 +1,6 @@
 //! Memory device source for RAM specifications.
 //!
-//! Fetches memory specifications from manufacturer websites
+//! Fetches memory specifications and images from manufacturer websites
 //! and aggregator databases.
 
 use crate::models::{DeviceIdentifier, DeviceType, SpecCategory, SpecItem};
@@ -9,11 +9,11 @@ use crate::services::PartialDeviceInfo;
 use anyhow::{Context, Result};
 use async_trait::async_trait;
 use reqwest::Client;
+use scraper::{Html, Selector};
 use std::collections::HashMap;
 
 /// Memory device source.
 pub struct MemorySource {
-    #[allow(dead_code)] // Reserved for future web scraping
     client: Client,
 }
 
@@ -285,6 +285,166 @@ impl MemorySource {
 
         (specs, categories)
     }
+
+    /// Build manufacturer-specific product search URL.
+    fn build_product_url(manufacturer: &Manufacturer, model: &str) -> Option<String> {
+        let encoded = urlencoding::encode(model);
+        match manufacturer {
+            Manufacturer::Corsair => Some(format!(
+                "https://www.corsair.com/us/en/search?query={}",
+                encoded
+            )),
+            Manufacturer::GSkill => Some(format!(
+                "https://www.gskill.com/search?q={}",
+                encoded
+            )),
+            Manufacturer::Kingston => Some(format!(
+                "https://www.kingston.com/en/search?q={}",
+                encoded
+            )),
+            Manufacturer::Crucial => Some(format!(
+                "https://www.crucial.com/search?q={}",
+                encoded
+            )),
+            Manufacturer::TeamGroup => Some(format!(
+                "https://www.teamgroupinc.com/en/catalog/act.php?act=3&keyword={}",
+                encoded
+            )),
+            Manufacturer::Adata => Some(format!(
+                "https://www.adata.com/en/search?keyword={}",
+                encoded
+            )),
+            Manufacturer::Patriot => Some(format!(
+                "https://www.patriotmemory.com/search?q={}",
+                encoded
+            )),
+            // Samsung, SK Hynix, Micron are OEM - use generic image
+            _ => None,
+        }
+    }
+
+    /// Extract image URL from HTML page.
+    fn extract_image_from_html(html: &str, manufacturer: &Manufacturer) -> Option<String> {
+        let document = Html::parse_document(html);
+
+        // Try og:image first (most reliable)
+        if let Ok(og_selector) = Selector::parse("meta[property='og:image']") {
+            if let Some(og_img) = document.select(&og_selector).next() {
+                if let Some(content) = og_img.value().attr("content") {
+                    if !content.is_empty() && content.contains("http") {
+                        return Some(content.to_string());
+                    }
+                }
+            }
+        }
+
+        // Manufacturer-specific selectors
+        let selectors = match manufacturer {
+            Manufacturer::Corsair => vec![
+                "img.product-image",
+                "img.pdp-image",
+                "div.product-media img",
+                "img[alt*='Vengeance']",
+                "img[alt*='Dominator']",
+            ],
+            Manufacturer::GSkill => vec![
+                "img.product-img",
+                "div.product-image img",
+                "img[alt*='Trident']",
+                "img[alt*='Ripjaws']",
+            ],
+            Manufacturer::Kingston => vec![
+                "img.product-image",
+                "div.pdp-hero img",
+                "img[alt*='FURY']",
+            ],
+            Manufacturer::Crucial => vec![
+                "img.product-image",
+                "div.product-gallery img",
+            ],
+            _ => vec![
+                "img.product-image",
+                "div.product img",
+                "img[alt*='DDR']",
+                "img[alt*='memory']",
+            ],
+        };
+
+        for selector_str in selectors {
+            if let Ok(selector) = Selector::parse(selector_str) {
+                if let Some(img) = document.select(&selector).next() {
+                    if let Some(src) = img.value().attr("src")
+                        .or_else(|| img.value().attr("data-src"))
+                        .or_else(|| img.value().attr("srcset").map(|s| s.split(',').next().unwrap_or("").split(' ').next().unwrap_or("")))
+                    {
+                        if !src.is_empty() {
+                            let url = if src.starts_with("//") {
+                                format!("https:{}", src)
+                            } else if src.starts_with('/') {
+                                // Need base URL from manufacturer
+                                match manufacturer {
+                                    Manufacturer::Corsair => format!("https://www.corsair.com{}", src),
+                                    Manufacturer::GSkill => format!("https://www.gskill.com{}", src),
+                                    Manufacturer::Kingston => format!("https://www.kingston.com{}", src),
+                                    Manufacturer::Crucial => format!("https://www.crucial.com{}", src),
+                                    Manufacturer::TeamGroup => format!("https://www.teamgroupinc.com{}", src),
+                                    Manufacturer::Adata => format!("https://www.adata.com{}", src),
+                                    Manufacturer::Patriot => format!("https://www.patriotmemory.com{}", src),
+                                    _ => src.to_string(),
+                                }
+                            } else {
+                                src.to_string()
+                            };
+                            return Some(url);
+                        }
+                    }
+                }
+            }
+        }
+
+        None
+    }
+
+    /// Fetch product image from manufacturer website.
+    async fn fetch_manufacturer_image(&self, manufacturer: &Manufacturer, model: &str) -> Option<String> {
+        let url = Self::build_product_url(manufacturer, model)?;
+
+        log::debug!("Fetching memory image from: {}", url);
+
+        match self.client.get(&url).send().await {
+            Ok(response) => {
+                if response.status().is_success() {
+                    if let Ok(html) = response.text().await {
+                        return Self::extract_image_from_html(&html, manufacturer);
+                    }
+                }
+            }
+            Err(e) => {
+                log::debug!("Failed to fetch memory image: {}", e);
+            }
+        }
+
+        None
+    }
+
+    /// Get a generic DDR image URL based on memory type.
+    fn get_generic_ddr_image(mem_type: &MemoryType) -> Option<String> {
+        // Use Wikimedia Commons images for generic DDR modules (public domain)
+        match mem_type {
+            MemoryType::Ddr5 => Some(
+                "https://upload.wikimedia.org/wikipedia/commons/thumb/d/db/DDR5_RAM_module.jpg/320px-DDR5_RAM_module.jpg".to_string()
+            ),
+            MemoryType::Ddr4 => Some(
+                "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/Desktop_DDR4_RAM.jpg/320px-Desktop_DDR4_RAM.jpg".to_string()
+            ),
+            MemoryType::Ddr3 => Some(
+                "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c4/DDR3_RAM_front.jpg/320px-DDR3_RAM_front.jpg".to_string()
+            ),
+            MemoryType::Ddr2 => Some(
+                "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5c/DDR2_ram_mounted.jpg/320px-DDR2_ram_mounted.jpg".to_string()
+            ),
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -336,12 +496,33 @@ impl DeviceSource for MemorySource {
         // Build basic specs from model name parsing
         let (specs, categories) = Self::build_basic_specs(manufacturer, model);
 
-        // Determine manufacturer-specific URLs
+        // Determine manufacturer
         let mfr = Self::detect_manufacturer(manufacturer, model);
+        let mem_type = Self::detect_memory_type(model);
+
+        // Try to fetch manufacturer-specific image
+        let image_url = if let Some(ref detected_mfr) = mfr {
+            log::debug!("Detected memory manufacturer: {:?}", detected_mfr);
+
+            // Try manufacturer website first
+            let mfr_image = self.fetch_manufacturer_image(detected_mfr, model).await;
+
+            if mfr_image.is_some() {
+                log::info!("Found memory image from manufacturer website");
+                mfr_image
+            } else {
+                // Fall back to generic DDR image
+                log::debug!("Using generic DDR image fallback");
+                Self::get_generic_ddr_image(&mem_type)
+            }
+        } else {
+            // Unknown manufacturer - use generic DDR image
+            Self::get_generic_ddr_image(&mem_type)
+        };
 
         let product_page = match mfr {
             Some(Manufacturer::Corsair) => Some(format!(
-                "https://www.corsair.com/search/?text={}",
+                "https://www.corsair.com/us/en/search?query={}",
                 urlencoding::encode(model)
             )),
             Some(Manufacturer::GSkill) => Some(format!(
@@ -349,11 +530,23 @@ impl DeviceSource for MemorySource {
                 urlencoding::encode(model)
             )),
             Some(Manufacturer::Kingston) => Some(format!(
-                "https://www.kingston.com/search?q={}",
+                "https://www.kingston.com/en/search?q={}",
                 urlencoding::encode(model)
             )),
             Some(Manufacturer::Crucial) => Some(format!(
                 "https://www.crucial.com/search?q={}",
+                urlencoding::encode(model)
+            )),
+            Some(Manufacturer::TeamGroup) => Some(format!(
+                "https://www.teamgroupinc.com/en/catalog/act.php?act=3&keyword={}",
+                urlencoding::encode(model)
+            )),
+            Some(Manufacturer::Adata) => Some(format!(
+                "https://www.adata.com/en/search?keyword={}",
+                urlencoding::encode(model)
+            )),
+            Some(Manufacturer::Patriot) => Some(format!(
+                "https://www.patriotmemory.com/search?q={}",
                 urlencoding::encode(model)
             )),
             _ => None,
@@ -364,8 +557,14 @@ impl DeviceSource for MemorySource {
             Some(Manufacturer::GSkill) => Some("https://www.gskill.com/support".to_string()),
             Some(Manufacturer::Kingston) => Some("https://www.kingston.com/support".to_string()),
             Some(Manufacturer::Crucial) => Some("https://www.crucial.com/support".to_string()),
+            Some(Manufacturer::TeamGroup) => Some("https://www.teamgroupinc.com/en/support".to_string()),
+            Some(Manufacturer::Adata) => Some("https://www.adata.com/en/support".to_string()),
+            Some(Manufacturer::Patriot) => Some("https://www.patriotmemory.com/pages/support".to_string()),
             _ => None,
         };
+
+        // Confidence is higher if we found a manufacturer-specific image
+        let confidence = if image_url.is_some() && mfr.is_some() { 0.75 } else { 0.6 };
 
         Ok(PartialDeviceInfo {
             specs,
@@ -374,10 +573,10 @@ impl DeviceSource for MemorySource {
             release_date: None,
             product_page,
             support_page,
-            image_url: None,
+            image_url,
             source_name: "Memory Source".to_string(),
             source_url: None,
-            confidence: 0.6, // Medium confidence - parsed from model name
+            confidence,
             image_cached_path: None,
             thumbnail_url: None,
             thumbnail_cached_path: None,
@@ -450,5 +649,61 @@ mod tests {
             MemorySource::extract_kit_config("4x8GB Kit"),
             Some("4x8GB".to_string())
         );
+    }
+
+    #[test]
+    fn test_build_product_url() {
+        // Corsair
+        let url = MemorySource::build_product_url(&Manufacturer::Corsair, "Vengeance DDR5");
+        assert!(url.is_some());
+        assert!(url.unwrap().contains("corsair.com"));
+
+        // G.Skill
+        let url = MemorySource::build_product_url(&Manufacturer::GSkill, "Trident Z5");
+        assert!(url.is_some());
+        assert!(url.unwrap().contains("gskill.com"));
+
+        // OEM manufacturers should return None
+        let url = MemorySource::build_product_url(&Manufacturer::Samsung, "M378A1K43CB2");
+        assert!(url.is_none());
+    }
+
+    #[test]
+    fn test_get_generic_ddr_image() {
+        // DDR5 should return a Wikimedia image URL
+        let url = MemorySource::get_generic_ddr_image(&MemoryType::Ddr5);
+        assert!(url.is_some());
+        assert!(url.unwrap().contains("wikimedia.org"));
+
+        // DDR4 should also have a fallback
+        let url = MemorySource::get_generic_ddr_image(&MemoryType::Ddr4);
+        assert!(url.is_some());
+        assert!(url.unwrap().contains("wikimedia.org"));
+    }
+
+    #[test]
+    fn test_extract_image_from_html() {
+        // Test og:image extraction
+        let html = r#"
+            <html>
+            <head>
+                <meta property="og:image" content="https://example.com/image.jpg">
+            </head>
+            <body></body>
+            </html>
+        "#;
+        let url = MemorySource::extract_image_from_html(html, &Manufacturer::Corsair);
+        assert_eq!(url, Some("https://example.com/image.jpg".to_string()));
+
+        // Test fallback to product image
+        let html_no_og = r#"
+            <html>
+            <body>
+                <img class="product-image" src="https://example.com/product.jpg">
+            </body>
+            </html>
+        "#;
+        let url = MemorySource::extract_image_from_html(html_no_og, &Manufacturer::Corsair);
+        assert_eq!(url, Some("https://example.com/product.jpg".to_string()));
     }
 }
