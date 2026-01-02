@@ -42,7 +42,14 @@
       "Bash(start /c/dev/syslens/projects/branding/syslens/v1/index.html)",
       "Bash(\"/c/Users/lesli/.cargo/bin/cargo\" tauri build)",
       "Bash(tasklist:*)",
-      "Bash(\"/c/Users/lesli/.cargo/bin/cargo\" test amdproduct -- --nocapture)"
+      "Bash(\"/c/Users/lesli/.cargo/bin/cargo\" test amdproduct -- --nocapture)",
+      "Skill(jira)",
+      "Bash(\"https://syslens.atlassian.net/rest/api/3/project\" )",
+      "Bash(\"https://syslens.atlassian.net/rest/api/3/myself\")",
+      "Bash(\"https://syslens.atlassian.net/rest/api/3/search?jql=project=SL&maxResults=50\")",
+      "Bash(\"https://syslens.atlassian.net/rest/api/3/search?jql=project%3DSL&maxResults=50\")",
+      "Bash(\"https://syslens.atlassian.net/rest/api/3/search/jql\" )",
+      "Bash(\"https://syslens.atlassian.net/rest/api/3/issue\" )"
     ],
     "deny": []
   }
