@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(./bin/*:*)",
+      "Bash(bash:*)",
+      "Bash(powershell:*)",
+      "Bash(rmdir:*)",
+      "Bash(rustup:*)",
+      "Bash(tauri:*)",
+      "Edit(*)",
+      "Read(*)",
+      "Write(*)"
+    ],
+    "deny": []
+  }
+}
