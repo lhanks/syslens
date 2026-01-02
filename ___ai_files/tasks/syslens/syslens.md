@@ -7,8 +7,9 @@
 
 ## Pending
 
-- archive
-- work on jira tasks
+- [ ] [SL-2] Hardware: RAM needs to display images like processor and GPU
+
+_See [JIRA Task List](./jira-tasks.md) for details_
 
 ## In Progress
 
@@ -16,24 +17,7 @@
 
 ## Completed (January 2026)
 
-- [x] AMD CPU image enrichment for Ryzen processors (commit: 50c2fdc)
-
-  - [x] Fixed `normalize_for_slug()` to strip "-Core Processor" suffix
-  - [x] Added `build_direct_urls()` for proper AMD product URL patterns
-  - [x] Added `extract_ryzen_series()` for 9000/7000/5000 series detection
-  - [x] Prioritized og:image meta tag for reliable image extraction
-  - [x] Added comprehensive tests for new functions
-
-- [x] JIRA Integration Setup
-
-  - [x] Created Syslens Atlassian instance (syslens.atlassian.net)
-  - [x] Created SL project for issue tracking
-  - [x] Configured credentials in ~/.env (JIRA*SYSLENS*\*)
-  - [x] Created .claude/jira.json for project config
-
-- [x] Migrated to \_\_\_ai_files/ structure
-  - [x] Removed legacy todo/ directory
-  - [x] Created specs/, reports/, tasks/ structure
+_Archived to [archived-2026-01.md](./archived-2026-01.md)_
 
 ## Future Development
 
@@ -57,4 +41,5 @@
 
 - [JIRA Task List](./jira-tasks.md) - Active JIRA issues
 - [Hardware Images Spec](../specs/_spec-hardware-images.md)
+- [Archived Tasks (Jan 2026)](./archived-2026-01.md)
 - [Startup Task List (archived)](./startup/startup.md) - Pre-JIRA development history

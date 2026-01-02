@@ -49,7 +49,11 @@
       "Bash(\"https://syslens.atlassian.net/rest/api/3/search?jql=project=SL&maxResults=50\")",
       "Bash(\"https://syslens.atlassian.net/rest/api/3/search?jql=project%3DSL&maxResults=50\")",
       "Bash(\"https://syslens.atlassian.net/rest/api/3/search/jql\" )",
-      "Bash(\"https://syslens.atlassian.net/rest/api/3/issue\" )"
+      "Bash(\"https://syslens.atlassian.net/rest/api/3/issue\" )",
+      "Bash(source ~/.env)",
+      "Bash(\"$JIRA_SYSLENS_BASE_URL/rest/api/3/search/jql\" )",
+      "Bash(\"$JIRA_SYSLENS_BASE_URL/rest/api/3/issue/10045\")",
+      "Bash(\"$JIRA_SYSLENS_BASE_URL/rest/api/3/issue/SL-1/transitions\" )"
     ],
     "deny": []
   }

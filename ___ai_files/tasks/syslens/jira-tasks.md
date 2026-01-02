@@ -7,10 +7,7 @@
 
 ## Pending
 
-- [ ] **SL-1**: Set up JIRA task list integration
-  - Create jira-tasks.md to sync with JIRA issues
-  - Enable automated task tracking between local development and JIRA
-  - [View in JIRA](https://syslens.atlassian.net/browse/SL-1)
+- [ ] [SL-2] Hardware: RAM needs to display images like processor and GPU
 
 ## In Progress
 
@@ -18,17 +15,21 @@
 
 ## Completed
 
-(none)
+- [x] [SL-1] Set up JIRA task list integration
+  - [x] Create jira-tasks.md to sync with JIRA issues
+  - [x] Enable automated task tracking between local development and JIRA
 
 ---
 
 **JIRA Sync Info:**
+
 - **Project:** SL (Syslens)
 - **Instance:** https://syslens.atlassian.net
-- **Last Synced:** 2026-01-02
+- **Last Synced:** 2026-01-01 21:15
 - **JQL Filter:** `project = SL AND status != Done ORDER BY created DESC`
 
 **Commands:**
+
 - Sync from JIRA: `/jira sync`
 - Create issue: `/jira create "Title" --type Task`
 - View issue: `/jira SL-1`
