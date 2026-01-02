@@ -7,11 +7,12 @@
 
 ## Pending
 
-- [ ] [SL-2] Hardware: RAM needs to display images like processor and GPU
+(none)
 
 ## In Progress
 
-(none)
+- [*] [SL-2] Hardware: RAM needs to display images like processor and GPU
+  - PR: https://github.com/lhanks/syslens/pull/1
 
 ## Completed
 
@@ -25,7 +26,8 @@
 
 - **Project:** SL (Syslens)
 - **Instance:** https://syslens.atlassian.net
-- **Last Synced:** 2026-01-01 21:15
+- **Kanban Board:** https://syslens.atlassian.net/jira/software/projects/SL/boards/35
+- **Last Synced:** 2026-01-01 21:30
 - **JQL Filter:** `project = SL AND status != Done ORDER BY created DESC`
 
 **Commands:**

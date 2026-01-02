@@ -1,0 +1,37 @@
+{
+  "runs": [
+    {
+      "id": "run_20260101_2029",
+      "timestamp": "2026-01-01T20:29:00-06:00",
+      "project": "SL",
+      "issuesProcessed": 1,
+      "issuesByTier": {
+        "tier1": 0,
+        "tier2": 1,
+        "tier3": 0,
+        "tier4": 0
+      },
+      "results": [
+        {
+          "key": "SL-2",
+          "title": "Hardware: RAM needs to display images like processor and GPU",
+          "tier": 2,
+          "action": "PR Created",
+          "branch": "fix/SL-2-ram-images",
+          "commit": "44db460",
+          "pr": "https://github.com/lhanks/syslens/pull/1",
+          "status": "In Progress"
+        }
+      ],
+      "duration": "5m 30s"
+    }
+  ],
+  "totals": {
+    "runsCount": 1,
+    "issuesProcessed": 1,
+    "prsCreated": 1,
+    "autoMerged": 0,
+    "analysisOnly": 0,
+    "skipped": 0
+  }
+}
