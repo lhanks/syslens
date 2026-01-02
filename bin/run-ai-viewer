@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Launch the AI Files Viewer web app from dotfiles
+# This script delegates to the dotfiles run-ai-viewer which starts a Node.js server
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+
+# Path to dotfiles ai-viewer script
+DOTFILES_AI_VIEWER="/c/dev/dotfiles/bin/run-ai-viewer"
+
+if [[ ! -f "$DOTFILES_AI_VIEWER" ]]; then
+    echo "Error: AI Viewer not found at $DOTFILES_AI_VIEWER"
+    echo "Please ensure dotfiles is installed at /c/dev/dotfiles"
+    exit 1
+fi
+
+# Run the dotfiles ai-viewer with this project's path
+exec "$DOTFILES_AI_VIEWER" "$PROJECT_ROOT"
