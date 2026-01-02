@@ -53,7 +53,10 @@
       "Bash(source ~/.env)",
       "Bash(\"$JIRA_SYSLENS_BASE_URL/rest/api/3/search/jql\" )",
       "Bash(\"$JIRA_SYSLENS_BASE_URL/rest/api/3/issue/10045\")",
-      "Bash(\"$JIRA_SYSLENS_BASE_URL/rest/api/3/issue/SL-1/transitions\" )"
+      "Bash(\"$JIRA_SYSLENS_BASE_URL/rest/api/3/issue/SL-1/transitions\" )",
+      "Bash(\"$JIRA_SYSLENS_BASE_URL/rest/api/3/search?jql=project%3DSL%20AND%20type%20IN%20\\(Bug%2CDefect\\)%20AND%20status%20NOT%20IN%20\\(Done%2CClosed\\)%20ORDER%20BY%20priority%20DESC%2Ccreated%20ASC&maxResults=50\")",
+      "Bash(\"$JIRA_SYSLENS_BASE_URL/rest/api/3/issue/SL-2/transitions\")",
+      "Bash(\"$JIRA_SYSLENS_BASE_URL/rest/agile/1.0/board?projectKeyOrId=SL\")"
     ],
     "deny": []
   }
