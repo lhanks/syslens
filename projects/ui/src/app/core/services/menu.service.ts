@@ -2,6 +2,7 @@ import { Injectable, inject, signal, computed } from '@angular/core';
 import { listen } from '@tauri-apps/api/event';
 import { ViewSettingsService } from './view-settings.service';
 import { DockService } from './dock.service';
+import { SystemService } from './system.service';
 
 /**
  * Service for handling native application menu events from Tauri.
@@ -13,9 +14,18 @@ import { DockService } from './dock.service';
 export class MenuService {
   private viewSettings = inject(ViewSettingsService);
   private dockService = inject(DockService);
+  private systemService = inject(SystemService);
 
   // Sidebar visibility - now delegates to DockService (inverted: collapsed = not visible)
   sidebarVisible = computed(() => !this.dockService.rightRegion().isCollapsed);
+
+  // Export state
+  private _isExporting = signal(false);
+  isExporting = this._isExporting.asReadonly();
+
+  // Export result notification
+  private _lastExportResult = signal<{ success: boolean; path?: string; error?: string } | null>(null);
+  lastExportResult = this._lastExportResult.asReadonly();
 
   // About dialog state
   private _aboutDialogOpen = signal(false);
@@ -69,6 +79,47 @@ export class MenuService {
     await listen('menu:about', () => {
       this._aboutDialogOpen.set(true);
     });
+
+    // Listen for export report event
+    await listen('menu:export-report', () => {
+      this.exportReport();
+    });
+  }
+
+  /**
+   * Export system report to file.
+   */
+  async exportReport(): Promise<void> {
+    if (this._isExporting()) {
+      return; // Already exporting
+    }
+
+    this._isExporting.set(true);
+    this._lastExportResult.set(null);
+
+    try {
+      const filePath = await this.systemService.exportSystemReport().toPromise();
+      if (filePath) {
+        this._lastExportResult.set({ success: true, path: filePath });
+      } else {
+        // User cancelled - no notification needed
+        this._lastExportResult.set(null);
+      }
+    } catch (error) {
+      this._lastExportResult.set({
+        success: false,
+        error: error instanceof Error ? error.message : 'Export failed'
+      });
+    } finally {
+      this._isExporting.set(false);
+    }
+  }
+
+  /**
+   * Clear the last export result notification.
+   */
+  clearExportResult(): void {
+    this._lastExportResult.set(null);
   }
 
   /**

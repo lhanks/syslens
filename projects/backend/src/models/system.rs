@@ -150,3 +150,47 @@ pub enum RestorePointType {
     WindowsUpdate,
     Unknown,
 }
+
+// Re-export hardware, network, storage models needed for SystemReport
+use super::{
+    AudioDevice, CpuInfo, GpuInfo, MemoryInfo, Monitor, MotherboardInfo, NetworkAdapter,
+    PhysicalDisk, ServiceSummary, UsbDevice, Volume,
+};
+
+/// Complete system report containing all static system information
+/// Used for exporting system information to a file
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SystemReport {
+    /// Report metadata
+    pub report_generated_at: String,
+    pub syslens_version: String,
+
+    /// System information
+    pub device_info: DeviceInfo,
+    pub bios_info: BiosInfo,
+    pub boot_config: BootConfig,
+    pub os_info: OsInfo,
+    pub uptime: SystemUptime,
+    pub domain_info: DomainInfo,
+    pub user_info: UserInfo,
+
+    /// Hardware information
+    pub cpu_info: CpuInfo,
+    pub memory_info: MemoryInfo,
+    pub gpu_info: Vec<GpuInfo>,
+    pub motherboard_info: MotherboardInfo,
+    pub usb_devices: Vec<UsbDevice>,
+    pub audio_devices: Vec<AudioDevice>,
+    pub monitors: Vec<Monitor>,
+
+    /// Storage information
+    pub physical_disks: Vec<PhysicalDisk>,
+    pub volumes: Vec<Volume>,
+
+    /// Network information
+    pub network_adapters: Vec<NetworkAdapter>,
+
+    /// Services summary
+    pub services_summary: ServiceSummary,
+}

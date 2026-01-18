@@ -93,3 +93,52 @@ export type RestorePointType =
   | 'ManualCheckpoint'
   | 'WindowsUpdate'
   | 'Unknown';
+
+// Import types for SystemReport
+import type {
+  CpuInfo,
+  GpuInfo,
+  MemoryInfo,
+  MotherboardInfo,
+  UsbDevice,
+  AudioDevice,
+  Monitor,
+} from './hardware.model';
+import type { PhysicalDisk, Volume } from './storage.model';
+import type { NetworkAdapter } from './network.model';
+import type { ServiceSummary } from './service.model';
+
+/** Complete system report containing all static system information */
+export interface SystemReport {
+  /** Report metadata */
+  reportGeneratedAt: string;
+  syslensVersion: string;
+
+  /** System information */
+  deviceInfo: DeviceInfo;
+  biosInfo: BiosInfo;
+  bootConfig: BootConfig;
+  osInfo: OsInfo;
+  uptime: SystemUptime;
+  domainInfo: DomainInfo;
+  userInfo: UserInfo;
+
+  /** Hardware information */
+  cpuInfo: CpuInfo;
+  memoryInfo: MemoryInfo;
+  gpuInfo: GpuInfo[];
+  motherboardInfo: MotherboardInfo;
+  usbDevices: UsbDevice[];
+  audioDevices: AudioDevice[];
+  monitors: Monitor[];
+
+  /** Storage information */
+  physicalDisks: PhysicalDisk[];
+  volumes: Volume[];
+
+  /** Network information */
+  networkAdapters: NetworkAdapter[];
+
+  /** Services summary */
+  servicesSummary: ServiceSummary;
+}

@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable, interval, switchMap, startWith, shareReplay, of, tap, concat } from 'rxjs';
+import { Observable, interval, switchMap, startWith, shareReplay, of, tap, concat, from } from 'rxjs';
 import { TauriService } from './tauri.service';
 import { DataCacheService, CacheKeys } from './data-cache.service';
 import {
@@ -11,7 +11,10 @@ import {
   DomainInfo,
   UserInfo,
   RestorePoint,
+  SystemReport,
 } from '../models/system.model';
+import { save } from '@tauri-apps/plugin-dialog';
+import { writeTextFile } from '@tauri-apps/plugin-fs';
 
 /**
  * Service for retrieving system configuration information.
@@ -141,5 +144,55 @@ export class SystemService {
     this.cache.clear(CacheKeys.DEVICE_INFO);
     this.cache.clear(CacheKeys.BIOS_INFO);
     this.cache.clear(CacheKeys.OS_INFO);
+  }
+
+  /**
+   * Generate a complete system report.
+   */
+  generateSystemReport(): Observable<SystemReport> {
+    return this.tauri.invoke<SystemReport>('generate_system_report');
+  }
+
+  /**
+   * Export system report to a JSON file.
+   * Opens a save dialog and writes the report to the selected location.
+   * @returns Observable that completes when export is done, or errors if cancelled/failed
+   */
+  exportSystemReport(): Observable<string | null> {
+    return from(this.performExport());
+  }
+
+  private async performExport(): Promise<string | null> {
+    // Generate the report
+    const report = await this.tauri.invoke<SystemReport>('generate_system_report').toPromise();
+
+    if (!report) {
+      throw new Error('Failed to generate system report');
+    }
+
+    // Generate default filename with computer name and timestamp
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+    const defaultName = `syslens-report-${report.deviceInfo.computerName}-${timestamp}.json`;
+
+    // Show save dialog
+    const filePath = await save({
+      defaultPath: defaultName,
+      filters: [
+        { name: 'JSON', extensions: ['json'] },
+        { name: 'All Files', extensions: ['*'] },
+      ],
+      title: 'Export System Report',
+    });
+
+    if (!filePath) {
+      // User cancelled
+      return null;
+    }
+
+    // Write the file
+    const content = JSON.stringify(report, null, 2);
+    await writeTextFile(filePath, content);
+
+    return filePath;
   }
 }

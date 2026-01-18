@@ -28,6 +28,7 @@ fn main() {
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_fs::init())
+        .plugin(tauri_plugin_dialog::init())
         .manage(sysinfo_state)
         .setup(|app| {
             // Build the application menu
@@ -41,7 +42,16 @@ fn main() {
                 .build(app)?;
 
             // File submenu
-            let file_submenu = SubmenuBuilder::new(app, "File").quit().build()?;
+            let export_report = MenuItemBuilder::new("Export System Report...")
+                .id("export_report")
+                .accelerator("CmdOrCtrl+E")
+                .build(app)?;
+
+            let file_submenu = SubmenuBuilder::new(app, "File")
+                .item(&export_report)
+                .separator()
+                .quit()
+                .build()?;
 
             // View submenu - Show resources submenu
             let toggle_cpu = MenuItemBuilder::new("CPU").id("toggle_cpu").build(app)?;
@@ -140,6 +150,9 @@ fn main() {
                     "about" => {
                         let _ = handle.emit("menu:about", ());
                     }
+                    "export_report" => {
+                        let _ = handle.emit("menu:export-report", ());
+                    }
                     "github" => {
                         let _ = open::that("https://github.com/syslens/syslens");
                     }
@@ -168,6 +181,7 @@ fn main() {
             commands::get_domain_info,
             commands::get_user_info,
             commands::get_restore_points,
+            commands::generate_system_report,
             // Hardware commands
             commands::get_cpu_info,
             commands::get_cpu_metrics,
