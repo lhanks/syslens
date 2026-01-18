@@ -1,0 +1,227 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+BACKEND_DIR="$PROJECT_ROOT/projects/backend"
+UI_DIR="$PROJECT_ROOT/projects/ui"
+BUNDLE_DIR="$BACKEND_DIR/target/release/bundle"
+
+# Parse arguments
+INSTALLER_TYPE=""
+BUILD_FIRST=false
+FORCE_BUILD=false
+
+for arg in "$@"; do
+    case $arg in
+        --msi)
+            INSTALLER_TYPE="msi"
+            ;;
+        --nsis|--exe)
+            INSTALLER_TYPE="nsis"
+            ;;
+        --build)
+            BUILD_FIRST=true
+            ;;
+        --force)
+            FORCE_BUILD=true
+            ;;
+        --help|-h)
+            echo "Usage: run-installer [OPTIONS]"
+            echo ""
+            echo "Find and run the built Syslens installer."
+            echo ""
+            echo "Options:"
+            echo "  --msi      Run MSI installer (Windows Installer)"
+            echo "  --nsis     Run NSIS installer (Setup executable)"
+            echo "  --exe      Same as --nsis"
+            echo "  --build    Build installer first if not found or out of date"
+            echo "  --force    Force rebuild even if installer is up to date"
+            echo "  -h, --help Show this help message"
+            echo ""
+            echo "If no type specified, prefers MSI if available, then NSIS."
+            echo ""
+            echo "Auto-detection: Rebuilds if source files are newer than installer."
+            exit 0
+            ;;
+    esac
+done
+
+# Function to check if installer is out of date
+is_installer_outdated() {
+    local installer_path="$1"
+
+    # If installer doesn't exist, it's outdated
+    [[ ! -f "$installer_path" ]] && return 0
+
+    local installer_time
+    installer_time=$(stat -c %Y "$installer_path" 2>/dev/null || stat -f %m "$installer_path" 2>/dev/null)
+
+    # Check key source directories for newer files
+    # Angular sources
+    local newest_ui_src
+    newest_ui_src=$(find "$UI_DIR/src" -type f \( -name "*.ts" -o -name "*.html" -o -name "*.css" -o -name "*.scss" \) -printf '%T@\n' 2>/dev/null | sort -rn | head -1 || echo "0")
+
+    # Rust sources
+    local newest_rust_src
+    newest_rust_src=$(find "$BACKEND_DIR/src" -type f -name "*.rs" -printf '%T@\n' 2>/dev/null | sort -rn | head -1 || echo "0")
+
+    # Package files
+    local pkg_json_time=0
+    [[ -f "$UI_DIR/package.json" ]] && pkg_json_time=$(stat -c %Y "$UI_DIR/package.json" 2>/dev/null || stat -f %m "$UI_DIR/package.json" 2>/dev/null || echo "0")
+
+    local cargo_toml_time=0
+    [[ -f "$BACKEND_DIR/Cargo.toml" ]] && cargo_toml_time=$(stat -c %Y "$BACKEND_DIR/Cargo.toml" 2>/dev/null || stat -f %m "$BACKEND_DIR/Cargo.toml" 2>/dev/null || echo "0")
+
+    local tauri_conf_time=0
+    [[ -f "$BACKEND_DIR/tauri.conf.json" ]] && tauri_conf_time=$(stat -c %Y "$BACKEND_DIR/tauri.conf.json" 2>/dev/null || stat -f %m "$BACKEND_DIR/tauri.conf.json" 2>/dev/null || echo "0")
+
+    # Compare - if any source is newer, return 0 (outdated)
+    [[ "${newest_ui_src%.*}" -gt "$installer_time" ]] && return 0
+    [[ "${newest_rust_src%.*}" -gt "$installer_time" ]] && return 0
+    [[ "$pkg_json_time" -gt "$installer_time" ]] && return 0
+    [[ "$cargo_toml_time" -gt "$installer_time" ]] && return 0
+    [[ "$tauri_conf_time" -gt "$installer_time" ]] && return 0
+
+    # Installer is up to date
+    return 1
+}
+
+# Function to find MSI installer
+find_msi() {
+    if [[ -d "$BUNDLE_DIR/msi" ]]; then
+        ls -1 "$BUNDLE_DIR/msi"/*.msi 2>/dev/null | head -1
+    fi
+}
+
+# Function to find NSIS installer
+find_nsis() {
+    if [[ -d "$BUNDLE_DIR/nsis" ]]; then
+        ls -1 "$BUNDLE_DIR/nsis"/*.exe 2>/dev/null | head -1
+    fi
+}
+
+# Function to run installer
+run_installer() {
+    local installer_path="$1"
+    local installer_name="$(basename "$installer_path")"
+
+    echo "Running installer: $installer_name"
+    echo "Path: $installer_path"
+    echo ""
+
+    # Windows: use 'start' to launch installer
+    if [[ "$OSTYPE" == "msys" || "$OSTYPE" == "cygwin" || "$OSTYPE" == "win32" ]]; then
+        # Convert to Windows path if needed
+        local win_path
+        win_path=$(cygpath -w "$installer_path" 2>/dev/null || echo "$installer_path")
+        start "" "$win_path"
+    else
+        # Non-Windows: try xdg-open or open
+        if command -v xdg-open &> /dev/null; then
+            xdg-open "$installer_path"
+        elif command -v open &> /dev/null; then
+            open "$installer_path"
+        else
+            echo "ERROR: Don't know how to open installer on this platform"
+            echo "Please manually run: $installer_path"
+            exit 1
+        fi
+    fi
+
+    echo "Installer launched successfully."
+}
+
+# Main logic
+echo "========================================"
+echo "  Syslens Installer Runner"
+echo "========================================"
+echo ""
+
+# Check if bundle directory exists
+if [[ ! -d "$BUNDLE_DIR" ]]; then
+    if [[ "$BUILD_FIRST" == "true" ]]; then
+        echo "No bundle found. Building installer first..."
+        echo ""
+        "$SCRIPT_DIR/build-installer"
+        echo ""
+    else
+        echo "ERROR: Bundle directory not found: $BUNDLE_DIR"
+        echo ""
+        echo "Run 'bin/build-installer' first to create the installer,"
+        echo "or use 'bin/run-installer --build' to build and run."
+        exit 1
+    fi
+fi
+
+# Check for force rebuild
+if [[ "$FORCE_BUILD" == "true" ]]; then
+    echo "Force rebuild requested..."
+    echo ""
+    "$SCRIPT_DIR/build-installer"
+    echo ""
+fi
+
+# Find installer based on preference
+INSTALLER_PATH=""
+
+if [[ -n "$INSTALLER_TYPE" ]]; then
+    # User specified type
+    case $INSTALLER_TYPE in
+        msi)
+            INSTALLER_PATH=$(find_msi)
+            if [[ -z "$INSTALLER_PATH" ]]; then
+                echo "ERROR: MSI installer not found in $BUNDLE_DIR/msi"
+                exit 1
+            fi
+            ;;
+        nsis)
+            INSTALLER_PATH=$(find_nsis)
+            if [[ -z "$INSTALLER_PATH" ]]; then
+                echo "ERROR: NSIS installer not found in $BUNDLE_DIR/nsis"
+                exit 1
+            fi
+            ;;
+    esac
+else
+    # Auto-detect: prefer MSI, then NSIS
+    INSTALLER_PATH=$(find_msi)
+    if [[ -z "$INSTALLER_PATH" ]]; then
+        INSTALLER_PATH=$(find_nsis)
+    fi
+
+    if [[ -z "$INSTALLER_PATH" ]]; then
+        echo "ERROR: No installer found in $BUNDLE_DIR"
+        echo ""
+        echo "Available bundle types:"
+        ls -1 "$BUNDLE_DIR" 2>/dev/null || echo "  (none)"
+        echo ""
+        echo "Run 'bin/build-installer' to create an installer."
+        exit 1
+    fi
+fi
+
+# Check if installer is out of date (only when --build flag is set)
+if [[ "$BUILD_FIRST" == "true" ]] && [[ "$FORCE_BUILD" != "true" ]]; then
+    if is_installer_outdated "$INSTALLER_PATH"; then
+        echo "Installer is out of date. Rebuilding..."
+        echo ""
+        "$SCRIPT_DIR/build-installer"
+        echo ""
+        # Re-find the installer after rebuild
+        if [[ -n "$INSTALLER_TYPE" ]]; then
+            case $INSTALLER_TYPE in
+                msi) INSTALLER_PATH=$(find_msi) ;;
+                nsis) INSTALLER_PATH=$(find_nsis) ;;
+            esac
+        else
+            INSTALLER_PATH=$(find_msi)
+            [[ -z "$INSTALLER_PATH" ]] && INSTALLER_PATH=$(find_nsis)
+        fi
+    else
+        echo "Installer is up to date."
+        echo ""
+    fi
+fi
+
+run_installer "$INSTALLER_PATH"
