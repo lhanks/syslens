@@ -111,13 +111,13 @@ import { DockRegionComponent } from './dock-region.component';
 
     .dock-container {
       display: grid;
+      position: relative;
       height: 100%;
       width: 100%;
-      position: relative;
       grid-template-areas:
-        "top    top    top"
-        "left   main   right"
-        "bottom bottom bottom";
+        'top top top'
+        'left main right'
+        'bottom bottom bottom';
     }
 
     .dock-top {
@@ -130,7 +130,7 @@ import { DockRegionComponent } from './dock-region.component';
 
     .dock-main {
       grid-area: main;
-      overflow: hidden;
+      overflow: auto;
       min-width: 0;
       min-height: 0;
     }
@@ -144,7 +144,7 @@ import { DockRegionComponent } from './dock-region.component';
     }
 
     .hidden {
-      display: none;
+      display: none !important;
     }
 
     /* Drop zones */

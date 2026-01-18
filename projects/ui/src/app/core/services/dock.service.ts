@@ -12,6 +12,7 @@ import {
 
 const STORAGE_KEY = 'syslens_dock_layout';
 const DETACHED_PANELS_KEY = 'syslens_detached_panels';
+const LAYOUT_VERSION = 2; // Increment to force layout reset on upgrade
 
 /** Tracks a detached (floating) panel */
 export interface DetachedPanel {
@@ -433,14 +434,32 @@ export class DockService {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) {
-        const parsed = JSON.parse(stored) as DockLayout;
+        const parsed = JSON.parse(stored) as DockLayout & { version?: number };
+
+        // Check layout version - reset if outdated
+        if (!parsed.version || parsed.version < LAYOUT_VERSION) {
+          console.log('[DockService] Layout version outdated, resetting to defaults');
+          localStorage.removeItem(STORAGE_KEY);
+          return; // Use default layout
+        }
+
         // Merge with defaults to handle missing properties
+        const defaults = createDefaultLayout();
         const layout = createDefaultLayout();
+
         for (const pos of ['top', 'left', 'right', 'bottom'] as DockRegionPosition[]) {
           if (parsed.regions[pos]) {
+            const storedRegion = parsed.regions[pos];
+            const defaultRegion = defaults.regions[pos];
+
             layout.regions[pos] = {
               ...layout.regions[pos],
-              ...parsed.regions[pos],
+              ...storedRegion,
+              // If stored panels are empty but defaults exist, use defaults
+              // This handles migration from older versions or corrupted state
+              panels: storedRegion.panels?.length > 0
+                ? storedRegion.panels
+                : defaultRegion.panels,
             };
           }
         }
@@ -456,7 +475,11 @@ export class DockService {
    */
   private saveLayout(): void {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(this._layout()));
+      const layoutWithVersion = {
+        ...this._layout(),
+        version: LAYOUT_VERSION,
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(layoutWithVersion));
     } catch {
       // Ignore localStorage errors
     }

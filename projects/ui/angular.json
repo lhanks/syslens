@@ -38,7 +38,9 @@
               }
             ],
             "styles": ["src/styles.scss"],
-            "scripts": []
+            "scripts": [],
+            "ssr": false,
+            "prerender": false
           },
           "configurations": {
             "production": {
@@ -54,7 +56,14 @@
                   "maximumError": "4kB"
                 }
               ],
-              "outputHashing": "all"
+              "outputHashing": "all",
+              "optimization": {
+                "scripts": true,
+                "styles": {
+                  "minify": true,
+                  "inlineCritical": false
+                }
+              }
             },
             "development": {
               "optimization": false,
