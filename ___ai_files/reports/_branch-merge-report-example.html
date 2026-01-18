@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Branch/Merge Report - Example</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0d0d0d;
+      color: #b8b8b8;
+      line-height: 1.6;
+      padding: 24px;
+    }
+    .container { max-width: 1200px; margin: 0 auto; }
+    header {
+      border-bottom: 1px solid #333;
+      padding-bottom: 16px;
+      margin-bottom: 24px;
+    }
+    h1 { color: #fff; font-size: 24px; margin-bottom: 8px; }
+    .subtitle { color: #808080; font-size: 14px; }
+    .branch-info { color: #4a9eff; font-size: 14px; margin-top: 8px; }
+    .branch-info code {
+      background: #1a1a1a;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-family: 'Consolas', 'Monaco', monospace;
+    }
+    .example-badge {
+      display: inline-block;
+      background: #4a9eff22;
+      color: #4a9eff;
+      padding: 4px 12px;
+      border-radius: 4px;
+      font-size: 12px;
+      margin-left: 12px;
+      vertical-align: middle;
+    }
+    .stats {
+      display: flex;
+      gap: 24px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+    .stat-card {
+      background: #1a1a1a;
+      border: 1px solid #333;
+      border-radius: 8px;
+      padding: 16px 24px;
+      min-width: 120px;
+    }
+    .stat-value { font-size: 28px; font-weight: 600; color: #4a9eff; }
+    .stat-label { font-size: 12px; color: #808080; text-transform: uppercase; }
+    .section {
+      background: #1a1a1a;
+      border: 1px solid #333;
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 24px;
+    }
+    .section-title {
+      color: #fff;
+      font-size: 16px;
+      margin-bottom: 16px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #333;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .section-icon { font-size: 18px; }
+    .info-box {
+      background: #1a2a1a;
+      border: 1px solid #2a4a2a;
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 24px;
+    }
+    .info-box h3 { color: #4caf50; margin-bottom: 8px; }
+    .info-box p { color: #8faf8f; font-size: 14px; }
+    .info-box code {
+      background: #0d0d0d;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: 'Consolas', 'Monaco', monospace;
+    }
+    .commit-list { list-style: none; }
+    .commit-item {
+      padding: 12px;
+      border-bottom: 1px solid #252525;
+      display: flex;
+      gap: 12px;
+    }
+    .commit-item:last-child { border-bottom: none; }
+    .commit-hash {
+      font-family: 'Consolas', 'Monaco', monospace;
+      color: #4a9eff;
+      font-size: 12px;
+      min-width: 70px;
+    }
+    .commit-message { color: #b8b8b8; flex: 1; }
+    .commit-author { color: #808080; font-size: 12px; min-width: 100px; }
+    .commit-date { color: #606060; font-size: 12px; min-width: 100px; text-align: right; }
+    .ticket-list { list-style: none; }
+    .ticket-item {
+      padding: 12px;
+      border-bottom: 1px solid #252525;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .ticket-item:last-child { border-bottom: none; }
+    .ticket-key {
+      background: #2a3a5a;
+      color: #6a9eff;
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 600;
+      min-width: 80px;
+      text-align: center;
+    }
+    .ticket-summary { color: #b8b8b8; flex: 1; }
+    .ticket-status {
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      text-transform: uppercase;
+    }
+    .status-done { background: #1a3a1a; color: #4caf50; }
+    .status-progress { background: #3a3a1a; color: #ff9800; }
+    .status-review { background: #2a2a3a; color: #9c6eff; }
+    .db-diff { font-family: 'Consolas', 'Monaco', monospace; font-size: 13px; }
+    .diff-file {
+      padding: 8px 12px;
+      background: #252525;
+      border-radius: 4px 4px 0 0;
+      color: #808080;
+      border-bottom: 1px solid #333;
+    }
+    .diff-content {
+      padding: 12px;
+      background: #151515;
+      border-radius: 0 0 4px 4px;
+      white-space: pre-wrap;
+      overflow-x: auto;
+    }
+    .diff-add { color: #4caf50; }
+    .diff-remove { color: #f44336; }
+    .diff-context { color: #606060; }
+    .refactor-list { list-style: none; }
+    .refactor-item {
+      padding: 12px;
+      border-bottom: 1px solid #252525;
+    }
+    .refactor-item:last-child { border-bottom: none; }
+    .refactor-title {
+      color: #fff;
+      font-weight: 500;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .refactor-severity {
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 10px;
+      text-transform: uppercase;
+    }
+    .severity-high { background: #3a1a1a; color: #f44336; }
+    .severity-medium { background: #3a3a1a; color: #ff9800; }
+    .severity-low { background: #1a2a3a; color: #4a9eff; }
+    .refactor-desc { color: #808080; font-size: 13px; }
+    .refactor-files { color: #606060; font-size: 12px; margin-top: 4px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Branch/Merge Report <span class="example-badge">Example</span></h1>
+      <div class="subtitle">Generated: ${now}</div>
+      <div class="branch-info">
+        <code>feature/user-auth</code> → <code>main</code>
+      </div>
+    </header>
+
+    <div class="info-box">
+      <h3>This is an Example Report</h3>
+      <p>
+        This sample report demonstrates the Branch/Merge Report format. To generate a real report
+        for your project, run <code>/prepare-merge</code> in Claude Code before merging a feature branch.
+        The report will analyze commits, JIRA tickets, DB changes, and provide refactoring recommendations.
+      </p>
+    </div>
+
+    <div class="stats">
+      <div class="stat-card">
+        <div class="stat-value">23</div>
+        <div class="stat-label">Files Changed</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">12</div>
+        <div class="stat-label">Commits</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">4</div>
+        <div class="stat-label">JIRA Tickets</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">3</div>
+        <div class="stat-label">DB Changes</div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2 class="section-title"><span class="section-icon">📝</span> Commits</h2>
+      <ul class="commit-list">
+        <li class="commit-item">
+          <span class="commit-hash">a1b2c3d</span>
+          <span class="commit-message">feat(auth): add JWT token validation middleware</span>
+          <span class="commit-author">jsmith</span>
+          <span class="commit-date">2 days ago</span>
+        </li>
+        <li class="commit-item">
+          <span class="commit-hash">e4f5g6h</span>
+          <span class="commit-message">feat(auth): implement login endpoint with password hashing</span>
+          <span class="commit-author">jsmith</span>
+          <span class="commit-date">2 days ago</span>
+        </li>
+        <li class="commit-item">
+          <span class="commit-hash">i7j8k9l</span>
+          <span class="commit-message">feat(auth): add user registration with email verification</span>
+          <span class="commit-author">jsmith</span>
+          <span class="commit-date">3 days ago</span>
+        </li>
+        <li class="commit-item">
+          <span class="commit-hash">m0n1o2p</span>
+          <span class="commit-message">fix(auth): handle expired token refresh correctly</span>
+          <span class="commit-author">alee</span>
+          <span class="commit-date">3 days ago</span>
+        </li>
+        <li class="commit-item">
+          <span class="commit-hash">q3r4s5t</span>
+          <span class="commit-message">chore: add bcrypt dependency for password hashing</span>
+          <span class="commit-author">jsmith</span>
+          <span class="commit-date">4 days ago</span>
+        </li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <h2 class="section-title"><span class="section-icon">🎫</span> JIRA Tickets</h2>
+      <ul class="ticket-list">
+        <li class="ticket-item">
+          <span class="ticket-key">AUTH-101</span>
+          <span class="ticket-summary">Implement JWT-based authentication system</span>
+          <span class="ticket-status status-done">Done</span>
+        </li>
+        <li class="ticket-item">
+          <span class="ticket-key">AUTH-102</span>
+          <span class="ticket-summary">Add user registration flow with email verification</span>
+          <span class="ticket-status status-done">Done</span>
+        </li>
+        <li class="ticket-item">
+          <span class="ticket-key">AUTH-103</span>
+          <span class="ticket-summary">Implement password reset functionality</span>
+          <span class="ticket-status status-review">In Review</span>
+        </li>
+        <li class="ticket-item">
+          <span class="ticket-key">AUTH-104</span>
+          <span class="ticket-summary">Add rate limiting to auth endpoints</span>
+          <span class="ticket-status status-progress">In Progress</span>
+        </li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <h2 class="section-title"><span class="section-icon">🗄️</span> Database Changes</h2>
+      <div class="db-diff">
+        <div class="diff-file">ddl/users.sql</div>
+        <div class="diff-content"><span class="diff-context"> CREATE TABLE users (
+   id INT PRIMARY KEY,
+   email VARCHAR(255) NOT NULL,</span>
+<span class="diff-add">+  password_hash VARCHAR(255) NOT NULL,
++  email_verified BOOLEAN DEFAULT FALSE,
++  verification_token VARCHAR(100),
++  reset_token VARCHAR(100),
++  reset_token_expires TIMESTAMP,</span>
+<span class="diff-context">   created_at TIMESTAMP DEFAULT NOW()
+ );</span></div>
+      </div>
+      <div class="db-diff" style="margin-top: 16px;">
+        <div class="diff-file">ddl/sessions.sql (NEW)</div>
+        <div class="diff-content"><span class="diff-add">+ CREATE TABLE sessions (
++   id INT PRIMARY KEY,
++   user_id INT REFERENCES users(id),
++   token VARCHAR(500) NOT NULL,
++   expires_at TIMESTAMP NOT NULL,
++   created_at TIMESTAMP DEFAULT NOW()
++ );
++
++ CREATE INDEX idx_sessions_user ON sessions(user_id);
++ CREATE INDEX idx_sessions_token ON sessions(token);</span></div>
+      </div>
+      <div class="db-diff" style="margin-top: 16px;">
+        <div class="diff-file">patches/001_add_auth_fields.sql</div>
+        <div class="diff-content"><span class="diff-add">+ ALTER TABLE users ADD COLUMN password_hash VARCHAR(255);
++ ALTER TABLE users ADD COLUMN email_verified BOOLEAN DEFAULT FALSE;
++ ALTER TABLE users ADD COLUMN verification_token VARCHAR(100);
++ CREATE INDEX idx_users_email ON users(email);</span></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2 class="section-title"><span class="section-icon">🔧</span> Refactoring Recommendations</h2>
+      <ul class="refactor-list">
+        <li class="refactor-item">
+          <div class="refactor-title">
+            <span class="refactor-severity severity-high">High</span>
+            Password validation logic duplicated
+          </div>
+          <div class="refactor-desc">Password strength validation is implemented in both registration and password reset handlers. Consider extracting to a shared utility.</div>
+          <div class="refactor-files">Files: auth/register.ts, auth/reset-password.ts</div>
+        </li>
+        <li class="refactor-item">
+          <div class="refactor-title">
+            <span class="refactor-severity severity-medium">Medium</span>
+            Token generation could use crypto.randomUUID()
+          </div>
+          <div class="refactor-desc">Current implementation uses Math.random() for token generation. Consider using crypto.randomUUID() for better security.</div>
+          <div class="refactor-files">Files: auth/tokens.ts</div>
+        </li>
+        <li class="refactor-item">
+          <div class="refactor-title">
+            <span class="refactor-severity severity-low">Low</span>
+            Consider adding TypeScript interfaces for auth responses
+          </div>
+          <div class="refactor-desc">Auth endpoints return inline object shapes. Adding explicit interfaces would improve type safety and documentation.</div>
+          <div class="refactor-files">Files: auth/login.ts, auth/register.ts, auth/refresh.ts</div>
+        </li>
+      </ul>
+    </div>
+  </div>
+</body>
+</html>

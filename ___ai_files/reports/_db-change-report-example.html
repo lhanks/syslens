@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Database Schema Report - Example</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0d0d0d;
+      color: #b8b8b8;
+      line-height: 1.6;
+      padding: 24px;
+    }
+    .container { max-width: 1200px; margin: 0 auto; }
+    header {
+      border-bottom: 1px solid #333;
+      padding-bottom: 16px;
+      margin-bottom: 24px;
+    }
+    h1 { color: #fff; font-size: 24px; margin-bottom: 8px; }
+    .subtitle { color: #808080; font-size: 14px; }
+    .example-badge {
+      display: inline-block;
+      background: #4a9eff22;
+      color: #4a9eff;
+      padding: 4px 12px;
+      border-radius: 4px;
+      font-size: 12px;
+      margin-left: 12px;
+      vertical-align: middle;
+    }
+    .stats {
+      display: flex;
+      gap: 24px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+    .stat-card {
+      background: #1a1a1a;
+      border: 1px solid #333;
+      border-radius: 8px;
+      padding: 16px 24px;
+      min-width: 120px;
+    }
+    .stat-value { font-size: 28px; font-weight: 600; color: #4a9eff; }
+    .stat-label { font-size: 12px; color: #808080; text-transform: uppercase; }
+    .tree {
+      background: #1a1a1a;
+      border: 1px solid #333;
+      border-radius: 8px;
+      padding: 16px;
+    }
+    .tree-node {
+      padding: 4px 0;
+      padding-left: 20px;
+      position: relative;
+    }
+    .tree-node::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 50%;
+      width: 12px;
+      border-left: 1px solid #444;
+      border-bottom: 1px solid #444;
+    }
+    .tree-root::before { display: none; }
+    .tree-root { padding-left: 0; }
+    .tree-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 4px 8px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .tree-label:hover { background: #252525; }
+    .tree-icon { width: 16px; text-align: center; }
+    .tree-name { color: #b8b8b8; }
+    .tree-type { color: #808080; font-size: 12px; }
+    .tree-children { margin-left: 8px; }
+    details > summary { list-style: none; }
+    details > summary::-webkit-details-marker { display: none; }
+    details > summary .tree-icon::before { content: '▸'; color: #606060; }
+    details[open] > summary .tree-icon::before { content: '▾'; }
+    .section-title {
+      color: #fff;
+      font-size: 16px;
+      margin: 24px 0 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #333;
+    }
+    .info-box {
+      background: #1a2a1a;
+      border: 1px solid #2a4a2a;
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 24px;
+    }
+    .info-box h3 { color: #4caf50; margin-bottom: 8px; }
+    .info-box p { color: #8faf8f; font-size: 14px; }
+    .info-box code {
+      background: #0d0d0d;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: 'Consolas', 'Monaco', monospace;
+    }
+    .file-link {
+      color: #4a9eff;
+      text-decoration: none;
+      font-size: 12px;
+    }
+    .file-link:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Database Schema Report <span class="example-badge">Example</span></h1>
+      <div class="subtitle">Generated: 2026-01-13T03:22:47.137Z</div>
+    </header>
+
+    <div class="info-box">
+      <h3>This is an Example Report</h3>
+      <p>
+        This sample report demonstrates the DB Change Report format. To generate a real report
+        for your project, run <code>/db-report /path/to/ddl</code> in Claude Code.
+        The report will parse your DDL/SQL files and show table structures, indexes, and patches.
+      </p>
+    </div>
+
+    <div class="stats">
+      <div class="stat-card">
+        <div class="stat-value">3</div>
+        <div class="stat-label">Tables</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">5</div>
+        <div class="stat-label">Indexes</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">1</div>
+        <div class="stat-label">Views</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">2</div>
+        <div class="stat-label">Patches</div>
+      </div>
+    </div>
+
+    <h2 class="section-title">Schema Tree</h2>
+    <div class="tree">
+      <div class="tree-node tree-root">
+        <details open>
+          <summary class="tree-label">
+            <span class="tree-icon"></span>
+            <span class="tree-name">Tables</span>
+            <span class="tree-type">(3)</span>
+          </summary>
+          <div class="tree-children">
+            <div class="tree-node">
+              <details>
+                <summary class="tree-label">
+                  <span class="tree-icon"></span>
+                  <span class="tree-name">users</span>
+                </summary>
+                <div class="tree-children">
+                  <div class="tree-node">
+                    <details open>
+                      <summary class="tree-label">
+                        <span class="tree-icon"></span>
+                        <span class="tree-name">Columns</span>
+                        <span class="tree-type">(4)</span>
+                      </summary>
+                      <div class="tree-children">
+                        <div class="tree-node">
+                          <span class="tree-label">
+                            <span class="tree-icon">•</span>
+                            <span class="tree-name">id</span>
+                            <span class="tree-type">INT, NOT NULL, PK</span>
+                          </span>
+                        </div>
+                        <div class="tree-node">
+                          <span class="tree-label">
+                            <span class="tree-icon">•</span>
+                            <span class="tree-name">email</span>
+                            <span class="tree-type">VARCHAR(255), NOT NULL</span>
+                          </span>
+                        </div>
+                        <div class="tree-node">
+                          <span class="tree-label">
+                            <span class="tree-icon">•</span>
+                            <span class="tree-name">name</span>
+                            <span class="tree-type">VARCHAR(100)</span>
+                          </span>
+                        </div>
+                        <div class="tree-node">
+                          <span class="tree-label">
+                            <span class="tree-icon">•</span>
+                            <span class="tree-name">created_at</span>
+                            <span class="tree-type">TIMESTAMP</span>
+                          </span>
+                        </div>
+                      </div>
+                    </details>
+                  </div>
+                  <div class="tree-node">
+                    <details>
+                      <summary class="tree-label">
+                        <span class="tree-icon"></span>
+                        <span class="tree-name">Indexes</span>
+                        <span class="tree-type">(2)</span>
+                      </summary>
+                      <div class="tree-children">
+                        <div class="tree-node">
+                          <span class="tree-label">
+                            <span class="tree-icon">•</span>
+                            <span class="tree-name">idx_users_email</span>
+                            <span class="tree-type">UNIQUE (email)</span>
+                          </span>
+                        </div>
+                        <div class="tree-node">
+                          <span class="tree-label">
+                            <span class="tree-icon">•</span>
+                            <span class="tree-name">idx_users_created</span>
+                            <span class="tree-type">(created_at)</span>
+                          </span>
+                        </div>
+                      </div>
+                    </details>
+                  </div>
+                </div>
+              </details>
+            </div>
+            <div class="tree-node">
+              <details>
+                <summary class="tree-label">
+                  <span class="tree-icon"></span>
+                  <span class="tree-name">orders</span>
+                </summary>
+                <div class="tree-children">
+                  <div class="tree-node">
+                    <details>
+                      <summary class="tree-label">
+                        <span class="tree-icon"></span>
+                        <span class="tree-name">Columns</span>
+                        <span class="tree-type">(5)</span>
+                      </summary>
+                      <div class="tree-children">
+                        <div class="tree-node">
+                          <span class="tree-label">
+                            <span class="tree-icon">•</span>
+                            <span class="tree-name">id</span>
+                            <span class="tree-type">INT, NOT NULL, PK</span>
+                          </span>
+                        </div>
+                        <div class="tree-node">
+                          <span class="tree-label">
+                            <span class="tree-icon">•</span>
+                            <span class="tree-name">user_id</span>
+                            <span class="tree-type">INT, FK→users.id</span>
+                          </span>
+                        </div>
+                        <div class="tree-node">
+                          <span class="tree-label">
+                            <span class="tree-icon">•</span>
+                            <span class="tree-name">total</span>
+                            <span class="tree-type">DECIMAL(10,2)</span>
+                          </span>
+                        </div>
+                        <div class="tree-node">
+                          <span class="tree-label">
+                            <span class="tree-icon">•</span>
+                            <span class="tree-name">status</span>
+                            <span class="tree-type">VARCHAR(20)</span>
+                          </span>
+                        </div>
+                        <div class="tree-node">
+                          <span class="tree-label">
+                            <span class="tree-icon">•</span>
+                            <span class="tree-name">created_at</span>
+                            <span class="tree-type">TIMESTAMP</span>
+                          </span>
+                        </div>
+                      </div>
+                    </details>
+                  </div>
+                  <div class="tree-node">
+                    <details>
+                      <summary class="tree-label">
+                        <span class="tree-icon"></span>
+                        <span class="tree-name">Indexes</span>
+                        <span class="tree-type">(2)</span>
+                      </summary>
+                      <div class="tree-children">
+                        <div class="tree-node">
+                          <span class="tree-label">
+                            <span class="tree-icon">•</span>
+                            <span class="tree-name">idx_orders_user</span>
+                            <span class="tree-type">(user_id)</span>
+                          </span>
+                        </div>
+                        <div class="tree-node">
+                          <span class="tree-label">
+                            <span class="tree-icon">•</span>
+                            <span class="tree-name">idx_orders_status</span>
+                            <span class="tree-type">(status, created_at)</span>
+                          </span>
+                        </div>
+                      </div>
+                    </details>
+                  </div>
+                </div>
+              </details>
+            </div>
+            <div class="tree-node">
+              <details>
+                <summary class="tree-label">
+                  <span class="tree-icon"></span>
+                  <span class="tree-name">products</span>
+                </summary>
+                <div class="tree-children">
+                  <div class="tree-node">
+                    <details>
+                      <summary class="tree-label">
+                        <span class="tree-icon"></span>
+                        <span class="tree-name">Columns</span>
+                        <span class="tree-type">(4)</span>
+                      </summary>
+                      <div class="tree-children">
+                        <div class="tree-node">
+                          <span class="tree-label">
+                            <span class="tree-icon">•</span>
+                            <span class="tree-name">id</span>
+                            <span class="tree-type">INT, NOT NULL, PK</span>
+                          </span>
+                        </div>
+                        <div class="tree-node">
+                          <span class="tree-label">
+                            <span class="tree-icon">•</span>
+                            <span class="tree-name">name</span>
+                            <span class="tree-type">VARCHAR(200)</span>
+                          </span>
+                        </div>
+                        <div class="tree-node">
+                          <span class="tree-label">
+                            <span class="tree-icon">•</span>
+                            <span class="tree-name">price</span>
+                            <span class="tree-type">DECIMAL(10,2)</span>
+                          </span>
+                        </div>
+                        <div class="tree-node">
+                          <span class="tree-label">
+                            <span class="tree-icon">•</span>
+                            <span class="tree-name">sku</span>
+                            <span class="tree-type">VARCHAR(50), UNIQUE</span>
+                          </span>
+                        </div>
+                      </div>
+                    </details>
+                  </div>
+                  <div class="tree-node">
+                    <details>
+                      <summary class="tree-label">
+                        <span class="tree-icon"></span>
+                        <span class="tree-name">Indexes</span>
+                        <span class="tree-type">(1)</span>
+                      </summary>
+                      <div class="tree-children">
+                        <div class="tree-node">
+                          <span class="tree-label">
+                            <span class="tree-icon">•</span>
+                            <span class="tree-name">idx_products_sku</span>
+                            <span class="tree-type">UNIQUE (sku)</span>
+                          </span>
+                        </div>
+                      </div>
+                    </details>
+                  </div>
+                </div>
+              </details>
+            </div>
+          </div>
+        </details>
+      </div>
+
+      <div class="tree-node tree-root" style="margin-top: 12px;">
+        <details>
+          <summary class="tree-label">
+            <span class="tree-icon"></span>
+            <span class="tree-name">Views</span>
+            <span class="tree-type">(1)</span>
+          </summary>
+          <div class="tree-children">
+            <div class="tree-node">
+              <span class="tree-label">
+                <span class="tree-icon">•</span>
+                <span class="tree-name">v_user_orders</span>
+                <span class="tree-type">SELECT users.*, orders.*</span>
+              </span>
+            </div>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <h2 class="section-title">Patch History</h2>
+    <div class="tree">
+      <div class="tree-node tree-root">
+        <div class="tree-label">
+          <span class="tree-icon">📄</span>
+          <span class="tree-name">001_add_user_status.sql</span>
+          <span class="tree-type">ALTER TABLE users ADD COLUMN status</span>
+        </div>
+      </div>
+      <div class="tree-node tree-root">
+        <div class="tree-label">
+          <span class="tree-icon">📄</span>
+          <span class="tree-name">002_add_order_notes.sql</span>
+          <span class="tree-type">ALTER TABLE orders ADD COLUMN notes</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
