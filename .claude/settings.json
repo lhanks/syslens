@@ -9,6 +9,8 @@
       "Bash(tauri:*)",
       "Edit(*)",
       "Read(*)",
+      "Skill(archive-tasks)",
+      "Skill(jira)",
       "Write(*)"
     ],
     "deny": []

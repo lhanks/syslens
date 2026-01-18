@@ -1,6 +1,12 @@
 {
   "instance": "syslens.atlassian.net",
+  "baseUrl": "https://syslens.atlassian.net",
   "project": "SL",
   "envPrefix": "JIRA_SYSLENS",
-  "taskList": "___ai_files/tasks/syslens/syslens.md"
+  "env": {
+    "username": "JIRA_SYSLENS_USERNAME",
+    "token": "JIRA_SYSLENS_API_TOKEN",
+    "baseUrl": "JIRA_SYSLENS_BASE_URL"
+  },
+  "taskList": "___ai_files/tasks/syslens/issues.md"
 }
